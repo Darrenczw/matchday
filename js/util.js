@@ -50,7 +50,8 @@ export function countdown(d) {
   if (mins <= 0) return 'Starting now';
   if (mins < 60) return `in ${mins} min`;
   const h = Math.floor(mins / 60), m = mins % 60;
-  if (h < 48) return `in ${h} h ${m} min`;
+  if (h < 24) return `in ${h} h ${m} min`;
+  if (h < 72) return `in ${Math.floor(h / 24)} day${h >= 48 ? 's' : ''} ${h % 24} h`;
   return `in ${Math.round(h / 24)} days`;
 }
 

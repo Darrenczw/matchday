@@ -14,8 +14,10 @@ function result(g, id) {
 }
 function line(g, id, done) {
   const home = g.home.id === id, opp = home ? g.away : g.home, s = sg(g.date);
+  // Results read from this team's side: its score first, then W, D or L.
+  const me = home ? g.home : g.away, r = done && result(g, id);
   const right = done
-    ? `<div class="when"><b>${esc(g.home.score)}–${esc(g.away.score)}</b><span>${s.wd} ${s.d} ${s.mo}</span></div>`
+    ? `<div class="when"><b>${esc(me.score)}–${esc(opp.score)}</b><span>${s.wd} ${s.d} ${s.mo}</span></div>${r ? `<span class="fm ${r}" aria-label="${{ W: 'Won', D: 'Draw', L: 'Lost' }[r]}">${r}</span>` : ''}`
     : `<div class="when"><b>${s.wd} ${s.d} ${s.mo}</b><span>${g.timeValid ? s.hm : 'TBC'}${g.postponed ? ' · Postponed' : ''}</span></div>`;
   return `<a class="li" href="${href.match(g)}">${crest(opp, 30, true)}<span class="grow"><span class="t">${home ? 'v' : 'at'} ${esc(opp.short)}</span><small>${esc(g.comp.name)}</small></span>${right}</a>`;
 }

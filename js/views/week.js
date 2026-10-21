@@ -23,10 +23,10 @@ function card(g) {
   const half = (x, r) => `<div class="p${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${r ? `<b>${esc(x.team.abbr)}</b>${crest(x.team, 26, true)}` : `${crest(x.team, 26, true)}<b>${esc(x.team.abbr)}</b>`}</div>`;
   const mine = isMine(g, picks);
   const pick = { id: g.id, path: g.path, date: g.date, name: g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}` };
-  const action = mine && !picks.games.some((x) => x.id === g.id) ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick, { label: 'Follow' });
+  const action = mine && !picks.games.some((x) => x.id === g.id) ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick, { label: 'Follow', lite: true });
   return `<div class="card"><a class="row" style="margin:0;border-radius:0;box-shadow:none;grid-template-columns:1fr 1fr" href="${href.match(g)}">${half(k.left)}${half(k.right, true)}</a>
 <div class="li" style="border:0;align-items:center"><span class="grow"><span class="t" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num" style="font-size:20px">${s.wd} ${g.timeValid ? s.hm : 'TBC'}</span>${why.map((w) => `<span class="tag why">${esc(w)}</span>`).join('')}</span>
-<small>${esc(g.comp.name)} · ${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(m.channels[0] + (m.channels.length > 1 ? ` +${m.channels.length - 1}` : ''))}</small></span>${action}</div></div>`;
+<small>${esc(g.comp.name)} · ${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(m.channels[0] + (m.channels.length > 1 ? ` · ${m.channels.length - 1} more` : ''))}</small></span>${action}</div></div>`;
 }
 
 export default function week(params, ctx) {
@@ -40,7 +40,7 @@ export default function week(params, ctx) {
   }, 10 * 60e3);
   let html = `<header class="top"><h1>This week</h1><span class="sub">Good for you</span></header>
 <p class="lede">Games in your free hours, played overseas, on a streamer, or in the playoffs. Nothing is added until you tap Follow.</p>
-<div class="chips" role="group" aria-label="Sport">${[['all', 'All'], ['football', 'NFL'], ['basketball', 'NBA'], ['soccer', 'Football']].map(([k, l]) => `<button class="chip txt" data-act="f" data-f="${k}" aria-pressed="${state.f === k}">${l}</button>`).join('')}</div>`;
+<div class="chips" role="group" aria-label="Sport">${[['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']].map(([k, l]) => `<button class="chip txt" data-act="f" data-f="${k}" aria-pressed="${state.f === k}">${l}</button>`).join('')}</div>`;
   if (!list.length) return html + `<div class="banner info">Suggestions are off for every sport. Turn them on in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
   if (!e.v) return html + (e.err ? errorCard() : skel(4));
   const now = Date.now();

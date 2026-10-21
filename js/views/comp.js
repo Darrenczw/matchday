@@ -51,7 +51,7 @@ function games(ctx, path, ahead) {
 function teams(ctx, path) {
   const e = ctx.use(`teams:${path}`, () => leagueTeams(path), 12 * 3600e3);
   if (!e.v) return e.err ? errorCard() : skel(6);
-  return `<div class="card">${e.v.map((t) => `<div class="li"><a class="grow" href="${href.team(path, t.id)}" style="display:flex;align-items:center;gap:12px;min-width:0">${crest(t, 30)}<span class="grow"><span class="t">${esc(t.name)}</span><small>${esc(t.abbr)}</small></span></a>${teamFollowBtn(path, t)}</div>`).join('')}</div>`;
+  return `<div class="card">${e.v.map((t) => `<div class="li"><a class="grow" href="${href.team(path, t.id)}" style="display:flex;align-items:center;gap:12px;min-width:0">${crest(t, 30)}<span class="grow"><span class="t">${esc(t.name)}</span><small>${esc(t.abbr)}</small></span></a>${teamFollowBtn(path, t, { lite: true })}</div>`).join('')}</div>`;
 }
 
 export default function comp([sport, slug], ctx) {

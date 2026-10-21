@@ -47,7 +47,7 @@ export function gameRow(g, { why = true, tv = true } = {}) {
   bits.push(`${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
   if (tv && g.state !== 'post') {
     const m = mainMarket(g);
-    bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(m.channels[0] + (m.channels.length > 1 ? ` +${m.channels.length - 1}` : ''))}</span>`);
+    bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(m.channels[0] + (m.channels.length > 1 ? ` · ${m.channels.length - 1} more` : ''))}</span>`);
   }
   const moved = g.state === 'pre' ? movedFrom(g) : null;
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
@@ -114,10 +114,11 @@ export function goalLine(goals, now, k, label = '', cap = true) {
 }
 
 // ---------- Follow buttons. The item travels as JSON so the pick keeps its name and logo.
-export function followBtn(kind, key, item, { size = 'sm', label = 'Follow' } = {}) {
+// lite = outline, for Follow buttons repeated down a list, so green still stands out where it matters.
+export function followBtn(kind, key, item, { size = 'sm', label = 'Follow', lite = false } = {}) {
   const on = following(kind, key);
   if (on) return `<button class="btn ${size} on" data-act="unfollow" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true">${icon('check')}Following</button>`;
-  return `<button class="btn ${size} go" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false">${icon('plus')}${label}</button>`;
+  return `<button class="btn ${size} go${lite ? ' lite' : ''}" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false">${icon('plus')}${label}</button>`;
 }
 // Calendar button: its own layer, next to Follow. compact = icon only (match and league headers).
 export function calBtn(kind, key, item, { compact = false, covered = '' } = {}) {

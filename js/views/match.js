@@ -265,7 +265,7 @@ function formCard(g, d, k) {
     const rec = d.header?.competitions?.[0]?.competitors?.find((c) => c.id === x.team.id)?.record?.[0]?.summary;
     const p = pos(x.team.id);
     const sub = [p ? `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'} in the ${g.comp.name}` : '', rec ? `Record ${rec}` : ''].filter(Boolean).join(' · ');
-    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
+    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
   });
   return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now' : 'Last 5, newest right'}</span></div>${rows.join('')}</div>`;
 }

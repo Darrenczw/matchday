@@ -52,12 +52,15 @@ function hydrate(t, sport) {
 }
 setTeamHook((g) => { hydrate(g.home, g.sport); hydrate(g.away, g.sport); });
 
+// ESPN's football codes that read wrong or collide (Bayern as MUN, United as MAN): use the codes fans use.
+const CODES = { 132: 'FCB', 360: 'MUN', 382: 'MCI' };
+
 function teamFrom(x, sport) {
   const T = x.team || x;
   const logos = T.logos || [];
   const k = ids[`${sport}:${T.id}`] || {};
   const t = {
-    id: String(T.id), abbr: T.abbreviation || k.abbr || '', name: T.displayName || T.name || k.name || '',
+    id: String(T.id), abbr: (sport === 'soccer' && CODES[T.id]) || T.abbreviation || k.abbr || '', name: T.displayName || T.name || k.name || '',
     short: T.shortDisplayName || (sport !== 'soccer' && T.name) || T.displayName || k.short || '', nickname: T.nickname || '',
     color: hex(T.color) || k.color || null, alt: hex(T.alternateColor) || k.alt || null,
     logo: T.logo || logos.find((l) => l.rel?.includes('default'))?.href || logos[0]?.href || k.logo || '',

@@ -13,12 +13,12 @@ const compPick = (c) => ({ path: c.path, name: c.name, logo: c.logo });
 function compRow(c, sub) {
   return `<div class="li"><a class="grow" href="${href.comp(c.path)}" style="display:flex;align-items:center;gap:12px;min-width:0">
 ${compImg(c.logo, 32, c.name)}
-<span class="grow"><span class="t">${esc(c.name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span></a>${followBtn('comp', c.path, compPick(c))}</div>`;
+<span class="grow"><span class="t">${esc(c.name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span></a>${followBtn('comp', c.path, compPick(c), { lite: true })}</div>`;
 }
 function teamRow(path, t, sub) {
   const sw = t.color ? `<span class="sw" aria-hidden="true"><i style="background:${t.color}"></i><i style="background:${t.alt || t.color}"></i></span>` : '';
   return `<div class="li"><a class="grow" href="${href.team(path, t.id)}" style="display:flex;align-items:center;gap:12px;min-width:0">${crest(t, 32)}
-<span class="grow"><span class="t">${esc(t.name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${sw}</a>${teamFollowBtn(path, t)}</div>`;
+<span class="grow"><span class="t">${esc(t.name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${sw}</a>${teamFollowBtn(path, t, { lite: true })}</div>`;
 }
 
 function chips() {

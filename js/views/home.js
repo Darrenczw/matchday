@@ -21,7 +21,7 @@ function empty() {
 <section class="empty"><h2>Pick what you follow</h2><p>Matchday shows only your games: clubs, national teams, whole leagues or single games. Nothing is picked for you.</p>
 <a class="btn go big" href="#/follow">${icon('search')}Find clubs and leagues</a></section>
 <div class="sect"><h2 class="cap">Or start with a whole league</h2></div>
-<div class="card">${QUICK.map((q) => `<div class="li">${compImg(q.item.logo, 32, q.item.name)}<span class="grow"><span class="t">${esc(q.item.name)}</span><small>${esc(q.sub)}</small></span><button class="btn sm go" data-act="follow" data-kind="${q.kind}" data-item="${esc(JSON.stringify(q.item))}">${icon('plus')}Follow</button></div>`).join('')}</div>`;
+<div class="card">${QUICK.map((q) => `<div class="li">${compImg(q.item.logo, 32, q.item.name)}<span class="grow"><span class="t">${esc(q.item.name)}</span><small>${esc(q.sub)}</small></span><button class="btn sm go lite" data-act="follow" data-kind="${q.kind}" data-item="${esc(JSON.stringify(q.item))}">${icon('plus')}Follow</button></div>`).join('')}</div>`;
 }
 
 // Calendar lag watch and failures (PRD 7.9): amber when a change hasn't reached the iPhone yet,
@@ -66,12 +66,13 @@ export default function home(params, ctx) {
   let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>` + calBanners(ctx);
 
   const games = all?.filter(keep);
+  const liveIn = new Set((all || []).filter(isLive).map((g) => g.sport));
   const ahead = (games || []).filter((g) => g.state === 'pre' || g.postponed);
   // Dates, then the sport filter, in one bar that stays at the top.
   const days = keyRange(t, addDays(t, 6));
   const has = new Set(ahead.map((g) => sg(g.date).key));
   html += `<div class="filterbar"><div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
-    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>`;
+    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}</div></div>`;
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
   if (e.err && stale) html += `<div class="banner amber">${icon('wifi')}<span>Can’t reach the score feed. Showing games from ${ago(stale)}.</span></div>`;
@@ -85,10 +86,11 @@ export default function home(params, ctx) {
     return html + `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
   }
   // Results first, newest at the top. Then anything live. Then what's coming, soonest at the top.
+  // While a game is on, Live now comes first so a quick score check never needs a scroll.
   const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
-  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
+  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
   // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
   const wk = f === 'football' ? [...new Set(ahead.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
   const wkTxt = wk.length ? `<span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span>` : '';

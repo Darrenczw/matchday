@@ -24,5 +24,5 @@ export function market(g, m) {
 }
 export const allMarkets = (g) => settings.markets.map((m) => market(g, m));
 export const mainMarket = (g) => market(g, settings.markets[0]);
-export const chans = (x, sep = ' or ') => (x.channels.length > 2 ? `${x.channels.slice(0, 2).join(', ')} +${x.channels.length - 2}` : x.channels.join(sep));
+export const chans = (x, sep = ' or ') => (x.channels.length > 2 ? `${x.channels.slice(0, 2).join(', ')} and ${x.channels.length - 2} more` : x.channels.join(sep));
 export const KIND = { exact: 'Exact', likely: 'Likely', none: 'Not listed' };
