@@ -57,6 +57,7 @@ export default function home(params, ctx) {
   const followed = new Set([...picks.comps, ...picks.teams, ...picks.games].map((x) => sportOf(x.path)));
   const f = SPORTS.some(([k]) => k === settings.homeSport) ? settings.homeSport : 'all';
   const keep = (g) => f === 'all' || g.sport === f;
+  if (f !== 'all') ctx.sport = f;
 
   const t = todayKey();
   const sub = DEMO ? 'Sample picks · SGT' : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
@@ -86,7 +87,10 @@ export default function home(params, ctx) {
   if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  if (ahead.length) html += `<div class="sect" id="coming"><h2 class="cap">Coming up</h2></div>`;
+  // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
+  const wk = f === 'football' ? [...new Set(ahead.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
+  const wkTxt = wk.length ? `<span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span>` : '';
+  if (ahead.length) html += `<div class="sect" id="coming"><h2 class="cap">Coming up</h2>${wkTxt}</div>`;
   let day = '';
   for (const g of ahead) {
     const k = sg(g.date).key;

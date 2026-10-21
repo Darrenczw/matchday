@@ -30,6 +30,7 @@ function card(g) {
 }
 
 export default function week(params, ctx) {
+  if (state.f !== 'all') ctx.sport = state.f;
   const t = todayKey();
   const list = paths();
   const e = ctx.use(`week:${list.join(',')}:${t}`, async () => {

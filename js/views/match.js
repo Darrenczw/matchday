@@ -4,7 +4,7 @@ import { following, picks } from '../store.js';
 import { summary, norm, liveLabel, net, isMine } from '../espn.js';
 import { kitsFor, clashNote, crest, edge } from '../identity.js';
 import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
-import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href } from '../ui.js';
+import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
 
@@ -23,7 +23,7 @@ function header(g, k, d) {
   const sc = scorers(g, d);
   const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<b class="sc">${esc(x.team.score ?? '0')}</b><span><span class="tn">${esc(x.team.short)}</span>${ha(g, x)}${sc[x.team.id] ? `<span class="scorers" style="display:block">${esc(sc[x.team.id])}</span>` : ''}</span></div>`;
   const pill = g.state === 'in' ? `<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))} · Live</span></div>` : `<div class="state"><span>${esc(g.sport === 'soccer' ? 'Full time' : 'Final')}${g.detail && !/^(FT|Final)$/i.test(g.detail) ? ` · ${esc(g.detail)}` : ''} · ${s.wd} ${s.d} ${s.mo}</span></div>`;
-  return `<section class="mh">${side(k.left)}${side(k.right, true)}${pill}</section>`;
+  return `<section class="mh sp-${g.sport}">${side(k.left)}${side(k.right, true)}${pill}</section>`;
 }
 function scorers(g, d) {
   const out = {};
@@ -70,7 +70,11 @@ function moments(g, d, k, newestFirst) {
       list.push({ min: e.clock?.displayValue || '', team: e.team?.id, who, sub, kind: isGoal(e) ? 'goal' : /red/i.test(e.type.text) ? 'red' : isCard(e) ? 'yellow' : 'var' });
     }
   }
-  if (!list.length && !subs.length) return '';
+  // Goal timeline (R4) at the top of the card, live and at full time.
+  const goals = (d.keyEvents || []).filter(isGoal).map((e) => ({ m: parseInt(e.clock?.displayValue, 10) || 0, t: String(e.team?.id || ''), who: e.participants?.[0]?.athlete?.shortName || '', og: /own goal/i.test(e.type?.text || '') }));
+  const now = g.state === 'post' ? Math.max(90, ...goals.map((x) => x.m)) : /HALFTIME/.test(g.statusName) ? 45 : parseInt(g.clock, 10) || 0;
+  const line = `<div class="tlwrap">${goalLine(goals, now, k, '', false)}</div>`;
+  if (!list.length && !subs.length) return `<div class="card"><div class="h">Key moments</div>${line}</div>`;
   if (newestFirst) list.reverse();
   const leftId = k.left.team.id;
   const badge = (m) => {
@@ -91,7 +95,7 @@ function moments(g, d, k, newestFirst) {
   const open = openSubs.has(g.id);
   const subRows = open ? subs.map((x) => `<div class="ev"><span class="min">${esc(x.min)}</span><span class="who"><span class="tchip" style="background:${(x.team === leftId ? k.left : k.right).bg};color:${(x.team === leftId ? k.left : k.right).ink};${edge((x.team === leftId ? k.left : k.right).bg)}">${esc((x.team === leftId ? k.left : k.right).team.abbr)}</span><span><small style="color:var(--ink);font-size:13px">${esc(x.txt)}</small></span></span><span></span></div>`).join('') : '';
   const subBtn = subs.length ? `<button class="ev subs" data-act="subs" data-id="${g.id}" aria-expanded="${open}"><span>${subs.length} substitution${subs.length > 1 ? 's' : ''}</span>${icon(open ? 'up' : 'down', 'chev')}</button>` : '';
-  return `<div class="card"><div class="h">Key moments<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${rows}${subBtn}${subRows}</div>`;
+  return `<div class="card"><div class="h">Key moments<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${line}${rows}${subBtn}${subRows}</div>`;
 }
 
 function quarters(g, d, k) {
@@ -282,6 +286,7 @@ function statusLines(g, ctx) {
 // ---------- Page
 export default function match([sport, slug, id], ctx) {
   const path = `${sport}/${slug}`;
+  ctx.sport = sport;
   const e = ctx.use(`sum:${id}`, () => summary(path, id, ctx.wasLive), ctx.wasLive ? 8e3 : 60e3);
   const d = e.v;
   const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : null;

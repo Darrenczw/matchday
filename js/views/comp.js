@@ -56,6 +56,7 @@ function teams(ctx, path) {
 
 export default function comp([sport, slug], ctx) {
   const path = `${sport}/${slug}`;
+  ctx.sport = sport;
   if (sport === 'soccer') ctx.use('comps', compList, 24 * 3600e3); // names and logos for competitions not seen yet
   const c = compInfo(path);
   const bg = brand(path), ink = inkOn(bg, '#ffffff');

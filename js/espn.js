@@ -64,7 +64,11 @@ function teamFrom(x, sport) {
     logoDark: logos.find((l) => l.rel?.includes('dark'))?.href || k.logoDark || '',
     home: x.homeAway === 'home', score: typeof x.score === 'object' ? x.score?.displayValue : x.score, winner: !!x.winner,
     national: !!T.isNational,
+    lines: (x.linescores || []).map((l) => String(l.displayValue ?? l.value ?? '')),
   };
+  // NBA: the team's top scorer so far ("J. Duren 22").
+  const pts = sport === 'basketball' && x.leaders?.find((l) => l.name === 'points')?.leaders?.[0];
+  if (pts) t.top = { who: pts.athlete?.shortName || pts.athlete?.displayName || '', v: pts.displayValue };
   if (hex(T.color)) remember(sport, t); else if (!t.color && T.id) fill(sport, t.id);
   return t;
 }
@@ -110,6 +114,11 @@ export function norm(e, path, src = 'sb') {
     home: teamFrom(H, sport), away: teamFrom(A, sport), usTV: [...tv],
     postseason: sport !== 'soccer' && (e.season?.type === 3 || e.seasonType?.type === 3 || String(e.seasonType?.id) === '3'),
     note: c.notes?.[0]?.headline || '',
+    week: sport === 'football' && (e.season?.type ?? e.seasonType?.type) === 2 ? e.week?.number || null : null,
+    // NFL, live only: down and distance, and who has the ball.
+    sit: sport === 'football' && ty.state === 'in' && c.situation?.possession ? { dd: c.situation.shortDownDistanceText || c.situation.downDistanceText || '', poss: String(c.situation.possession), at: c.situation.possessionText || '' } : null,
+    // Football: goals with their minute, for the goal timeline.
+    goals: sport === 'soccer' ? (c.details || []).filter((x) => x.scoringPlay && !x.shootout).map((x) => ({ m: parseInt(x.clock?.displayValue, 10) || Math.ceil((x.clock?.value || 0) / 60), t: String(x.team?.id || ''), who: x.athletesInvolved?.[0]?.shortName || '', og: !!x.ownGoal })) : [],
   };
 }
 

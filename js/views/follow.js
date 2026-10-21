@@ -78,6 +78,7 @@ function usSport(ctx, key) {
 }
 
 export default function followView(params, ctx) {
+  ctx.sport = { soccer: 'soccer', nfl: 'football', nba: 'basketball' }[state.sport];
   const comps = ctx.use('comps', compList, 24 * 3600e3);
   let html = `<header class="top"><h1>Follow</h1><span class="sub">${comps.v ? `${comps.v.length} competitions` : ''}</span></header>
 <label class="search">${icon('search')}<span class="sr">Search</span><input type="search" placeholder="Search clubs, leagues, countries" value="${esc(state.q)}" data-input="q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">${state.q ? `<button type="button" data-act="clear" aria-label="Clear search">${icon('x')}</button>` : ''}</label>`;

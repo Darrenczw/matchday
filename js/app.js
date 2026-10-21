@@ -4,6 +4,7 @@ import { addCal, removeCal } from './cal.js';
 import { rightsReady } from './tv.js';
 import { compInfo } from './espn.js';
 import { toast } from './ui.js';
+import { ground } from './ground.js';
 import home from './views/home.js';
 import followView from './views/follow.js';
 import comp from './views/comp.js';
@@ -52,6 +53,7 @@ export function draw() { cancelAnimationFrame(raf); raf = requestAnimationFrame(
 function paint() {
   if (!route) return;
   ctx.live = false;
+  ctx.sport = '';
   let html;
   try { html = route.view(route.params, ctx); } catch (err) { console.error(err); html = `<div class="banner red">Something broke on this screen: ${err.message}</div>`; }
   if (html !== lastHtml) {
@@ -60,6 +62,7 @@ function paint() {
     t.innerHTML = html;
     morphChildren(main, t.content);
   }
+  ground(ctx.sport);
   settleScroll();
 }
 // Where a screen opens: back where you left it, or at the top.
