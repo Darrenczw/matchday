@@ -1,0 +1,11 @@
+# Planning and local files: never in the public repo
+PRODUCT.md
+PRD.md
+DESIGN.md
+TECH-DESIGN.md
+CLAUDE.md
+.impeccable/
+spike/
+*.local.*
+.DS_Store
+.claude/

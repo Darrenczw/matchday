@@ -1,0 +1,89 @@
+{
+  "checked": "2026-10-21",
+  "note": "Who holds live rights per competition and market. Shown in the app as 'Likely'. Every entry has a source.",
+  "entries": {
+    "eng.1": {
+      "uk": {"channels": ["Sky Sports", "TNT Sports"], "note": "Saturday 15:00 UK games not shown live (3pm blackout)", "seasons": "2025-26 to 2028-29", "source": "https://www.insideworldfootball.com/2023/12/05/premier-league-agrees-record-6-7bn-uk-broadcast-deals-sky-tnt-bbc/"},
+      "us": {"channels": ["NBC", "Peacock"], "note": "All 380 matches", "seasons": "2022-23 to 2027-28", "source": "https://www.news4jax.com/sports/2021/11/18/ap-source-nbc-keeps-premier-league-deal-27b-for-6-years/"},
+      "ca": {"channels": ["Fubo"], "seasons": "2025-26 to 2027-28", "source": "https://www.premierleague.com/en/news/3703577"},
+      "sg": {"channels": ["StarHub"], "seasons": "2025-26 to 2027-28", "source": "https://www.premierleague.com/en/news/3703577"},
+      "my": {"channels": ["Astro"], "note": "All 380 matches", "seasons": "2025-26 to 2027-28", "source": "https://www.sportcal.com/news/astro-renews-with-english-premier-league-fa-cup-through-2027-28/"},
+      "hk": {"channels": ["Now TV"], "note": "All 380 matches", "seasons": "Renewed July 2026, through 2030-31", "source": "https://www.hkt.com/en/about-hkt/press-release/now-tv-secures-premier-league-and-emirates-fa-cup-exclusive-broadcast-rights-until-2030-31-bringing-leading-english-football-competitions-to-hong-kong-fans-for-the-next-five-consecutive-seasons/"},
+      "kr": {"channels": ["Coupang Play"], "seasons": "2025-26 to 2027-28", "source": "https://www.premierleague.com/en/news/3703577"},
+      "mena": {"channels": ["beIN Sports"], "note": "All 380 matches, also on TOD", "seasons": "2025-26 to 2027-28", "source": "https://www.beinsports.com/en-mena/football/premier-league/articles-video/bein-media-group-extends-exclusive-broadcast-rights-of-the-premier-league-across-mena-until-2028-2025-06-17"}
+    },
+    "uefa.champions": {
+      "uk": {"channels": ["TNT Sports", "Prime Video"], "note": "Prime Video has the first-pick Tuesday game. From 2027-28 Paramount takes most games", "seasons": "2024-25 to 2026-27", "source": "https://www.uefa.com/uefachampionsleague/news/0253-0d82037aaedd-f371c464f919-1000--where-to-watch-the-uefa-champions-league-tv-channels-live-streams/", "extra_sources": ["https://www.televisual.com/news/sky-signs-four-year-deal-to-add-uefa-matches/"]},
+      "us": {"channels": ["Paramount+", "TUDN", "DAZN"], "seasons": "2026-27 (UEFA broadcaster list)", "source": "https://www.uefa.com/uefachampionsleague/news/0253-0d82037aaedd-f371c464f919-1000--where-to-watch-the-uefa-champions-league-tv-channels-live-streams/"},
+      "ca": {"channels": ["DAZN", "OneSoccer"], "note": "OneSoccer has selected games. Paramount+ takes over from 2027-28", "seasons": "2024-25 to 2026-27", "source": "https://www.uefa.com/uefachampionsleague/news/0253-0d82037aaedd-f371c464f919-1000--where-to-watch-the-uefa-champions-league-tv-channels-live-streams/"},
+      "sg": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "my": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "hk": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "kr": {"channels": ["SPOTV"], "note": "Coupang reported to take over from 2027-28", "seasons": "2026-27 (UEFA broadcaster list)", "source": "https://www.uefa.com/uefachampionsleague/news/0253-0d82037aaedd-f371c464f919-1000--where-to-watch-the-uefa-champions-league-tv-channels-live-streams/"},
+      "mena": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"}
+    },
+    "uefa.europa": {
+      "uk": {"channels": ["TNT Sports"], "note": "Sky Sports takes over from 2027-28", "seasons": "2024-25 to 2026-27", "source": "https://www.uefa.com/uefaeuropaleague/news/028d-1ae6d62165d6-69b17b354deb-1000--where-to-watch-the-europa-league-tv-broadcast-partners-li/"},
+      "us": {"channels": ["Paramount+", "TUDN", "DAZN"], "seasons": "2026-27 (UEFA broadcaster list)", "source": "https://www.uefa.com/uefaeuropaleague/news/028d-1ae6d62165d6-69b17b354deb-1000--where-to-watch-the-europa-league-tv-broadcast-partners-li/"},
+      "ca": {"channels": ["DAZN", "OneSoccer"], "note": "OneSoccer has selected games", "seasons": "2024-25 to 2026-27", "source": "https://www.uefa.com/uefaeuropaleague/news/028d-1ae6d62165d6-69b17b354deb-1000--where-to-watch-the-europa-league-tv-broadcast-partners-li/"},
+      "sg": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "my": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "hk": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"},
+      "kr": {"channels": ["SPOTV"], "seasons": "2026-27 (UEFA broadcaster list)", "source": "https://www.uefa.com/uefaeuropaleague/news/028d-1ae6d62165d6-69b17b354deb-1000--where-to-watch-the-europa-league-tv-broadcast-partners-li/"},
+      "mena": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2026-27", "source": "https://www.beinsports.com/en-mena/football/articles-video/bein-media-group-extends-rights-deal-in-mena-and-asia-to-broadcast-uefa-club-competitions-until-2027-2025-04-28"}
+    },
+    "esp.1": {
+      "uk": {"channels": ["Premier Sports", "Disney+"], "note": "Disney+ has the Saturday prime-time game; Premier Sports shows the rest", "seasons": "2025-26 to 2027-28", "source": "https://www.cordbusters.co.uk/disney-plus-laliga-deal-confirmed/"},
+      "us": {"channels": ["ESPN+", "ESPN", "ESPN Deportes", "ABC"], "note": "All 380 matches on ESPN+", "seasons": "2021-22 to 2028-29", "source": "https://www.laliga.com/en-NL/news/laliga-returns-to-espn-on-august-15-for-the-2026-27-season-after-leading-all-leagues-with-24-players-represented-in-the-world-cup-final"},
+      "ca": {"channels": ["TSN", "RDS"], "seasons": "2021-22 to 2028-29", "source": "https://www.laliga.com/en-GB/news/espn-and-laliga-reach-historic-rights-agreement-bringing-top-rated-soccer-league-to-millions-more-fans-across-the-us"},
+      "sg": {"channels": ["beIN Sports"], "seasons": "Through 2026-27", "source": "https://www.laliga.com/en-GB/news/bein-extends-exclusive-laliga-broadcast-rights-across-34-markets-in-mena-and-apac"},
+      "my": {"channels": ["beIN Sports"], "seasons": "Through 2026-27", "source": "https://www.laliga.com/en-GB/news/bein-extends-exclusive-laliga-broadcast-rights-across-34-markets-in-mena-and-apac"},
+      "kr": {"channels": ["Coupang Play"], "seasons": "2023-24 to 2027-28", "source": "https://www.eyesmag.com/posts/148346/coupangplay-laliga-broadcasting"},
+      "mena": {"channels": ["beIN Sports"], "seasons": "Through 2027-28", "source": "https://www.laliga.com/en-GB/news/bein-extends-exclusive-laliga-broadcast-rights-across-34-markets-in-mena-and-apac"}
+    },
+    "ita.1": {
+      "uk": {"channels": ["DAZN", "TNT Sports", "BBC"], "note": "DAZN shows most games; BBC one a round (BBC Alba / iPlayer)", "seasons": "2026-27", "source": "https://www.sportcal.com/news/dazn-extends-with-serie-a-in-uk-and-ireland-deals-with-livemode-tv/"},
+      "us": {"channels": ["Paramount+"], "note": "Every match", "seasons": "Extended to end of 2026-27", "source": "https://cordcuttersnews.com/paramount-locks-in-italys-top-soccer-league-with-serie-a-rights-extension/"},
+      "hk": {"channels": ["beIN Sports"], "seasons": "2025-26 and 2026-27", "source": "https://www.beinsports.com/en-asia/football/serie-a/articles/serie-a-championship-returns-to-bein-sports-in-hong-kong"},
+      "mena": {"channels": ["STARZPLAY"], "note": "Not on beIN", "seasons": "2025-26 to 2027-28", "source": "https://www.sportcal.com/news/starzplay-retains-serie-a-rights-exclusively-in-mena-until-2028/"}
+    },
+    "ger.1": {
+      "uk": {"channels": ["Sky Sports", "Prime Video", "BBC iPlayer"], "note": "Sky: Saturday 17:30 game. Prime Video: Sunday games. BBC: Friday games free", "seasons": "Multi-year from 2025-26", "source": "https://www.bundesliga.com/en/bundesliga/news/bundesliga-international-unveils-multi-layered-strategy-in-uk-and-ireland-33589"},
+      "us": {"channels": ["USA Network", "Fandango", "Telemundo", "Universo", "Peacock"], "note": "New this season, replacing ESPN. Spanish on Telemundo/Universo and Peacock", "seasons": "Multi-year from 2026-27", "source": "https://www.bundesliga.com/en/bundesliga/news/bundesliga-broadens-broadcast-access-to-fans-in-us-with-new-deals-versants-usa-sports-and-nbcuniversals-telemundo-38268"},
+      "ca": {"channels": ["DAZN"], "note": "Every match", "seasons": "2023-24 to 2027-28", "source": "https://www.sportcal.com/newsletters/dazn-canada-inks-11th-hour-bundesliga-rights-before-ahead-of-season-opener"},
+      "mena": {"channels": ["MBC Action", "Shahid"], "note": "All games on Shahid; 3 a week free on MBC Action. Not on beIN", "seasons": "Three seasons from 2025-26", "source": "https://aib.org.uk/bundesliga-international-lands-historic-three-year-deal-with-mbc-group-for-the-mena-region/"}
+    },
+    "fra.1": {
+      "uk": {"channels": ["Ligue 1+"], "note": "The league's own streaming service", "seasons": "2026-27", "source": "https://www.advanced-television.com/?p=291389"},
+      "us": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2028-29", "source": "https://www.sportcal.com/media/bein-rides-to-ligue-1-rescue-again-with-late-deal-across-27-markets/"},
+      "ca": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2028-29", "source": "https://www.sportcal.com/media/bein-rides-to-ligue-1-rescue-again-with-late-deal-across-27-markets/"},
+      "mena": {"channels": ["beIN Sports"], "seasons": "2024-25 to 2028-29", "source": "https://www.sportcal.com/media/bein-rides-to-ligue-1-rescue-again-with-late-deal-across-27-markets/"}
+    },
+    "eng.fa": {
+      "uk": {"channels": ["TNT Sports", "BBC"], "note": "TNT shows every game from round 3; BBC 14 a season incl. the final", "seasons": "2025-26 to 2028-29", "source": "https://www.sportcal.com/media/bbc-confirms-deal-with-tnt-to-retain-fa-cup-rights-through-2028-29/"},
+      "us": {"channels": ["ESPN+"], "seasons": "2024-25 to 2027-28", "source": "http://espnpressroom.com/press-release/espn-the-english-fa-agree-to-four-year-extension-of-the-emirates-fa-cup-media-rights-in-the-u-s/"},
+      "my": {"channels": ["Astro"], "seasons": "2025-26 to 2027-28", "source": "https://www.sportcal.com/news/astro-renews-with-english-premier-league-fa-cup-through-2027-28/"},
+      "hk": {"channels": ["Now TV"], "note": "Selected matches", "seasons": "Renewed July 2026, through 2030-31", "source": "https://www.hkt.com/en/about-hkt/press-release/now-tv-secures-premier-league-and-emirates-fa-cup-exclusive-broadcast-rights-until-2030-31-bringing-leading-english-football-competitions-to-hong-kong-fans-for-the-next-five-consecutive-seasons/"}
+    },
+    "eng.league_cup": {
+      "uk": {"channels": ["Sky Sports"], "note": "All matches; many on Sky Sports+", "seasons": "2024-25 to 2028-29", "source": "https://www.skysports.com/football/news/11095/12873679/sky-sports-agrees-new-five-year-efl-deal-over-1000-matches-per-season"},
+      "us": {"channels": ["Paramount+", "CBS Sports Network"], "seasons": "2024-25 to 2027-28", "source": "https://www.sportsvideo.org/2024/07/18/cbs-sports-announces-multi-year-multi-platform-rights-agreement-with-english-football-league/"},
+      "mena": {"channels": ["beIN Sports"], "note": "Also on TOD", "seasons": "2024-25 to 2027-28", "source": "https://www.beinsports.com/en-mena/football/championship/articles/bein-media-group-extends-broadcast-rights-for-english-football-league-until-2028-across-27-countries-2024-08-19"}
+    },
+    "nfl": {
+      "uk": {"channels": ["Sky Sports", "Channel 5", "DAZN"], "note": "Channel 5 has some games free. DAZN (NFL Game Pass) streams every game", "seasons": "Sky: through the 2027 season", "source": "https://www.tsn.ca/britain-s-sky-sports-signs-new-three-year-deal-to-show-nfl-games-1.2352674", "extra_sources": ["https://ibc.org/ott-streaming/news/5-to-broadcast-nfl-games-free-to-air-in-uk-market/22233", "https://www.advanced-television.com/?p=291679"]},
+      "us": {"channels": ["CBS", "FOX", "NBC", "ESPN", "ABC", "Prime Video", "Netflix", "NFL Network"], "seasons": "2026 season", "source": "https://www.sportsvideo.org/2026/05/15/nfl-broadcast-schedule-roundup-breaking-down-cbs-espn-fox-nbc-netflix-and-prime-lineups/"},
+      "ca": {"channels": ["TSN", "CTV", "RDS"], "note": "RDS in French", "seasons": "2026 season (Bell Media deal)", "source": "https://www.tsn.ca/nfl/article/nfl-on-tsnctv-broadcast-schedule-3", "extra_sources": ["https://www.bellmedia.ca/the-lede/press/nfl-and-bell-media-announce-landmark-expansion-of-media-rights-agreement/"]},
+      "sg": {"channels": ["DAZN"], "note": "Every game via NFL Game Pass on DAZN", "seasons": "10-year DAZN deal from 2023", "source": "https://www.advanced-television.com/?p=291679"},
+      "my": {"channels": ["DAZN"], "note": "Every game via NFL Game Pass on DAZN", "seasons": "10-year DAZN deal from 2023", "source": "https://www.advanced-television.com/?p=291679"},
+      "kr": {"channels": ["Coupang Play"], "seasons": "2026 season", "source": "https://www.aboutcoupang.com/?p=7241"},
+      "mena": {"channels": ["DAZN"], "note": "Every game via NFL Game Pass on DAZN", "seasons": "10-year DAZN deal from 2023", "source": "https://www.advanced-television.com/?p=291679"}
+    },
+    "nba": {
+      "uk": {"channels": ["Sky Sports", "Prime Video"], "seasons": "11-year deal from 2025-26", "source": "https://www.hoopsfix.com/2024/07/uk-fans-benefit-in-nba-rights-deal-as-sky-sports-prime-video-secure-games/"},
+      "us": {"channels": ["ESPN", "ABC", "NBC", "Peacock", "Prime Video"], "seasons": "2025-26 to 2035-36", "source": "https://www.nba.com/news/nba-media-agreements-2024"},
+      "ca": {"channels": ["Prime Video", "TSN", "Sportsnet"], "note": "Prime Video national games new this season; Raptors games on TSN and Sportsnet", "seasons": "Prime Video from 2026-27", "source": "https://www.aboutamazon.ca/news/amazon-prime/prime-video-to-bring-nba-games-to-canadian-basketball-fans-starting-in-2026", "extra_sources": ["https://www.sportsmediawatch.com/tv-schedules/nba-tv-schedule/toronto-raptors/"]},
+      "kr": {"channels": ["Coupang Play"], "note": "Needs the Sports Pass add-on", "seasons": "Multi-year from 2025-26", "source": "https://www.dailian.co.kr/news/view/1509587/", "extra_sources": ["https://www.aboutcoupang.com/?p=7241"]}
+    }
+  }
+}

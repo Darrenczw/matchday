@@ -1,0 +1,15 @@
+{
+  "name": "Matchday",
+  "short_name": "Matchday",
+  "description": "Your NFL, football and NBA games in Singapore time, with where to watch.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e8e9ec",
+  "theme_color": "#e8e9ec",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
