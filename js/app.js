@@ -53,11 +53,21 @@ function paint() {
   ctx.live = false;
   let html;
   try { html = route.view(route.params, ctx); } catch (err) { console.error(err); html = `<div class="banner red">Something broke on this screen: ${err.message}</div>`; }
-  if (html === lastHtml) return;
-  lastHtml = html;
-  const t = document.createElement('template');
-  t.innerHTML = html;
-  morphChildren(main, t.content);
+  if (html !== lastHtml) {
+    lastHtml = html;
+    const t = document.createElement('template');
+    t.innerHTML = html;
+    morphChildren(main, t.content);
+  }
+  settleScroll();
+}
+// Where a screen opens: back where you left it, at the top, or (My games) at "now" once games have drawn.
+function settleScroll() {
+  const sc = route?.scroll;
+  if (sc == null) return;
+  if (sc === 'anchor') { if (route.view.anchor?.()) route.scroll = null; return; }
+  scrollTo(0, sc === 'top' ? 0 : sc);
+  route.scroll = null;
 }
 function morph(a, b) {
   if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b); return; }
@@ -75,10 +85,13 @@ function morphChildren(a, b) {
 }
 
 // ---------- Routing
+// The app decides where each screen opens; stop the browser restoring an old position over it.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 const scrolls = {};
 let prevHash = location.hash;
+let tabReset = false;
 function go() {
-  scrolls[prevHash] = scrollY;
+  if (route) scrolls[prevHash] = scrollY; // remember where we left the previous screen
   const h = location.hash || '#/';
   for (const [re, view, tab] of ROUTES) {
     const m = h.match(re);
@@ -87,10 +100,12 @@ function go() {
     ctx.back = stack.length > 1 ? { href: stack[stack.length - 2], label: labelFor(stack[stack.length - 2]) } : null;
     if (tab) lastTab = tab;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.tab === lastTab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    const fresh = route.view.anchor ? 'anchor' : 'top';
+    route.scroll = tabReset || scrolls[h] == null ? fresh : scrolls[h];
+    tabReset = false;
     lastHtml = '';
     main.innerHTML = '';
     paint();
-    requestAnimationFrame(() => scrollTo(0, scrolls[h] || 0));
     prevHash = h;
     return;
   }
@@ -115,6 +130,22 @@ addEventListener('hashchange', () => {
   go();
 });
 stack.push(location.hash || '#/');
+
+// ---------- Tab bar, as on iOS: a tab opens its main screen at the top; tapping the tab you're on
+// scrolls it to the top (My games: to "now" first).
+document.querySelector('.tabs').addEventListener('click', (e) => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  e.preventDefault();
+  const root = a.getAttribute('href'), cur = location.hash || '#/';
+  if (cur === root || (root === '#/' && (cur === '#' || cur === '#/'))) {
+    if (route?.view.tabTap) route.view.tabTap();
+    else scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    return;
+  }
+  tabReset = true;
+  location.hash = root;
+});
 
 // ---------- Actions (one listener for every button)
 const ACT = {

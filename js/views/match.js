@@ -68,8 +68,6 @@ function moments(g, d, k, newestFirst) {
       const sub = isGoal(e) ? (p[1] ? `Assist ${p[1].athlete?.displayName}` : /own goal/i.test(e.type.text) ? 'Own goal' : /penalty/i.test(e.type.text) ? 'Penalty' : '') : isCard(e) ? e.type.text : e.type?.text;
       list.push({ min: e.clock?.displayValue || '', team: e.team?.id, who, sub, kind: isGoal(e) ? 'goal' : /red/i.test(e.type.text) ? 'red' : isCard(e) ? 'yellow' : 'var' });
     }
-  } else if (g.sport === 'football') {
-    for (const p of d.scoringPlays || []) list.push({ min: `Q${p.period?.number} ${p.clock?.displayValue || ''}`, team: p.team?.id, who: p.type?.text || 'Score', sub: p.text, kind: 'goal', abbr: p.type?.abbreviation });
   }
   if (!list.length && !subs.length) return '';
   if (newestFirst) list.reverse();
@@ -108,33 +106,127 @@ function quarters(g, d, k) {
 <tr><td>${tchip(k.left)}</td>${cells(L)}<td>${esc(k.left.team.score ?? '')}</td></tr><tr><td>${tchip(k.right)}</td>${cells(R)}<td>${esc(k.right.team.score ?? '')}</td></tr></table></div>`;
 }
 
-const STATS = {
+// Team stats, in the order each sport's own coverage uses (NBA.com / NFL GameCenter / ESPN).
+// [stat, label, kind, sub stat, sub suffix]. kind: '%' adds a percent sign; 'ratio' = "9-17" made/attempts;
+// 'countYds' = "12-133" count and yards.
+const TEAM_STATS = {
   soccer: [['possessionPct', 'Possession', '%'], ['totalShots', 'Shots'], ['shotsOnTarget', 'On target'], ['wonCorners', 'Corners'], ['foulsCommitted', 'Fouls'], ['saves', 'Saves']],
-  football: [['totalYards', 'Total yards'], ['firstDowns', 'First downs'], ['netPassingYards', 'Passing yards'], ['rushingYards', 'Rushing yards'], ['turnovers', 'Turnovers'], ['possessionTime', 'Possession']],
-  basketball: [['fieldGoalPct', 'Field goals', '%'], ['threePointFieldGoalPct', '3-pointers', '%'], ['totalRebounds', 'Rebounds'], ['assists', 'Assists'], ['turnovers', 'Turnovers'], ['steals', 'Steals']],
+  basketball: [
+    ['fieldGoalPct', 'Field goals', '%', 'fieldGoalsMade-fieldGoalsAttempted'], ['threePointFieldGoalPct', '3-pointers', '%', 'threePointFieldGoalsMade-threePointFieldGoalsAttempted'],
+    ['freeThrowPct', 'Free throws', '%', 'freeThrowsMade-freeThrowsAttempted'], ['totalRebounds', 'Rebounds', '', 'offensiveRebounds', 'offensive'],
+    ['assists', 'Assists'], ['totalTurnovers', 'Turnovers'], ['steals', 'Steals'], ['blocks', 'Blocks'],
+    ['pointsInPaint', 'Points in the paint'], ['fastBreakPoints', 'Fast-break points'], ['turnoverPoints', 'Points off turnovers'], ['largestLead', 'Largest lead'],
+  ],
+  football: [
+    ['totalYards', 'Total yards', '', 'yardsPerPlay', 'a play'], ['netPassingYards', 'Passing yards', '', 'completionAttempts', 'comp/att'],
+    ['rushingYards', 'Rushing yards', '', 'rushingAttempts', 'carries'], ['firstDowns', 'First downs'],
+    ['thirdDownEff', '3rd down', 'ratio'], ['fourthDownEff', '4th down', 'ratio'], ['redZoneAttempts', 'Red zone TDs', 'ratio'],
+    ['turnovers', 'Turnovers'], ['totalPenaltiesYards', 'Penalties', 'countYds'], ['sacksYardsLost', 'Sacked', 'countYds'], ['possessionTime', 'Possession'],
+  ],
 };
 function stats(g, d, k) {
   const teams = d.boxscore?.teams || [];
-  const of = (x) => Object.fromEntries((teams.find((t) => t.team?.id === x.team.id)?.statistics || []).map((s) => [s.name, s.displayValue]));
+  const of = (x) => Object.fromEntries((teams.find((t) => t.team?.id === x.team.id)?.statistics || []).map((st) => [st.name, st.displayValue]));
   const a = of(k.left), b = of(k.right);
-  const rows = STATS[g.sport].filter(([n]) => a[n] != null && b[n] != null).map(([n, label, unit = '']) => {
-    const num = (v) => (String(v).includes(':') ? String(v).split(':').reduce((m, s) => m * 60 + +s, 0) : parseFloat(v) || 0);
-    const x = num(a[n]), y = num(b[n]), tot = x + y || 1;
-    const bar = (side, v) => `<i style="flex:${Math.max(v / tot, 0.02)};background:${side.bg};${edge(side.bg)}"></i>`;
-    return `<div class="stat"><div class="l"><b>${esc(a[n])}${unit}</b><span>${label}</span><b>${esc(b[n])}${unit}</b></div><div class="bars" aria-hidden="true">${bar(k.left, x)}${bar(k.right, y)}</div></div>`;
+  const num = (v) => (String(v).includes(':') ? String(v).split(':').reduce((m, x) => m * 60 + +x, 0) : parseFloat(v) || 0);
+  const rows = TEAM_STATS[g.sport].filter(([n]) => a[n] != null && b[n] != null).map(([n, label, kind = '', subN, subS = '']) => {
+    // What to show, what the bar measures, and the small line under it.
+    const view = (v, o) => {
+      const [x, y] = String(v).split('-').map(Number);
+      if (kind === 'ratio') return { big: `${x}/${y}`, bar: y ? x / y : 0, small: y ? `${Math.round((100 * x) / y)}%` : '' };
+      if (kind === 'countYds') return { big: String(x), bar: x, small: `${y} yds` };
+      return { big: `${v}${kind === '%' ? '%' : ''}`, bar: num(v), small: subN && o[subN] != null ? `${o[subN]}${subS ? ` ${subS}` : ''}` : '' };
+    };
+    const L = view(a[n], a), R = view(b[n], b), tot = kind === 'ratio' ? 1 : L.bar + R.bar || 1;
+    const share = (v) => (kind === 'ratio' ? v / ((L.bar + R.bar) || 1) : v / tot);
+    const bar = (side, v) => `<i style="flex:${Math.max(share(v), 0.02)};background:${side.bg};${edge(side.bg)}"></i>`;
+    return `<div class="stat"><div class="l"><b>${esc(L.big)}${L.small ? `<small>${esc(L.small)}</small>` : ''}</b><span>${label}</span><b>${esc(R.big)}${R.small ? `<small>${esc(R.small)}</small>` : ''}</b></div>${L.bar || R.bar ? `<div class="bars" aria-hidden="true">${bar(k.left, L.bar)}${bar(k.right, R.bar)}</div>` : ''}</div>`;
   });
-  return rows.length ? `<div class="card"><h2>Stats</h2>${rows.join('')}</div>` : '';
+  return rows.length ? `<div class="card"><h2>${g.sport === 'soccer' ? 'Stats' : 'Team stats'}</h2>${rows.join('')}</div>` : '';
 }
 
-// NBA and NFL: each team's top players (points, rebounds, assists / passing, rushing, receiving).
-function leaders(g, d, k) {
+// Game leaders, side by side per category, as NBA.com and NFL.com show them.
+function gameLeaders(g, d, k) {
   if (g.sport === 'soccer' || !d.leaders?.length) return '';
-  const col = (x) => {
-    const L = d.leaders.find((l) => l.team?.id === x.team.id);
-    const rows = (L?.leaders || []).slice(0, 3).map((c) => { const p = c.leaders?.[0]; return p ? `<p><i style="width:auto;min-width:20px">${esc(p.displayValue?.split(',')[0] || '')}</i>${esc(p.athlete?.shortName || p.athlete?.displayName || '')} <span style="color:var(--mute)">${esc(c.displayName?.toLowerCase() || '')}</span></p>` : ''; }).join('');
-    return `<div><h3>${crest(x.team, 22)}${tchip(x)}</h3>${rows}</div>`;
+  const of = (x) => d.leaders.find((l) => l.team?.id === x.team.id)?.leaders || [];
+  const L = of(k.left), R = of(k.right);
+  const cats = L.map((c) => c.name).filter((n) => R.some((c) => c.name === n)).slice(0, 3);
+  if (!cats.length) return '';
+  // NBA gives "32"; NFL gives "19/33, 225 YDS, 3 TD": show the yards big and the rest small.
+  const split = (v = '') => { const m = v.match(/(\d+) YDS/); return m ? { big: m[1], small: v.replace(/,?\s*\d+ YDS/, '').replace(/^,\s*/, '') } : { big: v, small: '' }; };
+  const side = (list, n, r) => {
+    const p = list.find((c) => c.name === n)?.leaders?.[0];
+    if (!p) return '<div></div>';
+    const v = split(p.displayValue);
+    const who = `<span class="pn">${esc(p.athlete?.shortName || p.athlete?.displayName || '')}${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
+    return `<div class="gl-p${r ? ' r' : ''}">${r ? who + `<b>${esc(v.big)}</b>` : `<b>${esc(v.big)}</b>` + who}</div>`;
   };
-  return `<div class="card"><h2>Top players</h2><div class="xi">${col(k.left)}${col(k.right)}</div></div>`;
+  const label = (n) => L.find((c) => c.name === n)?.displayName || n;
+  return `<div class="card"><div class="h">Game leaders<span>${tchip(k.left)} ${tchip(k.right)}</span></div>${cats.map((n) => `<div class="gl">${side(L, n)}<span class="cat">${esc(label(n).replace(' Yards', ''))}</span>${side(R, n, true)}</div>`).join('')}</div>`;
+}
+
+// One team at a time, like the team toggle on a box score.
+const boxTeam = new Map();
+function teamSwitch(g, k) {
+  const cur = boxTeam.get(g.id) || k.left.team.id;
+  return `<div class="seg" role="group" aria-label="Team" style="margin:4px 14px 10px">${[k.left, k.right].map((x) => `<button data-act="boxteam" data-g="${g.id}" data-t="${x.team.id}" aria-pressed="${cur === x.team.id}">${tchip(x)} ${esc(x.team.short)}</button>`).join('')}</div>`;
+}
+function table(cols, rows, totals) {
+  const th = `<tr><th>Player</th>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
+  const tr = rows.map((r) => (r.section ? `<tr class="sec"><td colspan="${cols.length + 1}">${esc(r.section)}</td></tr>`
+    : `<tr><td><span class="pn">${esc(r.name)}</span>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</td>${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)).join('');
+  const tt = totals ? `<tr class="tot"><td>Team</td>${totals.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>` : '';
+  return `<div class="boxwrap"><table class="box">${th}${tr}${tt}</table></div>`;
+}
+const pick = (labels, want, row) => want.map((w) => row[labels.indexOf(w)] ?? '');
+
+// NBA box score: starters, then bench, then who didn't play.
+function boxNBA(g, d, k) {
+  const id = boxTeam.get(g.id) || k.left.team.id;
+  const s = d.boxscore?.players?.find((p) => p.team?.id === id)?.statistics?.[0];
+  if (!s?.athletes?.length) return '';
+  const cols = ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'FT', 'STL', 'BLK', 'TO', '+/-'];
+  const played = s.athletes.filter((a) => !a.didNotPlay && a.stats?.length);
+  const row = (a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, sub: a.athlete?.position?.abbreviation, cells: pick(s.labels, cols, a.stats) });
+  const rows = [{ section: 'Starters' }, ...played.filter((a) => a.starter).map(row), { section: 'Bench' }, ...played.filter((a) => !a.starter).map(row)];
+  const dnp = s.athletes.filter((a) => a.didNotPlay).map((a) => a.athlete?.shortName).filter(Boolean);
+  return `<div class="card"><div class="h">Box score<span>Swipe for more</span></div>${teamSwitch(g, k)}${table(cols, rows, pick(s.labels, cols, s.totals || []))}${dnp.length ? `<p class="note">Didn’t play: ${esc(dnp.join(', '))}</p>` : ''}</div>`;
+}
+
+// NFL player stats by unit, as NFL GameCenter groups them.
+const NFL_UNITS = [
+  ['passing', 'Passing', ['C/ATT', 'YDS', 'TD', 'INT', 'RTG']], ['rushing', 'Rushing', ['CAR', 'YDS', 'AVG', 'TD', 'LONG']],
+  ['receiving', 'Receiving', ['REC', 'YDS', 'TD', 'TGTS', 'LONG']], ['defensive', 'Defence', ['TOT', 'SACKS', 'TFL', 'PD'], 6],
+  ['interceptions', 'Interceptions', ['INT', 'YDS', 'TD']], ['kicking', 'Kicking', ['FG', 'XP', 'PTS', 'LONG']],
+];
+function playersNFL(g, d, k) {
+  const id = boxTeam.get(g.id) || k.left.team.id;
+  const groups = d.boxscore?.players?.find((p) => p.team?.id === id)?.statistics || [];
+  if (!groups.length) return '';
+  const parts = NFL_UNITS.map(([key, title, cols, max]) => {
+    const s = groups.find((x) => x.name === key);
+    if (!s?.athletes?.length) return '';
+    const rows = s.athletes.slice(0, max || 99).map((a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, cells: pick(s.labels, cols, a.stats) }));
+    return `<h3 class="unit">${title}</h3>${table(cols, rows)}`;
+  }).join('');
+  return `<div class="card"><h2>Player stats</h2>${teamSwitch(g, k)}${parts}</div>`;
+}
+
+// NFL scoring summary: by quarter, with the running score (away first, like the header).
+function scoringNFL(g, d, k, newestFirst) {
+  const plays = [...(d.scoringPlays || [])];
+  if (!plays.length) return '';
+  if (newestFirst) plays.reverse();
+  const awayLeft = k.left.team.id === g.away.id;
+  let html = '', q = null;
+  for (const p of plays) {
+    const n = p.period?.number;
+    if (n !== q) { q = n; html += `<div class="sec-h">${n > 4 ? 'Overtime' : ['1st', '2nd', '3rd', '4th'][n - 1] + ' quarter'}</div>`; }
+    const side = p.team?.id === k.left.team.id ? k.left : k.right;
+    const score = awayLeft ? `${p.awayScore}–${p.homeScore}` : `${p.homeScore}–${p.awayScore}`;
+    html += `<div class="sp"><span class="goal" style="background:${side.bg};color:${side.ink};${edge(side.bg)}">${esc(p.type?.abbreviation || 'SC')}</span><span class="txt"><b>${esc(side.team.abbr)} · ${esc(p.type?.text || '')}</b><small>${esc(p.text || '')}</small></span><span class="sc"><b>${esc(score)}</b><small>${esc(p.clock?.displayValue || '')}</small></span></div>`;
+  }
+  return `<div class="card"><div class="h">Scoring summary<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${html}</div>`;
 }
 
 function lineups(g, d, k) {
@@ -197,16 +289,22 @@ export default function match([sport, slug, id], ctx) {
   ctx.wasLive = ctx.live;
   const k = kitsFor(g);
   html += header(g, k, d);
+  // Football: key moments, stats, line-ups. NBA: quarters, leaders, box score, team stats.
+  // NFL: quarters, scoring summary, leaders, team stats, player stats by unit.
+  const us = (live) => (g.sport === 'basketball'
+    ? quarters(g, d, k) + gameLeaders(g, d, k) + boxNBA(g, d, k) + stats(g, d, k)
+    : quarters(g, d, k) + scoringNFL(g, d, k, live) + gameLeaders(g, d, k) + stats(g, d, k) + playersNFL(g, d, k));
   if (g.state === 'pre') {
     html += statusLines(g) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k) + lineups(g, d, k);
   } else if (g.state === 'in') {
-    html += tvMain(g) + moments(g, d, k, true) + quarters(g, d, k) + stats(g, d, k) + leaders(g, d, k) + lineups(g, d, k);
+    html += tvMain(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
   } else {
-    html += moments(g, d, k, false) + quarters(g, d, k) + stats(g, d, k) + formCard(g, d, k) + leaders(g, d, k) + lineups(g, d, k) + theGame(g, d, k);
+    html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
   return html;
 }
 match.actions = {
   subs(d, el, e, ctx) { openSubs.has(d.id) ? openSubs.delete(d.id) : openSubs.add(d.id); ctx.redraw(); },
+  boxteam(d, el, e, ctx) { boxTeam.set(d.g, d.t); ctx.redraw(); },
 };

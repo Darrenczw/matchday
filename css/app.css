@@ -60,6 +60,10 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .nav .spacer { width: 88px; }
 .lede { padding: 0 18px 12px; color: var(--mute); font-size: 14px; }
 
+/* ---------- Sport filter on My games: stays at the top while the timeline scrolls */
+.filterbar { position: sticky; top: 0; z-index: 6; padding: 6px 0 8px; background: var(--ground); }
+.filterbar .chips { padding-bottom: 0; }
+
 /* ---------- Day strip */
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 0 var(--gutter) 14px; }
 .days button { position: relative; min-height: 50px; padding: 6px 0 9px; border-radius: 10px; background: var(--row); color: var(--mute); font: 600 11px/1.1 var(--text); box-shadow: var(--shadow); }
@@ -202,6 +206,36 @@ a.li:active, .row:active { filter: brightness(.97); }
 .stat .l b { font: 800 18px/1 var(--cond); color: var(--ink); }
 .stat .bars { display: flex; gap: 4px; margin-top: 6px; }
 .stat .bars i { height: 7px; border-radius: 4px; min-width: 4px; }
+.stat .l b small { display: block; margin-top: 2px; font: 600 11px/1 var(--text); color: var(--mute); }
+.stat .l b:last-child { text-align: right; }
+/* Game leaders: one category per row, a team on each side */
+.gl { display: grid; grid-template-columns: 1fr 76px 1fr; align-items: center; gap: 6px; min-height: 60px; padding: 8px 14px; border-top: 1px solid var(--line); }
+.gl .cat { font: 800 12px/1.2 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); text-align: center; }
+.gl-p { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gl-p.r { justify-content: flex-end; text-align: right; }
+.gl-p b { font: 800 26px/1 var(--cond); flex: none; }
+.gl-p .pn { min-width: 0; font: 600 13.5px/1.25 var(--text); }
+.gl-p small { display: block; font: 500 11.5px/1.3 var(--text); color: var(--mute); }
+/* Box score: scrolls sideways, player column stays put */
+.boxwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-top: 1px solid var(--line); }
+.box { border-collapse: collapse; min-width: 100%; font: 600 13.5px/1.2 var(--text); white-space: nowrap; }
+.box th, .box td { padding: 9px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.box th { font: 800 12px var(--cond); letter-spacing: .06em; color: var(--mute); }
+.box th:first-child, .box td:first-child { position: sticky; left: 0; z-index: 1; min-width: 132px; padding-left: 14px; text-align: left; background: var(--row); box-shadow: 1px 0 0 var(--line); }
+.box td:first-child .pn { display: inline-block; max-width: 116px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.box td:first-child small { margin-left: 5px; font: 600 11px var(--text); color: var(--mute); }
+.box td:nth-child(3) { font: 800 15px var(--cond); }
+.box tr.sec td { padding: 10px 14px 6px; font: 800 12px var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); text-align: left; }
+.box tr.tot td { font-weight: 800; border-bottom: 0; }
+h3.unit { padding: 14px 14px 6px; font: 800 14px var(--cond); letter-spacing: .08em; text-transform: uppercase; }
+/* NFL scoring summary */
+.sec-h { padding: 12px 14px 4px; border-top: 1px solid var(--line); font: 800 12px var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.sp { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 56px; padding: 6px 14px 10px; }
+.sp .txt b { display: block; font: 700 14px/1.25 var(--text); }
+.sp .txt small, .sp .sc small { display: block; font: 500 12px/1.35 var(--text); color: var(--mute); }
+.sp .sc { text-align: right; }
+.sp .sc b { font: 800 18px/1 var(--cond); }
+.seg button .tchip { min-width: 34px; height: 20px; font-size: 12px; margin-right: 4px; vertical-align: -3px; }
 .lines { width: 100%; border-collapse: collapse; font: 600 14px var(--text); }
 .lines th, .lines td { padding: 8px 6px; text-align: center; border-top: 1px solid var(--line); }
 .lines th { font: 800 12px var(--cond); letter-spacing: .08em; color: var(--mute); text-transform: uppercase; }
