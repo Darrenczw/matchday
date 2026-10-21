@@ -1,7 +1,7 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
 import { esc, sg, countdown, icon, ago } from '../util.js';
 import { following, picks } from '../store.js';
-import { summary, norm, liveLabel, net, isMine } from '../espn.js';
+import { summary, norm, liveLabel, net, isMine, schedule } from '../espn.js';
 import { kitsFor, clashNote, crest, edge } from '../identity.js';
 import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine } from '../ui.js';
@@ -163,7 +163,10 @@ function gameLeaders(g, d, k) {
     const p = list.find((c) => c.name === n)?.leaders?.[0];
     if (!p) return '<div></div>';
     const v = split(p.displayValue);
-    const who = `<span class="pn">${esc(p.athlete?.shortName || p.athlete?.displayName || '')}${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
+    // Surname only ("Wembanyama"), so long names fit on one line; the full name is still spoken.
+    const full = p.athlete?.displayName || p.athlete?.shortName || '';
+    const sur = (p.athlete?.shortName || full).replace(/^[A-Z]\.\s+/, '');
+    const who = `<span class="pn"><span class="sn" aria-label="${esc(full)}">${esc(sur)}</span>${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
     return `<div class="gl-p${r ? ' r' : ''}">${r ? who + `<b>${esc(v.big)}</b>` : `<b>${esc(v.big)}</b>` + who}</div>`;
   };
   const label = (n) => L.find((c) => c.name === n)?.displayName || n;
@@ -255,7 +258,16 @@ function theGame(g, d, k) {
   return `<div class="card"><h2>The game</h2><p class="note" style="padding-top:0;color:var(--ink);font-size:14px"><a href="${href.comp(g.path)}" style="text-decoration:none;font-weight:700">${esc(g.comp.name)}</a>${stage ? `, ${esc(stage)}` : ''}${where ? ` · ${esc(where)}` : ''}${why.length ? `<br><span class="tag why" style="margin-top:6px">${esc(why.join(' · '))}</span>` : ''}${clash ? `<span class="clashnote" style="margin-top:8px"><span class="sw" aria-hidden="true"><i style="background:${k.home.bg}"></i><i style="background:${g.away.color}"></i></span><span>${esc(clash)}</span></span>` : ''}</p></div>`;
 }
 
-function formCard(g, d, k) {
+// After full time: each team's next game ("Next: v Everton, Sat 24 Oct 22:00"), from its schedule.
+function nextFor(g, x, ctx) {
+  const id = x.team.id, list = ctx.use(`sched:${g.sport}:${id}`, () => schedule(g.path, id), 10 * 60e3).v || [];
+  const n = list.filter((y) => (y.home.id === id || y.away.id === id) && y.id !== g.id && y.state === 'pre' && new Date(y.date) > Date.now())
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  if (!n) return '';
+  const home = n.home.id === id, opp = home ? n.away : n.home, s = sg(n.date);
+  return `Next: ${home ? 'v' : 'at'} ${opp.short}, ${s.wd} ${s.d} ${s.mo} ${n.timeValid ? s.hm : 'TBC'}`;
+}
+function formCard(g, d, k, ctx) {
   const five = d.lastFiveGames || [];
   const table = (d.standings?.groups || []).flatMap((x) => x.standings?.entries || []);
   const pos = (id) => { const i = table.findIndex((e) => e.id === id || e.team?.id === id); return i >= 0 ? i + 1 : null; };
@@ -264,8 +276,9 @@ function formCard(g, d, k) {
     const res = (f?.events || []).map((e) => e.gameResult).filter(Boolean).slice(0, 5).reverse();
     const rec = d.header?.competitions?.[0]?.competitors?.find((c) => c.id === x.team.id)?.record?.[0]?.summary;
     const p = pos(x.team.id);
+    const nx = g.state === 'post' ? nextFor(g, x, ctx) : '';
     const sub = [p ? `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'} in the ${g.comp.name}` : '', rec ? `Record ${rec}` : ''].filter(Boolean).join(' · ');
-    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
+    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
   });
   return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now' : 'Last 5, newest right'}</span></div>${rows.join('')}</div>`;
 }
@@ -331,11 +344,11 @@ export default function match([sport, slug, id], ctx) {
     ? quarters(g, d, k) + gameLeaders(g, d, k) + boxNBA(g, d, k) + stats(g, d, k)
     : quarters(g, d, k) + scoringNFL(g, d, k, live) + gameLeaders(g, d, k) + stats(g, d, k) + playersNFL(g, d, k));
   if (g.state === 'pre') {
-    html += statusLines(g, ctx) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k) + lineups(g, d, k);
+    html += statusLines(g, ctx) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k, ctx) + lineups(g, d, k);
   } else if (g.state === 'in') {
     html += tvMain(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
   } else {
-    html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k) + lineups(g, d, k) + theGame(g, d, k);
+    html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
   return html;

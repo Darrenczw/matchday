@@ -206,7 +206,11 @@ export async function standings(path) {
         pts: v('points'), w: v('wins'), l: v('losses'), pct: v('winPercent'), gb: v('gamesBehind'), note: en.note };
     }).sort((a, b) => (a.rank || 99) - (b.rank || 99)),
   }));
-  return { name: d.name, groups };
+  // "2026–27" from "2026-27 English Premier League"; the most games any team has played.
+  const sd = (d.children?.[0] || d).standings?.seasonDisplayName || '';
+  const season = (sd.match(/^\d{4}(-\d{2})?/) || [''])[0].replace('-', '–');
+  const played = Math.max(0, ...groups.flatMap((g) => g.rows.map((r) => +r.gp || 0)));
+  return { name: d.name, groups, season, played };
 }
 
 // All 220 football competitions, kept for a day.

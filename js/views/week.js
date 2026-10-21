@@ -7,7 +7,8 @@ import { reasons } from '../suggest.js';
 import { mainMarket } from '../tv.js';
 import { followBtn, href, skel, errorCard } from '../ui.js';
 
-const state = { f: 'all' };
+const state = { f: 'all', open: new Set() };
+const PER_DAY = 4; // a busy NBA morning can have 10 games; show the first 4, the rest on tap
 const SPORT = { nfl: 'football/nfl', nba: 'basketball/nba' };
 
 function paths() {
@@ -49,12 +50,17 @@ export default function week(params, ctx) {
     .filter((g) => reasons(g).length)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
   if (!games.length) return html + `<div class="banner info">No games match your free hours and rules this week. You can change them in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
-  let last = '';
-  for (const g of games) {
-    const k = sg(g.date).key;
-    if (k !== last) { html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2></div>`; last = k; }
-    html += card(g);
+  const days = new Map();
+  for (const g of games) { const k = sg(g.date).key; days.set(k, [...(days.get(k) || []), g]); }
+  for (const [k, list] of days) {
+    const open = state.open.has(k) || list.length <= PER_DAY + 1;
+    html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${list.length > 1 ? `<span>${list.length} games</span>` : ''}</div>`;
+    html += (open ? list : list.slice(0, PER_DAY)).map(card).join('');
+    if (!open) html += `<button class="btn ghost more" data-act="more" data-k="${k}">Show ${list.length - PER_DAY} more</button>`;
   }
   return html + `<p class="foot">${games.length} games. Football suggestions come from the Premier League, Champions League and the competitions you follow.</p>`;
 }
-week.actions = { f(d, el, e, ctx) { state.f = d.f; ctx.redraw(); } };
+week.actions = {
+  f(d, el, e, ctx) { state.f = d.f; ctx.redraw(); },
+  more(d, el, e, ctx) { state.open.add(d.k); ctx.redraw(); },
+};

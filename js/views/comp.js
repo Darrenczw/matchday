@@ -61,7 +61,8 @@ export default function comp([sport, slug], ctx) {
   const c = compInfo(path);
   const bg = brand(path), ink = inkOn(bg, '#ffffff');
   const tab = tabs[path] || 'table';
-  const sub = sport === 'soccer' ? c.region : 'Whole league';
+  const st = ctx.use(`table:${path}`, () => standings(path), 30 * 60e3).v;
+  const sub = [sport === 'soccer' ? c.region : 'Whole league', st?.season && `${st.season} season`, st?.played && `${st.played} games played`].filter(Boolean).join(' · ');
   let html = `<div class="skin" style="--skin-bg:${bg};--skin-ink:${ink}"><div class="nav">${backBtn(ctx.back?.href || '#/follow', ctx.back?.label || 'Follow')}<span></span><span class="navr">${calBtn('comp', path, { path, name: c.name, logo: c.logo }, { compact: true })}${followBtn('comp', path, { path, name: c.name, logo: c.logo })}</span></div>
 <div class="ident"><div class="badge">${c.logo ? `<img src="${esc(logoSrc(c.logo, 156))}" alt="" data-ini="${esc(c.name.slice(0, 3).toUpperCase())}" data-flat="1">` : ''}</div><div><h1>${esc(c.name)}</h1><p>${esc(sub)}</p></div></div></div>`;
   html += `<div class="seg" role="group" aria-label="Show">${[['table', 'Table'], ['next', 'Fixtures'], ['done', 'Results'], ['teams', 'Teams']].map(([k, l]) => `<button data-act="tab" data-t="${k}" data-p="${path}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>`;
