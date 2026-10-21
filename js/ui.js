@@ -5,6 +5,7 @@ import { liveLabel } from './espn.js';
 import { mainMarket } from './tv.js';
 import { reasons } from './suggest.js';
 import { load, save, following, teamKey } from './store.js';
+import { inCal } from './cal.js';
 
 export const href = {
   match: (g) => `#/m/${g.path}/${g.id}`,
@@ -72,6 +73,14 @@ export function followBtn(kind, key, item, { size = 'sm', label = 'Follow' } = {
   const on = following(kind, key);
   if (on) return `<button class="btn ${size} on" data-act="unfollow" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true">${icon('check')}Following</button>`;
   return `<button class="btn ${size} go" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false">${icon('plus')}${label}</button>`;
+}
+// Calendar button: its own layer, next to Follow. compact = icon only (match and league headers).
+export function calBtn(kind, key, item, { compact = false, covered = '' } = {}) {
+  const on = inCal(kind, key);
+  const cls = `btn sm ${on || covered ? 'on' : 'ghost'}${compact ? ' icon' : ''}`;
+  if (covered && !on) return `<span class="${cls}" role="img" aria-label="In your calendar through ${esc(covered)}">${icon('cal')}${compact ? '' : 'In calendar'}</span>`;
+  if (on) return `<button class="${cls}" data-act="uncal" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true" aria-label="In your calendar. Tap to remove">${icon('cal')}${compact ? '' : 'In calendar'}</button>`;
+  return `<button class="${cls}" data-act="cal" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false" aria-label="Add to your iPhone calendar">${icon('calplus')}${compact ? '' : 'Calendar'}</button>`;
 }
 export const teamPick = (path, t) => ({ path, id: t.id, name: t.name, abbr: t.abbr, logo: t.logo });
 export const teamFollowBtn = (path, t, opts) => followBtn('team', teamKey(path, t.id), teamPick(path, t), opts);

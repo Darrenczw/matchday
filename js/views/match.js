@@ -1,10 +1,11 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
-import { esc, sg, countdown, icon } from '../util.js';
+import { esc, sg, countdown, icon, ago } from '../util.js';
 import { following, picks } from '../store.js';
 import { summary, norm, liveLabel, net, isMine } from '../espn.js';
 import { kitsFor, clashNote, crest, edge } from '../identity.js';
 import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
-import { followBtn, backBtn, skel, errorCard, movedFrom, movedText, href } from '../ui.js';
+import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href } from '../ui.js';
+import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
 
 // ---------- Pieces
@@ -265,10 +266,16 @@ function formCard(g, d, k) {
   return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now' : 'Last 5, newest right'}</span></div>${rows.join('')}</div>`;
 }
 
-function statusLines(g) {
-  const checked = net.lastOk ? sg(net.lastOk).hm : '';
-  let html = `<p class="status">${icon('clock')}<span>Kick-off time from ESPN${checked ? `, checked ${checked}` : ''}. Second-source check comes with the calendar helper.</span></p>`;
-  if (isMine(g, picks)) html += `<p class="status">${icon('cal')}<span>Calendar sync isn’t set up yet. It comes with the calendar helper (build step A5).</span></p>`;
+function statusLines(g, ctx) {
+  const st = calReady() ? ctx.use('calstatus', calStatus, 60e3).v : null;
+  const helper = st?.checkedById?.[g.id], checked = helper || net.lastOk;
+  let html = `<p class="status">${icon('clock')}<span>Kick-off time ${helper ? 'checked by the calendar helper' : 'from ESPN'}${checked ? ` at ${sg(checked).hm}` : ''}. A second-source check comes next.</span></p>`;
+  if (!gameInCal(g)) return html;
+  if (!CAL_API) html += `<p class="status">${icon('cal')}<span>On your calendar list. It goes to your iPhone once the calendar helper is live.</span></p>`;
+  else if (!calReady()) html += `<p class="status">${icon('cal')}<span>On your calendar list. Set up the calendar in Settings to send it to your iPhone.</span></p>`;
+  else if (st?.pending?.some((p) => p.id === g.id)) html += `<p class="status amber">${icon('alert')}<span>Changed since your iPhone last fetched. Open the Calendar app to refresh.</span></p>`;
+  else if (st?.lastFetch) html += `<p class="status ok">${icon('cal')}<span>In your calendar · iPhone fetched ${ago(st.lastFetch.at)}</span></p>`;
+  else html += `<p class="status">${icon('cal')}<span>On your calendar list · subscribe in Settings to see it on your iPhone</span></p>`;
   return html;
 }
 
@@ -283,7 +290,13 @@ export default function match([sport, slug, id], ctx) {
   // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
   const covered = g && !following('game', g.id) && isMine(g, picks);
   const right = !pick || g.state === 'post' ? '<span class="spacer"></span>' : covered ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick);
-  let html = `<div class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}<span class="cap">${esc(compName)}</span>${right}</div>`;
+  // Calendar is its own layer: a team or league in the calendar covers this game; otherwise add just this game.
+  let calNav = '';
+  if (g && g.state !== 'post') {
+    const via = cal.teams.find((t) => t.id === g.home.id || t.id === g.away.id)?.name || cal.comps.find((c) => c.path === g.path)?.name || '';
+    calNav = calBtn('game', g.id, pick, { compact: true, covered: !inCal('game', g.id) && gameInCal(g) ? via : '' });
+  }
+  let html = `<div class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}<span class="cap">${esc(compName)}</span><span class="navr">${calNav}${right}</span></div>`;
   if (!g) return html + (e.err ? errorCard('Couldn’t load this game.') : skel(3, true));
   ctx.live = g.state === 'in' || (g.state === 'pre' && new Date(g.date) - Date.now() < 10 * 60e3);
   ctx.wasLive = ctx.live;
@@ -295,7 +308,7 @@ export default function match([sport, slug, id], ctx) {
     ? quarters(g, d, k) + gameLeaders(g, d, k) + boxNBA(g, d, k) + stats(g, d, k)
     : quarters(g, d, k) + scoringNFL(g, d, k, live) + gameLeaders(g, d, k) + stats(g, d, k) + playersNFL(g, d, k));
   if (g.state === 'pre') {
-    html += statusLines(g) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k) + lineups(g, d, k);
+    html += statusLines(g, ctx) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k) + lineups(g, d, k);
   } else if (g.state === 'in') {
     html += tvMain(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
   } else {

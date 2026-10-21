@@ -3,7 +3,7 @@ import { esc, todayKey, addDays, sg, keyLabel } from '../util.js';
 import { sportOf, teamKey, following } from '../store.js';
 import { compInfo, compList, standings, range, leagueTeams } from '../espn.js';
 import { brand, inkOn, readable, logoSrc, crest, lum } from '../identity.js';
-import { followBtn, teamFollowBtn, gameRow, href, skel, errorCard, backBtn } from '../ui.js';
+import { followBtn, teamFollowBtn, calBtn, gameRow, href, skel, errorCard, backBtn } from '../ui.js';
 
 const tabs = {};
 const followedTeam = (path, t) => following('team', teamKey(path, t.id));
@@ -61,7 +61,7 @@ export default function comp([sport, slug], ctx) {
   const bg = brand(path), ink = inkOn(bg, '#ffffff');
   const tab = tabs[path] || 'table';
   const sub = sport === 'soccer' ? c.region : 'Whole league';
-  let html = `<div class="skin" style="--skin-bg:${bg};--skin-ink:${ink}"><div class="nav">${backBtn(ctx.back?.href || '#/follow', ctx.back?.label || 'Follow')}<span></span>${followBtn('comp', path, { path, name: c.name, logo: c.logo })}</div>
+  let html = `<div class="skin" style="--skin-bg:${bg};--skin-ink:${ink}"><div class="nav">${backBtn(ctx.back?.href || '#/follow', ctx.back?.label || 'Follow')}<span></span><span class="navr">${calBtn('comp', path, { path, name: c.name, logo: c.logo }, { compact: true })}${followBtn('comp', path, { path, name: c.name, logo: c.logo })}</span></div>
 <div class="ident"><div class="badge">${c.logo ? `<img src="${esc(logoSrc(c.logo, 156))}" alt="" data-ini="${esc(c.name.slice(0, 3).toUpperCase())}" data-flat="1">` : ''}</div><div><h1>${esc(c.name)}</h1><p>${esc(sub)}</p></div></div></div>`;
   html += `<div class="seg" role="group" aria-label="Show">${[['table', 'Table'], ['next', 'Fixtures'], ['done', 'Results'], ['teams', 'Teams']].map(([k, l]) => `<button data-act="tab" data-t="${k}" data-p="${path}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>`;
   if (tab === 'table') html += table(ctx, path);

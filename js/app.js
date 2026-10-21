@@ -1,5 +1,6 @@
 // App shell: routing, drawing, data loading, live polling, actions.
 import { on, follow, unfollow, set, settings, picks, DEMO } from './store.js';
+import { addCal, removeCal } from './cal.js';
 import { rightsReady } from './tv.js';
 import { compInfo } from './espn.js';
 import { toast } from './ui.js';
@@ -154,6 +155,15 @@ const ACT = {
   unfollow(d) {
     const undo = unfollow(d.kind, d.key);
     if (undo) toast(`Unfollowed ${undo.item.name}`, undo);
+  },
+  cal(d) {
+    const item = JSON.parse(d.item);
+    addCal(d.kind, item);
+    toast(`${item.name} added to your calendar`);
+  },
+  uncal(d) {
+    const undo = removeCal(d.kind, d.key);
+    if (undo) toast(`${undo.item.name} removed from your calendar`, undo);
   },
   back(d, el, e) {
     if (stack.length > 1) { e.preventDefault(); history.back(); }

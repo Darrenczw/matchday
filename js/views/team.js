@@ -1,9 +1,9 @@
 // Team page: the whole screen wears the team's colours (PRD 7.2, screen 4).
 import { esc, sg, icon } from '../util.js';
-import { sportOf } from '../store.js';
 import { teamInfo, schedule } from '../espn.js';
 import { inkOn, readable, logoSrc, crest, NEUTRAL } from '../identity.js';
-import { teamFollowBtn, href, skel, errorCard, backBtn } from '../ui.js';
+import { teamFollowBtn, calBtn, teamPick, href, skel, errorCard, backBtn } from '../ui.js';
+import { sportOf, teamKey } from '../store.js';
 import { mainMarket, chans, KIND } from '../tv.js';
 
 function result(g, id) {
@@ -38,7 +38,7 @@ export default function team([sport, slug, id], ctx) {
 
   const subBits = [t.nickname && !t.name.includes(t.nickname) ? `The ${t.nickname}` : '', t.abbr, t.standing || t.record].filter(Boolean);
   html += `<div class="ident"><div class="badge">${t.logo ? `<img src="${esc(logoSrc(t.logo, 156))}" alt="" data-ini="${esc(t.abbr)}">` : `<span class="ini" style="width:52px;height:52px">${esc(t.abbr)}</span>`}</div><div><h1>${esc(t.name)}</h1><p>${esc(subBits.join(' · '))}</p></div></div>
-<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${form.length ? `<span style="font:600 13px var(--text)">Form</span><span class="forms" aria-label="Last ${form.length} results, oldest first: ${form.join(' ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div></div>`;
+<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${calBtn('team', teamKey(path, t.id), teamPick(path, t))}${form.length ? `<span class="formrow"><span style="font:600 13px var(--text)">Form</span><span class="forms" aria-label="Last ${form.length} results, oldest first: ${form.join(' ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span></span>` : ''}</div></div>`;
 
   if (!sched.v) return html + (sched.err ? errorCard() : skel(3)) + '</div>';
   if (next[0]) {

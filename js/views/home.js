@@ -4,6 +4,7 @@ import { picks, followingAny, DEMO, load, save, settings, set, sportOf } from '.
 import { gamesFor, isLive, soon, net } from '../espn.js';
 import { compLogo, compImg } from '../identity.js';
 import { gameRow, hero, skel, errorCard } from '../ui.js';
+import { calReady, status as calStatus } from '../cal.js';
 
 let ver = 0;
 const sig = () => JSON.stringify(picks);
@@ -21,6 +22,23 @@ function empty() {
 <a class="btn go big" href="#/follow">${icon('search')}Find clubs and leagues</a></section>
 <div class="sect"><h2 class="cap">Or start with a whole league</h2></div>
 <div class="card">${QUICK.map((q) => `<div class="li">${compImg(q.item.logo, 32, q.item.name)}<span class="grow"><span class="t">${esc(q.item.name)}</span><small>${esc(q.sub)}</small></span><button class="btn sm go" data-act="follow" data-kind="${q.kind}" data-item="${esc(JSON.stringify(q.item))}">${icon('plus')}Follow</button></div>`).join('')}</div>`;
+}
+
+// Calendar lag watch and failures (PRD 7.9): amber when a change hasn't reached the iPhone yet,
+// red when the helper stops checking or the iPhone stops fetching.
+function calBanners(ctx) {
+  if (!calReady()) return '';
+  const st = ctx.use('calstatus', calStatus, 60e3).v;
+  if (!st) return '';
+  const now = Date.now(), out = [];
+  if (st.lastCheck && now - st.lastCheck > 30 * 60e3) out.push(`<div class="banner red">${icon('alert')}<span>Calendar not updated since ${sg(st.lastCheck).hm}. Kick-off times there may be out of date.</span></div>`);
+  if (st.lastFetch && now - st.lastFetch.at > 2 * 3600e3) out.push(`<div class="banner red">${icon('alert')}<span>Your iPhone hasn’t fetched the calendar since ${sg(st.lastFetch.at).hm}. Open the Calendar app to refresh.</span></div>`);
+  const moved = st.pending.find((p) => p.prev_start), off = st.pending.find((p) => p.status === 'postponed');
+  const name = (p) => (p.sport === 'soccer' ? `${p.home} v ${p.away}` : `${p.away} @ ${p.home}`);
+  if (moved) { const n = sg(moved.start_utc); out.push(`<div class="banner amber">${icon('clock')}<span>${esc(name(moved))}: kick-off moved to ${n.wd} ${n.hm}. Your Calendar app hasn’t picked it up yet. Open Calendar to refresh.</span></div>`); }
+  else if (off) out.push(`<div class="banner amber">${icon('alert')}<span>${esc(name(off))} is postponed. Your Calendar app hasn’t picked it up yet. Open Calendar to refresh.</span></div>`);
+  else if (st.pending.length) out.push(`<div class="banner amber">${icon('cal')}<span>${st.pending.length} calendar change${st.pending.length > 1 ? 's' : ''} not on your iPhone yet. Open the Calendar app to refresh.</span></div>`);
+  return out.join('');
 }
 
 const SPORTS = [['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']];
@@ -42,7 +60,7 @@ export default function home(params, ctx) {
 
   const t = todayKey();
   const sub = DEMO ? 'Sample picks · SGT' : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
-  let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>`;
+  let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>` + calBanners(ctx);
 
   const games = all?.filter(keep);
   const ahead = (games || []).filter((g) => g.state === 'pre' || g.postponed);
