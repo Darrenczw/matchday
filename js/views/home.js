@@ -3,7 +3,7 @@ import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, i
 import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
 import { gamesFor, isLive, soon, net, sortGames } from '../espn.js';
 import { compLogo, compImg, kitsFor, crest, kitEdge } from '../identity.js';
-import { gameRow, hero, skel, errorCard, scoreText, spoken, href } from '../ui.js';
+import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow } from '../ui.js';
 import { calReady, status as calStatus } from '../cal.js';
 import { useTables } from '../suggest.js';
 
@@ -99,7 +99,7 @@ export default function home(params, ctx) {
   const days = keyRange(addDays(t, -7 * (earlier + 1)), addDays(t, 7 * (MAX_WEEKS + 1)));
   const has = new Set([...ahead.map((g) => nightKey(g.date)), ...(e.v?.season || []).filter(() => f === 'all')]);
   const on = curDay || t;
-  html += `<div class="filterbar"><div class="days" role="group" aria-label="Jump to a day">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button class="${k === t ? 'today ' : ''}${k === on ? 'cur ' : ''}${has.has(k) ? 'has' : ''}${x.d === 1 ? ' m1' : ''}" data-act="jump" data-k="${k}" aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games' : ''}"${k === on ? ' aria-current="date"' : ''}>${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
+  html += `<div class="filterbar">${strip(days, t, on, has)}`
     + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<span class="stripm" aria-hidden="true">${monthOf(on)}</span></div></div>`;
   setTimeout(() => { placeStrip(); track(); }, 0);
 
@@ -146,8 +146,18 @@ export default function home(params, ctx) {
   return html + `<p class="foot" id="homefoot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
 
+// The season strip is ~300 buttons; build it again only when today, the highlighted day or the dots change.
+let stripKey = '', stripHtml = '';
+function strip(days, t, on, has) {
+  const key = `${days[0]}|${days.length}|${t}|${on}|${[...has].sort().join()}`;
+  if (key === stripKey) return stripHtml;
+  stripKey = key;
+  return (stripHtml = `<div class="days" role="group" aria-label="Jump to a day">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button class="${k === t ? 'today ' : ''}${k === on ? 'cur ' : ''}${has.has(k) ? 'has' : ''}${x.d === 1 ? ' m1' : ''}" data-act="jump" data-k="${k}" aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games' : ''}"${k === on ? ' aria-current="date"' : ''}>${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`);
+}
+
 // One line per game for later weeks and older results: kits, codes, time or score. Tap for the full game.
-function compactRow(g) {
+const compactRow = (g) => cachedRow('crow', g, {}, () => buildCompact(g));
+function buildCompact(g) {
   const k = kitsFor(g), s = sg(g.date);
   const p = (x, r) => `<div class="p${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${r ? `<b>${esc(x.team.abbr || x.team.short)}</b>${crest(x.team, 18, true)}` : `${crest(x.team, 18, true)}<b>${esc(x.team.abbr || x.team.short)}</b>`}</div>`;
   const mid = g.state === 'post' ? `<b>${scoreText(k, true)}</b>` : g.postponed ? '<b>PP</b>' : `<b>${g.timeValid ? s.hm : 'TBC'}</b>`;

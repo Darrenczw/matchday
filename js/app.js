@@ -91,6 +91,8 @@ function morph(a, b) {
   if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b); return; }
   if (a.nodeType === 3 || a.nodeType === 8) { if (a.data !== b.data) a.data = b.data; return; }
   if (a.nodeType !== 1) return;
+  // Most of a long list is the same as last time: the browser's own deep compare skips it in one call.
+  if (a.isEqualNode(b)) return;
   // A logo that changes gets a new element: patching src keeps showing the old logo until the new one loads.
   if (a.tagName === 'IMG' && a.getAttribute('src') !== b.getAttribute('src')) { a.replaceWith(b); return; }
   for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);

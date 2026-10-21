@@ -8,10 +8,12 @@ import { standings } from './espn.js';
 
 // League tables, by competition path, filled in by the screens that list games (useTables).
 const tables = new Map();
+let tablesVer = 0;
+export const tablesVersion = () => tablesVer; // rows drawn before a table arrived are drawn again
 export function useTables(ctx, paths) {
   for (const p of new Set(paths)) {
     const e = ctx.use(`table:${p}`, () => standings(p), 30 * 60e3);
-    if (e.v) tables.set(p, e.v);
+    if (e.v && tables.get(p) !== e.v) { tables.set(p, e.v); tablesVer++; }
   }
 }
 

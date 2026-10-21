@@ -1,10 +1,10 @@
 // Shared building blocks: game rows, the live hero, follow buttons, toasts, "moved" notes.
-import { esc, sg, shortDay, icon } from './util.js';
+import { esc, sg, shortDay, icon, todayKey } from './util.js';
 import { kitsFor, crest, compImg, isDark, edge, kitEdge } from './identity.js';
 import { liveLabel } from './espn.js';
-import { mainMarket, tvShort } from './tv.js';
-import { reasons, freeHour } from './suggest.js';
-import { load, save, following, teamKey } from './store.js';
+import { mainMarket, tvShort, rightsChecked } from './tv.js';
+import { reasons, freeHour, tablesVersion } from './suggest.js';
+import { load, save, on, following, teamKey } from './store.js';
 import { inCal } from './cal.js';
 
 export const href = {
@@ -75,7 +75,21 @@ export function spoken(g, k, { tv = '', moved = null, why = '' } = {}) {
   return out.join('. ') + '.';
 }
 
-export function gameRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1 } = {}) {
+// ---------- Rows are drawn again every few seconds, but most games haven't changed. Reuse a row's HTML
+// until something it shows changes: the game itself (state, score, clock, time, kit colours, logos), the
+// theme, the day, the TV rights or a league table arriving, or any follow, setting, colour or kit update.
+const rowCache = new Map();
+on((why) => { if (why !== 'calsync') rowCache.clear(); });
+export function cachedRow(kind, g, opts, build) {
+  const key = [kind, g.id, g.state, g.date, g.timeValid, g.postponed, g.home.score, g.away.score, g.home.color, g.away.color, g.home.logo, g.away.logo,
+    g.clock, g.period, g.statusName, g.detail, g.viaBackup, isDark(), rightsChecked() || '', tablesVersion(), todayKey(), JSON.stringify(opts)].join('|');
+  let h = rowCache.get(key);
+  if (h === undefined) { if (rowCache.size > 3000) rowCache.clear(); h = build(); rowCache.set(key, h); }
+  return h;
+}
+export const gameRow = (g, opts = {}) => cachedRow('row', g, opts, () => buildRow(g, opts));
+
+function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1 } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
