@@ -17,6 +17,10 @@ export function sg(d) {
   };
 }
 export const todayKey = () => sg(Date.now()).key;
+// A viewing night runs to 05:00 SGT: a 00:30 or 03:00 kick-off belongs with the evening before it, so lists
+// group by night, not by calendar date (Darren, 21 Oct 2026). The row itself still shows the real day and time.
+export const nightKey = (d) => sg(new Date(d).getTime() - 5 * 3600e3).key;
+export const nightToday = () => nightKey(Date.now());
 // "2026-10-21" → "21 Oct 2026", for dates written in sentences.
 export const dateText = (key) => { const [y, m, d] = String(key).split('-').map(Number); return d ? `${d} ${MO[m - 1]} ${y}` : String(key); };
 export function addDays(key, n) {
@@ -25,7 +29,7 @@ export function addDays(key, n) {
 export const keyRange = (k0, k1) => { const out = []; for (let k = k0; k <= k1; k = addDays(k, 1)) out.push(k); return out; };
 export const ymd = (key) => key.replaceAll('-', '');
 export function keyLabel(key) {
-  const t = todayKey();
+  const t = nightToday();
   if (key === t) return 'Today';
   if (key === addDays(t, 1)) return 'Tomorrow';
   if (key === addDays(t, -1)) return 'Yesterday';

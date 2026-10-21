@@ -1,5 +1,5 @@
 // Competition page, skinned in the competition's colour: table, fixtures, results, teams (PRD 7.7, screen 3).
-import { esc, todayKey, addDays, sg, keyLabel } from '../util.js';
+import { esc, todayKey, addDays, nightKey, keyLabel } from '../util.js';
 import { sportOf, teamKey, following } from '../store.js';
 import { compInfo, compList, standings, range, leagueTeams } from '../espn.js';
 import { brand, inkOn, readable, logoSrc, crest, lum } from '../identity.js';
@@ -42,7 +42,7 @@ function games(ctx, path, ahead) {
   if (!list.length) return `<div class="banner info">${ahead ? 'No games in the next 2 weeks.' : 'No results in the last 2 weeks.'}</div>`;
   let html = '', last = '';
   for (const g of list) {
-    const k = sg(g.date).key;
+    const k = nightKey(g.date);
     if (k !== last) { html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2></div>`; last = k; }
     html += gameRow(g, { why: false });
   }

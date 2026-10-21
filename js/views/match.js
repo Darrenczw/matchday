@@ -2,7 +2,7 @@
 import { esc, sg, countdown, icon, ago, dateText } from '../util.js';
 import { following, picks } from '../store.js';
 import { summary, norm, liveLabel, net, isMine, schedule, backup, known, standings } from '../espn.js';
-import { kitsFor, clashNote, crest, edge, kitEdge } from '../identity.js';
+import { kitsFor, clashNote, crest, edge, kitEdge, brand, inkOn, readable } from '../identity.js';
 import { allMarkets, mainMarket, KIND, rightsChecked, chanList } from '../tv.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
@@ -13,6 +13,14 @@ const openSubs = new Set();
 // NBA and NFL list away first, so say which side is which.
 const ha = (g, x) => (g.sport === 'soccer' ? '' : `<span class="ha">${x.team.home ? 'Home' : 'Away'}</span>`);
 const tchip = (x) => `<span class="tchip" style="background:${x.bg};color:${x.ink};${edge(x.bg)}">${esc(x.team.abbr)}</span>`;
+// Competitions are brands too (PRODUCT.md): a strip in the competition's own colour with its logo, so a
+// Champions League night never looks like a cup tie. It opens the competition page.
+function compStrip(g, d) {
+  const bg = readable(brand(g.path)), ink = inkOn(bg, '#ffffff');
+  const season = d?.header?.season?.name || '';
+  const stage = g.week ? `Week ${g.week}` : season.includes(',') ? season.split(',').slice(1).join(',').trim() : g.note;
+  return `<a class="cstrip" href="${href.comp(g.path)}" style="background:${bg};color:${ink}">${crest({ logo: g.comp.logo, name: g.comp.name, abbr: g.comp.name.slice(0, 3).toUpperCase() }, 22, true)}<b>${esc(g.comp.name)}</b>${stage ? `<small>${esc(stage)}</small>` : ''}${icon('chev', 'chev')}</a>`;
+}
 // The header is drawn for the eye; VoiceOver gets one plain summary first (score, who won, scorers),
 // and the team names stay as links to each team's page.
 const tname = (g, x) => `<a class="tn" href="${href.team(g.path, x.team.id)}">${esc(x.team.short)}</a>`;
@@ -60,7 +68,7 @@ function tvTag(x) {
 }
 // Main market, big, with why ("Saturday 3pm blackout in the UK"). Shared by both layouts.
 function tvHead(m) {
-  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b>${m.kind === 'none' ? 'Not listed' : esc(chanList(m.channels))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
+  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b${m.channels.length > 1 ? ' class="list"' : ''}>${m.kind === 'none' ? 'Not listed' : esc(chanList(m.channels))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
 }
 function tvMain(g) {
   return `<div class="card"><h2>Where to watch</h2>${tvHead(mainMarket(g))}</div>`;
@@ -106,12 +114,15 @@ function moments(g, d, k, newestFirst) {
     if (m.kind === 'yellow') return '<span class="card-y" aria-label="Yellow card"></span>';
     return '<span class="tag likely">VAR</span>';
   };
+  // The side of the row shows the team; VoiceOver gets it in words instead ("Arsenal, 80', goal, Noni Madueke, assist Declan Rice").
+  const KINDS = { goal: 'goal', red: 'red card', yellow: 'yellow card', var: 'VAR check' };
   const rows = list.map((m) => {
-    const left = m.team === leftId;
+    const left = m.team === leftId, team = (left ? k.left : k.right).team;
+    const said = [team.name || team.short, m.min, KINDS[m.kind], m.who, m.sub && !/card/i.test(m.sub) ? m.sub : ''].filter(Boolean).join(', ');
     const txt = `<span><b>${esc(m.who)}</b>${m.sub ? `<small>${esc(m.sub)}</small>` : ''}</span>`;
     return left
-      ? `<div class="ev"><span class="min">${esc(m.min)}</span><span class="who">${badge(m)}${txt}</span><span></span></div>`
-      : `<div class="ev"><span></span><span class="who r">${txt}${badge(m)}</span><span class="min r">${esc(m.min)}</span></div>`;
+      ? `<div class="ev"><span class="sr">${esc(said)}</span><span class="min" aria-hidden="true">${esc(m.min)}</span><span class="who" aria-hidden="true">${badge(m)}${txt}</span><span></span></div>`
+      : `<div class="ev"><span class="sr">${esc(said)}</span><span></span><span class="who r" aria-hidden="true">${txt}${badge(m)}</span><span class="min r" aria-hidden="true">${esc(m.min)}</span></div>`;
   }).join('');
   // Substitutions fold into one row that opens (PRD 7.6).
   const open = openSubs.has(g.id);
@@ -188,8 +199,10 @@ function gameLeaders(g, d, k) {
     // Surname only ("Wembanyama"), so long names fit on one line; the full name is still spoken.
     const full = p.athlete?.displayName || p.athlete?.shortName || '';
     const sur = (p.athlete?.shortName || full).replace(/^[A-Z]\.\s+/, '');
-    const who = `<span class="pn"><span class="sn" aria-label="${esc(full)}">${esc(sur)}</span>${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
-    return `<div class="gl-p${r ? ' r' : ''}">${r ? who + `<b>${esc(v.big)}</b>` : `<b>${esc(v.big)}</b>` + who}</div>`;
+    // Drawn: big number and surname. Spoken: full name first, then the numbers.
+    const who = `<span class="pn" aria-hidden="true"><span class="sn">${esc(sur)}</span>${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
+    const said = `<span class="sr">${esc(`${full}, ${p.displayValue || ''}`)}</span>`;
+    return `<div class="gl-p${r ? ' r' : ''}">${said}${r ? who + `<b aria-hidden="true">${esc(v.big)}</b>` : `<b aria-hidden="true">${esc(v.big)}</b>` + who}</div>`;
   };
   const label = (n) => L.find((c) => c.name === n)?.displayName || n;
   return `<div class="card"><div class="h">Game leaders<span>${tchip(k.left)} ${tchip(k.right)}</span></div>${cats.map((n) => `<div class="gl">${side(L, n)}<span class="cat">${esc(label(n).replace(' Yards', ''))}</span>${side(R, n, true)}</div>`).join('')}</div>`;
@@ -372,7 +385,6 @@ export default function match([sport, slug, id], ctx) {
   // Until the summary arrives, draw the header from the game the row was built from, so a tap never blanks.
   // ESPN down: the backup copy of this game (from My games) still gives the header.
   const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : known.get(id) || (e.err ? backup.byId.get(id) : null) || null;
-  const compName = g?.comp.name || '';
   const pick = g ? { id: g.id, path, date: g.date, name: `${g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`}` } : null;
   // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
   const covered = g && !following('game', g.id) && isMine(g, picks);
@@ -383,8 +395,9 @@ export default function match([sport, slug, id], ctx) {
     const via = cal.teams.find((t) => t.id === g.home.id || t.id === g.away.id)?.name || cal.comps.find((c) => c.path === g.path)?.name || '';
     calNav = calBtn('game', g.id, pick, { compact: true, covered: !inCal('game', g.id) && gameInCal(g) ? via : '' });
   }
-  let html = `<div class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}<span class="cap">${esc(compName)}</span><span class="navr">${calNav}${right}</span></div>`;
+  let html = `<div class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}<span class="cap"></span><span class="navr">${calNav}${right}</span></div>`;
   if (!g) return html + (e.err ? errorCard('Couldn’t load this game.') : skel(3, true));
+  html += compStrip(g, d);
   ctx.live = g.state === 'in' || (g.state === 'pre' && new Date(g.date) - Date.now() < 10 * 60e3);
   ctx.wasLive = ctx.live;
   const k = kitsFor(g);

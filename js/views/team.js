@@ -45,7 +45,8 @@ export default function team([sport, slug, id], ctx) {
   if (!sched.v) return html + (sched.err ? errorCard() : skel(3)) + '</div>';
   if (next[0]) {
     const m = mainMarket(next[0]);
-    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(next[0])}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${esc(tvShort(m))}</span><small>${KIND[m.kind]} · tap for all ${settings.markets.length} markets</small></span>${icon('chev', 'chev')}</a></div>`;
+    const n = next[0], opp = n.home.id === id ? `v ${n.away.short}` : `at ${n.home.short}`, ns = sg(n.date);
+    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(n)}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${esc(tvShort(m))}</span><small>${esc(`${opp}, ${ns.wd} ${ns.d} ${ns.mo} ${n.timeValid ? ns.hm : 'TBC'}`)} · ${KIND[m.kind]} · all ${settings.markets.length} markets</small></span>${icon('chev', 'chev')}</a></div>`;
   }
   html += `<div class="card"><h2>Next games</h2>${next.length ? next.slice(0, 5).map((g) => line(g, id, false)).join('') : '<p class="note">No games scheduled in the feed yet.</p>'}</div>`;
   if (done.length) html += `<div class="card"><h2>Results</h2>${done.slice(0, 5).map((g) => line(g, id, true)).join('')}</div>`;

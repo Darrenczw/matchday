@@ -49,13 +49,13 @@ export default function settingsView(params, ctx) {
 
   const rules = [['rules.overseas', 'Played overseas', 'NFL and NBA games outside the US and Canada'], ['rules.streaming', 'On a streamer', 'Netflix, Prime Video, YouTube, Disney+'], ['rules.playoffs', 'Playoffs and finals', 'All three sports']];
   html += `<div class="card"><h2>Also suggest</h2>${rules.map(([p, l, s]) => `<div class="li"><span class="grow"><span class="t">${l}</span><small>${s}</small></span>${sw(p, p.split('.').reduce((o, k) => o[k], settings), l)}</div>`).join('')}
-<div class="li"><span class="grow"><span class="t">Suggest from</span><small>Which sports appear in This week</small></span></div>
+<div class="h" style="padding-top:16px">Suggest from<span>Sports on This week</span></div>
 ${[['suggest.soccer', 'Football'], ['suggest.nfl', 'NFL'], ['suggest.nba', 'NBA']].map(([p, l]) => `<div class="li" style="min-height:48px"><span class="grow"><span class="t">${l}</span></span>${sw(p, p.split('.').reduce((o, k) => o[k], settings), `Suggest ${l}`)}</div>`).join('')}</div>`;
 
   html += `<div class="sect"><h2 class="cap">Look</h2></div><div class="seg" role="group" aria-label="Look">${[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']].map(([k, l]) => `<button data-act="theme" data-v="${k}" aria-pressed="${settings.theme === k}">${l}</button>`).join('')}</div>`;
 
   html += `<div class="card"><h2>About</h2><p class="note" style="padding-top:0">Scores, fixtures, tables, logos and US TV come from ESPN’s public feed. Away kit colours come from each club’s Wikipedia page. Free, with no account and no tracking. Your picks are saved on this phone. Once the calendar is set up, a copy also goes to your calendar helper, which builds the calendar and stands in when ESPN is down.</p>
-${followingAny() ? `<div class="li"><span class="grow"><span class="t">Clear all picks</span><small>Empties My games. Your calendar stays as it is.</small></span><button class="btn sm warn" data-act="clear">Clear all</button></div>` : ''}</div>`;
+${followingAny() ? `<div class="li"><span class="grow"><span class="t">Clear all picks</span><small class="wrap">Empties My games. Your calendar stays as it is.</small></span><button class="btn sm warn" data-act="clear">Clear all</button></div>` : ''}</div>`;
   return html;
 }
 

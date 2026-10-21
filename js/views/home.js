@@ -1,5 +1,5 @@
 // Home: "My games". Live first while a game is on, then results (newest first), then coming up (soonest first). All in SGT.
-import { esc, sg, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
+import { esc, sg, nightKey, nightToday, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
 import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
 import { gamesFor, isLive, soon, net } from '../espn.js';
 import { compLogo, compImg } from '../identity.js';
@@ -9,8 +9,8 @@ import { calReady, status as calStatus } from '../cal.js';
 let ver = 0;
 // The sport filter lives for this visit only: a fresh start always opens on All, so no sport is ever hidden by surprise.
 let cur = 'all';
-// Days of older league results the user opened ("Sun 18 Oct · 4 more results").
-const openDays = new Set();
+// Older league results, opened with "4 more results since Sun" (for this visit).
+let openOlder = false;
 const sig = () => JSON.stringify(picks);
 let lastSig = '';
 
@@ -65,7 +65,7 @@ export default function home(params, ctx) {
   const keep = (g) => f === 'all' || g.sport === f;
   if (f !== 'all') ctx.sport = f;
 
-  const t = todayKey();
+  const t = nightToday();
   const sub = DEMO ? 'Sample picks · SGT' : e.v?.backup ? `Backup · updated ${sg(e.v.backup.at).hm}` : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
   let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>` + calBanners(ctx);
 
@@ -74,7 +74,7 @@ export default function home(params, ctx) {
   const ahead = (games || []).filter((g) => g.state === 'pre' || g.postponed);
   // Dates, then the sport filter, in one bar that stays at the top.
   const days = keyRange(t, addDays(t, 6));
-  const has = new Set(ahead.map((g) => sg(g.date).key));
+  const has = new Set(ahead.map((g) => nightKey(g.date)));
   html += `<div class="filterbar"><div class="days" role="group" aria-label="Jump to a day">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games coming up' : k === t ? '' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
     + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}</div></div>`;
 
@@ -90,8 +90,8 @@ export default function home(params, ctx) {
   if (f !== 'all' && !followed.has(f)) {
     return html + `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
   }
-  // Results first, newest at the top. Then anything live. Then what's coming, soonest at the top.
-  // While a game is on, Live now comes first so a quick score check never needs a scroll.
+  // Live now first while a game is on, so a quick score check never needs a scroll. Then results, newest
+  // at the top. Then what's coming, soonest at the top, one section per viewing night.
   const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
@@ -102,7 +102,7 @@ export default function home(params, ctx) {
   if (ahead.length) html += `<div class="sect" id="coming"><h2 class="cap">Coming up</h2>${wkTxt}</div>`;
   let day = '';
   for (const g of ahead) {
-    const k = sg(g.date).key;
+    const k = nightKey(g.date);
     if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}"><h3 class="dayh">${keyLabel(k)}</h3>`; day = k; }
     html += gameRow(g);
   }
@@ -113,22 +113,17 @@ export default function home(params, ctx) {
   return html + `<p class="foot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
 
-// Today's and yesterday's results in full. Older ones show only your teams' games; the rest of a
-// followed league folds into one line per day, so the next game stays near the top.
+// Today's and yesterday's results in full. Older ones show only your teams' games; the rest of a followed
+// league folds into one button at the end, so the next game stays near the top.
 const yourTeam = (g) => picks.teams.some((x) => teamKey(x.path, x.id) === teamKey(g.path, g.home.id) || teamKey(x.path, x.id) === teamKey(g.path, g.away.id)) || picks.games.some((x) => x.id === g.id);
 function resultRows(results, t) {
-  const byDay = new Map();
-  for (const g of results) { const k = sg(g.date).key; byDay.set(k, [...(byDay.get(k) || []), g]); }
-  let html = '';
-  for (const [k, list] of byDay) {
-    const all = k >= addDays(t, -1) || openDays.has(k);
-    const shown = all ? list : list.filter(yourTeam), rest = list.length - shown.length;
-    // When a folded day is opened, its first newly shown row gets an id so focus can move to it.
-    const first = openDays.has(k) && k < addDays(t, -1) ? list.find((g) => !yourTeam(g)) : null;
-    html += shown.map((g) => (g === first ? gameRow(g).replace('<a class="row', `<a id="r-${k}" class="row`) : gameRow(g))).join('');
-    if (rest) html += `<button class="btn ghost more" data-act="older" data-k="${k}">${keyLabel(k)} · ${rest} more result${rest > 1 ? 's' : ''}</button>`;
-  }
-  return html;
+  const old = (g) => nightKey(g.date) < addDays(t, -1) && !yourTeam(g);
+  const hidden = results.filter(old);
+  // Once opened, the first newly shown row gets an id so focus can move to it.
+  if (openOlder || !hidden.length) return results.map((g) => (g === hidden[0] ? gameRow(g).replace('<a class="row', '<a id="r-older" class="row') : gameRow(g))).join('');
+  const from = sg(addDays(t, -3) + 'T04:00:00Z').wd;
+  return results.filter((g) => !old(g)).map((g) => gameRow(g)).join('')
+    + `<button class="btn ghost more" data-act="older">${hidden.length} more result${hidden.length > 1 ? 's' : ''} since ${from}</button>`;
 }
 
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
@@ -141,7 +136,7 @@ home.actions = {
   },
   // Tapping a sport shows that sport and goes straight to its next game (Coming up, soonest first).
   // The button goes away when the day opens, so move focus to the first row it revealed (VoiceOver and keyboard).
-  older(d, el, e, ctx) { openDays.add(d.k); ctx.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(`r-${d.k}`)?.focus())); },
+  older(d, el, e, ctx) { openOlder = true; ctx.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('r-older')?.focus())); },
   sport(d, el, e, ctx) {
     cur = d.s; ctx.redraw();
     requestAnimationFrame(() => requestAnimationFrame(() => {

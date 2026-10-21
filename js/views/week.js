@@ -1,8 +1,8 @@
 // This week: "Good for you" games with the reason, one tap to follow (PRD 7.8).
-import { sg, todayKey, addDays, keyLabel, icon } from '../util.js';
+import { nightKey, nightToday, addDays, keyLabel, icon } from '../util.js';
 import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
-import { reasons } from '../suggest.js';
+import { reasons, freeHour } from '../suggest.js';
 import { followBtn, gameRow, skel, errorCard } from '../ui.js';
 
 const state = { f: 'all', open: new Set() };
@@ -21,12 +21,12 @@ function paths() {
 // The button sits beside the link, not inside it.
 function card(g) {
   const pick = { id: g.id, path: g.path, date: g.date, name: g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}` };
-  return `<div class="wk">${gameRow(g, { room: 27, compName: false })}${followBtn('game', g.id, pick, { label: 'Follow', lite: true })}</div>`;
+  return `<div class="wk">${gameRow(g, { room: 27, compName: false, whyMax: 2 })}${followBtn('game', g.id, pick, { label: 'Follow', lite: true })}</div>`;
 }
 
 export default function week(params, ctx) {
   if (state.f !== 'all') ctx.sport = state.f;
-  const t = todayKey();
+  const t = nightToday();
   const list = paths();
   const e = ctx.use(`week:${list.join(',')}:${t}`, async () => {
     const res = await Promise.allSettled(list.map((p) => range(p, t, addDays(t, 7))));
@@ -49,11 +49,15 @@ export default function week(params, ctx) {
   if (!games.length) return html + `<div class="banner info">No games match your free hours and rules this week. You can change them in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
   const days = new Map();
   const had = new Map();
-  for (const g of games) { const k = sg(g.date).key; if (isMine(g, picks)) had.set(k, (had.get(k) || 0) + 1); else days.set(k, [...(days.get(k) || []), g]); }
-  for (const [k, list] of days) {
+  for (const g of games) { const k = nightKey(g.date); if (!days.has(k)) days.set(k, []); if (isMine(g, picks)) had.set(k, (had.get(k) || 0) + 1); else days.get(k).push(g); }
+  // Stand-outs first in each night (played abroad, on a streamer, playoffs), then the rest by kick-off time.
+  const stands = (g) => reasons(g).some((r) => r !== freeHour(g));
+  for (const [k, all] of days) {
+    const list = [...all.filter(stands), ...all.filter((g) => !stands(g))];
     const open = state.open.has(k) || list.length <= PER_DAY + 1;
     const note = [list.length > 1 ? `${list.length} games` : '', had.get(k) ? `+${had.get(k)} already in My games` : ''].filter(Boolean).join(' · ');
     html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${note ? `<span>${note}</span>` : ''}</div>`;
+    if (!list.length) continue; // a night where everything is already in My games keeps just its heading and count
     html += (open ? list : list.slice(0, PER_DAY)).map(card).join('');
     if (!open) html += `<button class="btn ghost more" data-act="more" data-k="${k}">Show ${list.length - PER_DAY} more</button>`;
   }

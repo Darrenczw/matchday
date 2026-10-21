@@ -3,7 +3,7 @@ import { esc, sg, shortDay, icon } from './util.js';
 import { kitsFor, crest, compImg, isDark, edge, kitEdge } from './identity.js';
 import { liveLabel } from './espn.js';
 import { mainMarket, tvShort } from './tv.js';
-import { reasons } from './suggest.js';
+import { reasons, freeHour } from './suggest.js';
 import { load, save, following, teamKey } from './store.js';
 import { inCal } from './cal.js';
 
@@ -75,7 +75,7 @@ export function spoken(g, k, { tv = '', moved = null, why = '' } = {}) {
   return out.join('. ') + '.';
 }
 
-export function gameRow(g, { why = true, tv = true, room: budget = 44, compName = true } = {}) {
+export function gameRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1 } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
@@ -84,13 +84,21 @@ export function gameRow(g, { why = true, tv = true, room: budget = 44, compName 
   else mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>${shortDay(g.date)} · <i class="sep">${k.sep}</i></span>`;
   const bits = [];
   const comp = g.comp;
-  // compName false = logo only, where the line also holds a button (This week). The spoken label still names it.
-  bits.push(compName || !comp.logo ? `${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>` : compImg(comp.logo, 18, comp.name));
+  // Logo only (no separator after it) where the line also holds a button: This week. The spoken label still names it.
+  const logoOnly = !compName && comp.logo;
+  bits.push(logoOnly ? '' : `${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
   const moved = g.state === 'pre' ? movedFrom(g) : null;
-  const why1 = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g)[0] : '';
+  // Reasons: the rare ones (played abroad, on a streamer, playoffs) first and in green, because they are why a
+  // game stands out; the free-hours fit after them in grey, since most games have one.
+  const all = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g) : [];
+  const fh = freeHour(g);
+  let whys = [...all.filter((x) => x !== fh), ...all.filter((x) => x === fh)].slice(0, whyMax);
+  const m = tv && g.state !== 'post' ? mainMarket(g) : null;
+  const used = (compName ? comp.name.length : 0) + (m ? m.label.length + tvShort(m, false).length : 0);
+  if (whys.length > 1 && used + whys.join(' · ').length > budget) whys = whys.slice(0, 1); // the line is one line
+  const why1 = whys.join(' · ');
   let tvSaid = '';
-  if (tv && g.state !== 'post') {
-    const m = mainMarket(g);
+  if (m) {
     // The meta line is one line: when it's full, drop "· 1 more" before the channel name gets cut.
     const room = (compName ? comp.name.length : 0) + m.label.length + tvShort(m).length + (why1 || '').length <= budget;
     bits.push(`<span class="tvt">${esc(m.label)} · ${esc(tvShort(m, room))}</span>`);
@@ -99,9 +107,9 @@ export function gameRow(g, { why = true, tv = true, room: budget = 44, compName 
   if (g.viaBackup) bits.push('<span class="tag likely">Backup</span>');
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
   else if (moved) bits.push(`<span class="moved">${movedText(moved)}</span>`);
-  else if (why1) bits.push(`<em>${esc(why1)}</em>`);
-  const label = spoken(g, k, { tv: tvSaid, moved, why: why1 });
-  return `<a class="row${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(label)}">${panel('l', k.left, 26, yours(g, k.left.team))}<div class="mid">${mid}</div>${panel('r', k.right, 26, yours(g, k.right.team))}<div class="meta">${bits.join('<span aria-hidden="true">·</span>')}</div></a>`;
+  else for (const w of whys) bits.push(w === fh ? `<span class="fh">${esc(w)}</span>` : `<em>${esc(w)}</em>`);
+  const label = spoken(g, k, { tv: tvSaid, moved, why: all.join(', ') });
+  return `<a class="row${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(label)}">${panel('l', k.left, 26, yours(g, k.left.team))}<div class="mid">${mid}</div>${panel('r', k.right, 26, yours(g, k.right.team))}<div class="meta">${logoOnly ? compImg(comp.logo, 18, comp.name) : ''}${bits.filter(Boolean).join('<span aria-hidden="true">·</span>')}</div></a>`;
 }
 
 const POSS = '<svg class="poss" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.6 16.4C2.4 11 7.6 3.9 16.4 3.6c1.2 5.4-4 12.5-12.8 12.8z"/><path d="M7.6 12.4l4.8-4.8M8.6 9.6l1.8 1.8M10.2 8l1.8 1.8"/></svg>';

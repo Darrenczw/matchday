@@ -113,6 +113,7 @@ html[data-theme="dark"] .darkkit { box-shadow: inset 0 0 0 1px rgba(255, 255, 25
 .row .meta > span:nth-child(2) { white-space: nowrap; }
 .row .meta .tvt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .row .meta em { font-style: normal; font-weight: 700; color: var(--go); white-space: nowrap; }
+.row .meta .fh { font-weight: 600; white-space: nowrap; }
 .row .meta .moved { color: var(--amber); font-weight: 700; white-space: nowrap; }
 .row .meta .pp { color: var(--amber); font-weight: 700; }
 .row.done .p { opacity: .92; }
@@ -135,7 +136,7 @@ a.li:active, .row:active { filter: brightness(.97); }
 .note { padding: 10px 14px 14px; color: var(--mute); font: 500 12.5px/1.45 var(--text); }
 .note a { text-decoration: underline; text-underline-offset: 2px; }
 .note, .lede, .foot, .banner span, .li small.wrap { text-wrap: pretty; }
-.note a.inl { display: inline-block; padding: 11px 0; margin: -11px 0; }
+.note a.inl { display: inline-block; padding: 12px 0; margin: -12px 0; }
 
 /* ---------- Buttons and tags */
 .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 14px; border-radius: 99px; font: 700 14px/1 var(--text); white-space: nowrap; flex: none; }
@@ -192,6 +193,12 @@ a.li:active, .row:active { filter: brightness(.97); }
 .mh .shirt.r { align-items: flex-end; text-align: right; }
 .mh .tn { font: 800 25px/1 var(--cond); text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
 .mh a.tn { display: inline-block; padding: 10px 0; margin: -10px 0; }
+/* Competition strip above the match header: the competition's colour, logo and name */
+.cstrip { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0 var(--gutter) 8px; padding: 0 10px 0 8px; border-radius: 12px; }
+.cstrip b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 15px/1 var(--cond); letter-spacing: .06em; text-transform: uppercase; }
+.cstrip small { margin-left: auto; font: 600 12px/1.2 var(--text); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cstrip .chev { width: 16px; height: 16px; flex: none; }
+.cstrip b + .chev { margin-left: auto; }
 .mh .sc { font: 800 92px/.82 var(--cond); letter-spacing: -.02em; }
 .mh .scorers { font: 600 12px/1.35 var(--text); } /* full strength: the ink colour is what passes 4.5:1 */
 .mh .ko { position: absolute; left: 50%; top: 12px; bottom: 12px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 128px; padding: 12px 6px; border-radius: 12px; background: #fff; color: #121318; text-align: center; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .45); }
@@ -202,6 +209,7 @@ a.li:active, .row:active { filter: brightness(.97); }
 .mh.pre .shirt { padding-bottom: 16px; }
 .tvmain { display: flex; align-items: center; gap: 12px; padding: 4px 14px 12px; }
 .tvmain b { flex: 1; min-width: 0; font: 800 24px/1.05 var(--cond); text-transform: uppercase; }
+.tvmain b.list { font: 700 17px/1.3 var(--text); text-transform: none; } /* a list of channels is a sentence: not condensed caps */
 .tvrow { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line); font: 500 14px/1.3 var(--text); }
 .tvrow .m { width: 92px; flex: none; font-weight: 700; }
 .tvrow .c { flex: 1; min-width: 0; }
