@@ -270,17 +270,23 @@ function formCard(g, d, k) {
   return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now' : 'Last 5, newest right'}</span></div>${rows.join('')}</div>`;
 }
 
+// "today 17:46", "yesterday 17:46" or "Mon 17:46", so a check time never reads like a kick-off time.
+function checkedWhen(t) {
+  const s = sg(t), today = sg(Date.now()).key, yday = sg(Date.now() - 864e5).key;
+  return `${s.key === today ? 'today' : s.key === yday ? 'yesterday' : s.wd} ${s.hm}`;
+}
+
 function statusLines(g, ctx) {
   const st = calReady() ? ctx.use('calstatus', calStatus, 60e3).v : null;
   const helper = st?.checkedById?.[g.id], checked = helper || net.lastOk;
-  let html = `<p class="status">${icon('clock')}<span>Kick-off time ${helper ? 'checked by the calendar helper' : 'from ESPN'}${checked ? ` at ${sg(checked).hm}` : ''}.</span></p>`;
+  let html = `<p class="status">${icon('clock')}<span>${helper ? 'Checked by the calendar helper' : 'Checked with ESPN'}${checked ? ` ${checkedWhen(checked)}` : ''}</span></p>`;
   // Second source (TheSportsDB), for games the helper tracks: [note, checked at, its time].
   if (helper) {
     const [note, at, t] = st.secondById?.[g.id] || [];
     const s = t && sg(t);
     if (note === 'differ') html += `<p class="status amber">${icon('alert')}<span>Time unconfirmed: TheSportsDB says ${s.wd} ${s.hm}. Showing ESPN’s time until they agree.</span></p>`;
     else if (note === 'postponed') html += `<p class="status amber">${icon('alert')}<span>Time unconfirmed: TheSportsDB lists this game as postponed. Showing ESPN’s time.</span></p>`;
-    else if (note === 'agree') html += `<p class="status ok">${icon('check')}<span>Second source agrees (TheSportsDB, checked ${sg(at).hm})</span></p>`;
+    else if (note === 'agree') html += `<p class="status ok">${icon('check')}<span>Second source agrees (TheSportsDB, checked ${checkedWhen(at)})</span></p>`;
     else if (note === 'nomatch') html += `<p class="status">${icon('clock')}<span>TheSportsDB doesn’t list this game, so only ESPN is checked.</span></p>`;
     else if (note === 'notime') html += `<p class="status">${icon('clock')}<span>TheSportsDB has no kick-off time for this game yet.</span></p>`;
     else if (new Date(g.date) - Date.now() > 14 * 864e5) html += `<p class="status">${icon('clock')}<span>Second-source check starts 14 days before kick-off.</span></p>`;
