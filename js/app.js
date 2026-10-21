@@ -203,7 +203,18 @@ go();
 
 // Offline support on the live site; locally only with "?sw", so edits show straight away while building.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw\b/.test(location.search))) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // New versions: check whenever the app comes back to the screen (iOS resumes the Home Screen app
+  // rather than restarting it), and reload once the new version has taken over.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
 }
 if (DEMO) document.title = 'Matchday (sample picks)';
 export { picks };

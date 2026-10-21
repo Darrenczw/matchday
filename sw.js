@@ -1,5 +1,5 @@
 // Matchday service worker. Bump VERSION on every deploy.
-const VERSION = 'md-v2';
+const VERSION = 'md-v3';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'data/rights.json',
   'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/ui.js',
@@ -9,7 +9,8 @@ const SHELL = [
 ];
 const DATA = 'md-data', IMG = 'md-img';
 
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
+// cache: 'reload' skips the browser's HTTP cache, so a new version never stores old files.
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => ![VERSION, DATA, IMG].includes(k)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
