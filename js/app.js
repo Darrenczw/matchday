@@ -1,6 +1,7 @@
 // App shell: routing, drawing, data loading, live polling, actions.
 import { on, follow, unfollow, set, settings, picks, DEMO } from './store.js';
 import { rightsReady } from './tv.js';
+import { compInfo } from './espn.js';
 import { toast } from './ui.js';
 import home from './views/home.js';
 import followView from './views/follow.js';
@@ -83,6 +84,7 @@ function go() {
     const m = h.match(re);
     if (!m) continue;
     route = { view, params: m.slice(1), hash: h };
+    ctx.back = stack.length > 1 ? { href: stack[stack.length - 2], label: labelFor(stack[stack.length - 2]) } : null;
     if (tab) lastTab = tab;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.tab === lastTab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     lastHtml = '';
@@ -93,6 +95,18 @@ function go() {
     return;
   }
   location.replace('#/');
+}
+// "Back" names the screen it returns to.
+function labelFor(h) {
+  if (!h || h === '#/' || h === '#') return 'My games';
+  if (h.startsWith('#/follow')) return 'Follow';
+  if (h === '#/week') return 'This week';
+  if (h === '#/settings') return 'Settings';
+  let m = h.match(/^#\/c\/(\w+)\/([\w.]+)$/);
+  if (m) return compInfo(`${m[1]}/${m[2]}`).name;
+  m = h.match(/^#\/t\/(\w+)\/[\w.]+\/(\d+)$/);
+  if (m) return data.get(`team:${m[1]}:${m[2]}`)?.v?.short || 'Team';
+  return 'Back';
 }
 const stack = [];
 addEventListener('hashchange', () => {

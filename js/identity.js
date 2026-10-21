@@ -118,6 +118,11 @@ export function crest(t, size, patch = false) {
   if (!url) return `<span class="ini${patch ? '' : ' flat'}" style="width:${size}px;height:${size}px">${ini}</span>`;
   return `<img class="${cls}" src="${esc(logoSrc(url, size * 3))}" width="${size}" height="${size}" alt="" loading="lazy" decoding="async" data-ini="${ini}" data-flat="${patch ? '' : '1'}" data-light="${esc(logoSrc(t.logo, size * 3))}">`;
 }
+// A team-colour mark (badge, bar, chip) that would melt into the card behind it gets a hairline edge.
+export function edge(bg) {
+  const dark = isDark();
+  return contrast(bg, dark ? '#1c1d22' : '#ffffff') < 1.6 ? `box-shadow:inset 0 0 0 1px ${dark ? 'rgba(255,255,255,.32)' : 'rgba(18,19,24,.25)'}` : '';
+}
 // A competition logo on a neutral surface.
 export const compImg = (logo, size, name = '') => (logo ? crest({ logo, name, abbr: initials(name) }, size) : '');
 // One listener swaps any broken logo for an initials crest.

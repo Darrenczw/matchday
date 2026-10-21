@@ -25,11 +25,9 @@ function table(ctx, path) {
       const style = mine ? ` style="background:${bg};color:${inkOn(bg, t.alt)}${lum(bg) > 0.7 ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.15)' : ''}"` : '';
       const sw = `<span class="sw" aria-hidden="true"><i style="background:${t.color || '#888'}"></i><i style="background:${t.alt || t.color || '#888'}"></i></span>`;
       const cells = us ? `<span>${esc(r.w)}</span><span>${esc(r.l)}</span><span class="pts">${esc(r.pct)}</span>` : `<span>${esc(r.gp)}</span><span>${esc(r.gd)}</span><span class="pts">${esc(r.pts)}</span>`;
-      html += `<a class="tr${r.note && !mine ? ' zone' : ''}" href="${href.team(path, t.id)}"${style} aria-label="${esc(`${r.rank}. ${t.name}`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
+      html += `<a class="tr" href="${href.team(path, t.id)}"${style} aria-label="${esc(`${r.rank}. ${t.name}`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
     }
   }
-  const zones = [...new Map(groups.flatMap((g) => g.rows).filter((r) => r.note?.description).map((r) => [r.note.description, r.note])).values()];
-  if (zones.length) html += `<p class="foot">Green edge: ${esc(zones.map((z) => z.description).join(', '))}.</p>`;
   return html + '</div>';
 }
 
@@ -63,7 +61,7 @@ export default function comp([sport, slug], ctx) {
   const bg = brand(path), ink = inkOn(bg, '#ffffff');
   const tab = tabs[path] || 'table';
   const sub = sport === 'soccer' ? c.region : 'Whole league';
-  let html = `<div class="skin" style="--skin-bg:${bg};--skin-ink:${ink}"><div class="nav">${backBtn('#/follow', 'Follow')}<span></span>${followBtn('comp', path, { path, name: c.name, logo: c.logo })}</div>
+  let html = `<div class="skin" style="--skin-bg:${bg};--skin-ink:${ink}"><div class="nav">${backBtn(ctx.back?.href || '#/follow', ctx.back?.label || 'Follow')}<span></span>${followBtn('comp', path, { path, name: c.name, logo: c.logo })}</div>
 <div class="ident"><div class="badge">${c.logo ? `<img src="${esc(logoSrc(c.logo, 156))}" alt="" data-ini="${esc(c.name.slice(0, 3).toUpperCase())}" data-flat="1">` : ''}</div><div><h1>${esc(c.name)}</h1><p>${esc(sub)}</p></div></div></div>`;
   html += `<div class="seg" role="group" aria-label="Show">${[['table', 'Table'], ['next', 'Fixtures'], ['done', 'Results'], ['teams', 'Teams']].map(([k, l]) => `<button data-act="tab" data-t="${k}" data-p="${path}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>`;
   if (tab === 'table') html += table(ctx, path);

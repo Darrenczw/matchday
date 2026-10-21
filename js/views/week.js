@@ -4,7 +4,7 @@ import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
 import { kitsFor, crest } from '../identity.js';
 import { reasons } from '../suggest.js';
-import { mainMarket, chans } from '../tv.js';
+import { mainMarket } from '../tv.js';
 import { followBtn, href, skel, errorCard } from '../ui.js';
 
 const state = { f: 'all' };
@@ -26,7 +26,7 @@ function card(g) {
   const action = mine && !picks.games.some((x) => x.id === g.id) ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick, { label: 'Follow' });
   return `<div class="card"><a class="row" style="margin:0;border-radius:0;box-shadow:none;grid-template-columns:1fr 1fr" href="${href.match(g)}">${half(k.left)}${half(k.right, true)}</a>
 <div class="li" style="border:0;align-items:center"><span class="grow"><span class="t" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num" style="font-size:20px">${s.wd} ${g.timeValid ? s.hm : 'TBC'}</span>${why.map((w) => `<span class="tag why">${esc(w)}</span>`).join('')}</span>
-<small>${esc(g.comp.name)} · ${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(chans(m))}</small></span>${action}</div></div>`;
+<small>${esc(g.comp.name)} · ${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(m.channels[0] + (m.channels.length > 1 ? ` +${m.channels.length - 1}` : ''))}</small></span>${action}</div></div>`;
 }
 
 export default function week(params, ctx) {

@@ -62,7 +62,7 @@ export function hero(g) {
   const tv = m.kind !== 'none' ? m.channels[0] : g.usTV[0];
   const side = (x, r) => {
     const sc = String(x.team.score ?? '0');
-    return `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 40, true)}<b class="score${sc.length > 2 ? ' sm' : ''}">${esc(sc)}</b><span class="name">${esc(x.team.short)}</span></div>`;
+    return `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 40, true)}<b class="score${sc.length > 2 ? ' sm' : ''}">${esc(sc)}</b><span class="name">${esc(x.team.short)}${g.sport !== 'soccer' ? `<small>${x.team.home ? 'Home' : 'Away'}</small>` : ''}</span></div>`;
   };
   return `<a class="hero" href="${href.match(g)}" aria-label="${esc(`Live: ${k.left.team.short} ${k.left.team.score}, ${k.right.team.short} ${k.right.team.score}, ${liveLabel(g)}`)}">${side(k.left)}${side(k.right, true)}<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))}${tv ? ` · ${esc(tv)}` : ''}</span></div></a>`;
 }

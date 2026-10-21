@@ -1,23 +1,27 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
 import { esc, sg, countdown, icon } from '../util.js';
-import { following } from '../store.js';
-import { summary, norm, liveLabel, net } from '../espn.js';
-import { kitsFor, clashNote, crest } from '../identity.js';
+import { following, picks } from '../store.js';
+import { summary, norm, liveLabel, net, isMine } from '../espn.js';
+import { kitsFor, clashNote, crest, edge } from '../identity.js';
 import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
 import { followBtn, backBtn, skel, errorCard, movedFrom, movedText, href } from '../ui.js';
 import { reasons } from '../suggest.js';
 
 // ---------- Pieces
+const openSubs = new Set();
+// NBA and NFL list away first, so say which side is which.
+const ha = (g, x) => (g.sport === 'soccer' ? '' : `<span class="ha">${x.team.home ? 'Home' : 'Away'}</span>`);
+const tchip = (x) => `<span class="tchip" style="background:${x.bg};color:${x.ink};${edge(x.bg)}">${esc(x.team.abbr)}</span>`;
 function header(g, k, d) {
   const s = sg(g.date);
   if (g.state === 'pre') {
     const moved = movedFrom(g);
-    const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<span class="tn">${esc(x.team.short)}</span></div>`;
+    const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<span><span class="tn">${esc(x.team.short)}</span>${ha(g, x)}</span></div>`;
     return `<section class="mh pre">${side(k.left)}${side(k.right, true)}<div class="ko"><b>${g.timeValid ? s.hm : 'TBC'}</b><span>${s.wd} ${s.d} ${s.mo} · SGT</span>${g.postponed ? '<span class="moved">Postponed</span>' : moved ? `<span class="moved">${movedText(moved)}</span>` : `<span class="cd">${g.timeValid ? countdown(g.date) : 'Time to be confirmed'}</span>`}</div></section>`;
   }
   const sc = scorers(g, d);
-  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<b class="sc">${esc(x.team.score ?? '0')}</b><span><span class="tn">${esc(x.team.short)}</span>${sc[x.team.id] ? `<span class="scorers" style="display:block">${esc(sc[x.team.id])}</span>` : ''}</span></div>`;
-  const pill = g.state === 'in' ? `<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))} · Live</span></div>` : `<div class="state"><span>${esc(g.sport === 'soccer' ? 'Full time' : 'Final')}${g.detail && !/^(FT|Final)$/i.test(g.detail) ? ` · ${esc(g.detail)}` : ''}</span></div>`;
+  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<b class="sc">${esc(x.team.score ?? '0')}</b><span><span class="tn">${esc(x.team.short)}</span>${ha(g, x)}${sc[x.team.id] ? `<span class="scorers" style="display:block">${esc(sc[x.team.id])}</span>` : ''}</span></div>`;
+  const pill = g.state === 'in' ? `<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))} · Live</span></div>` : `<div class="state"><span>${esc(g.sport === 'soccer' ? 'Full time' : 'Final')}${g.detail && !/^(FT|Final)$/i.test(g.detail) ? ` · ${esc(g.detail)}` : ''} · ${s.wd} ${s.d} ${s.mo}</span></div>`;
   return `<section class="mh">${side(k.left)}${side(k.right, true)}${pill}</section>`;
 }
 function scorers(g, d) {
@@ -50,10 +54,14 @@ function tvAll(g) {
 }
 
 function moments(g, d, k, newestFirst) {
-  let list = [], subs = 0;
+  const list = [], subs = [];
   if (g.sport === 'soccer') {
     for (const e of d.keyEvents || []) {
-      if (/substitution/i.test(e.type?.text || '')) { subs++; continue; }
+      if (/substitution/i.test(e.type?.text || '')) {
+        const txt = (e.text || '').replace(/^Substitution,\s*[^.]+\.\s*/i, '');
+        subs.push({ min: e.clock?.displayValue || '', team: e.team?.id, txt: txt || e.participants?.map((p) => p.athlete?.displayName).join(' for ') || '' });
+        continue;
+      }
       if (!isGoal(e) && !isCard(e) && !/var/i.test(e.type?.text || '')) continue;
       const p = e.participants || [];
       const who = p[0]?.athlete?.displayName || e.text || '';
@@ -63,12 +71,12 @@ function moments(g, d, k, newestFirst) {
   } else if (g.sport === 'football') {
     for (const p of d.scoringPlays || []) list.push({ min: `Q${p.period?.number} ${p.clock?.displayValue || ''}`, team: p.team?.id, who: p.type?.text || 'Score', sub: p.text, kind: 'goal', abbr: p.type?.abbreviation });
   }
-  if (!list.length && !subs) return '';
+  if (!list.length && !subs.length) return '';
   if (newestFirst) list.reverse();
   const leftId = k.left.team.id;
   const badge = (m) => {
     const side = m.team === leftId ? k.left : k.right;
-    if (m.kind === 'goal') return `<span class="goal" style="background:${side.bg};color:${side.ink}${side.light ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.2)' : ''}">${esc(m.abbr || (g.sport === 'soccer' ? 'GOAL' : 'SCORE'))}</span>`;
+    if (m.kind === 'goal') return `<span class="goal" style="background:${side.bg};color:${side.ink};${edge(side.bg)}">${esc(m.abbr || (g.sport === 'soccer' ? 'GOAL' : 'SCORE'))}</span>`;
     if (m.kind === 'red') return '<span class="card-r" aria-label="Red card"></span>';
     if (m.kind === 'yellow') return '<span class="card-y" aria-label="Yellow card"></span>';
     return '<span class="tag likely">VAR</span>';
@@ -80,7 +88,11 @@ function moments(g, d, k, newestFirst) {
       ? `<div class="ev"><span class="min">${esc(m.min)}</span><span class="who">${badge(m)}${txt}</span><span></span></div>`
       : `<div class="ev"><span></span><span class="who r">${txt}${badge(m)}</span><span class="min r">${esc(m.min)}</span></div>`;
   }).join('');
-  return `<div class="card"><div class="h">Key moments<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${rows}${subs ? `<div class="ev" style="grid-template-columns:1fr"><span style="color:var(--mute);font-weight:600">${subs} substitution${subs > 1 ? 's' : ''}</span></div>` : ''}</div>`;
+  // Substitutions fold into one row that opens (PRD 7.6).
+  const open = openSubs.has(g.id);
+  const subRows = open ? subs.map((x) => `<div class="ev"><span class="min">${esc(x.min)}</span><span class="who"><span class="tchip" style="background:${(x.team === leftId ? k.left : k.right).bg};color:${(x.team === leftId ? k.left : k.right).ink};${edge((x.team === leftId ? k.left : k.right).bg)}">${esc((x.team === leftId ? k.left : k.right).team.abbr)}</span><span><small style="color:var(--ink);font-size:13px">${esc(x.txt)}</small></span></span><span></span></div>`).join('') : '';
+  const subBtn = subs.length ? `<button class="ev subs" data-act="subs" data-id="${g.id}" aria-expanded="${open}"><span>${subs.length} substitution${subs.length > 1 ? 's' : ''}</span>${icon(open ? 'up' : 'down', 'chev')}</button>` : '';
+  return `<div class="card"><div class="h">Key moments<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${rows}${subBtn}${subRows}</div>`;
 }
 
 function quarters(g, d, k) {
@@ -93,7 +105,7 @@ function quarters(g, d, k) {
   const cells = (c) => Array.from({ length: n }, (_, i) => `<td>${esc(c?.linescores?.[i]?.displayValue ?? '')}</td>`).join('');
   const head = Array.from({ length: n }, (_, i) => `<th>${i < 4 ? `Q${i + 1}` : 'OT'}</th>`).join('');
   return `<div class="card"><h2>${g.sport === 'basketball' ? 'Quarters' : 'Score by quarter'}</h2><table class="lines"><tr><th>Team</th>${head}<th>T</th></tr>
-<tr><td>${esc(k.left.team.abbr)}</td>${cells(L)}<td>${esc(k.left.team.score ?? '')}</td></tr><tr><td>${esc(k.right.team.abbr)}</td>${cells(R)}<td>${esc(k.right.team.score ?? '')}</td></tr></table></div>`;
+<tr><td>${tchip(k.left)}</td>${cells(L)}<td>${esc(k.left.team.score ?? '')}</td></tr><tr><td>${tchip(k.right)}</td>${cells(R)}<td>${esc(k.right.team.score ?? '')}</td></tr></table></div>`;
 }
 
 const STATS = {
@@ -108,7 +120,7 @@ function stats(g, d, k) {
   const rows = STATS[g.sport].filter(([n]) => a[n] != null && b[n] != null).map(([n, label, unit = '']) => {
     const num = (v) => (String(v).includes(':') ? String(v).split(':').reduce((m, s) => m * 60 + +s, 0) : parseFloat(v) || 0);
     const x = num(a[n]), y = num(b[n]), tot = x + y || 1;
-    const bar = (side, v) => `<i style="flex:${Math.max(v / tot, 0.02)};background:${side.bg}${side.light ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.25)' : ''}"></i>`;
+    const bar = (side, v) => `<i style="flex:${Math.max(v / tot, 0.02)};background:${side.bg};${edge(side.bg)}"></i>`;
     return `<div class="stat"><div class="l"><b>${esc(a[n])}${unit}</b><span>${label}</span><b>${esc(b[n])}${unit}</b></div><div class="bars" aria-hidden="true">${bar(k.left, x)}${bar(k.right, y)}</div></div>`;
   });
   return rows.length ? `<div class="card"><h2>Stats</h2>${rows.join('')}</div>` : '';
@@ -120,7 +132,7 @@ function leaders(g, d, k) {
   const col = (x) => {
     const L = d.leaders.find((l) => l.team?.id === x.team.id);
     const rows = (L?.leaders || []).slice(0, 3).map((c) => { const p = c.leaders?.[0]; return p ? `<p><i style="width:auto;min-width:20px">${esc(p.displayValue?.split(',')[0] || '')}</i>${esc(p.athlete?.shortName || p.athlete?.displayName || '')} <span style="color:var(--mute)">${esc(c.displayName?.toLowerCase() || '')}</span></p>` : ''; }).join('');
-    return `<div><h3>${crest(x.team, 22)}${esc(x.team.abbr)}</h3>${rows}</div>`;
+    return `<div><h3>${crest(x.team, 22)}${tchip(x)}</h3>${rows}</div>`;
   };
   return `<div class="card"><h2>Top players</h2><div class="xi">${col(k.left)}${col(k.right)}</div></div>`;
 }
@@ -164,7 +176,7 @@ function formCard(g, d, k) {
 function statusLines(g) {
   const checked = net.lastOk ? sg(net.lastOk).hm : '';
   let html = `<p class="status">${icon('clock')}<span>Kick-off time from ESPN${checked ? `, checked ${checked}` : ''}. Second-source check comes with the calendar helper.</span></p>`;
-  if (following('game', g.id)) html += `<p class="status">${icon('cal')}<span>Calendar sync isn’t set up yet. It comes with the calendar helper (build step A5).</span></p>`;
+  if (isMine(g, picks)) html += `<p class="status">${icon('cal')}<span>Calendar sync isn’t set up yet. It comes with the calendar helper (build step A5).</span></p>`;
   return html;
 }
 
@@ -176,7 +188,10 @@ export default function match([sport, slug, id], ctx) {
   const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : null;
   const compName = g?.comp.name || '';
   const pick = g ? { id: g.id, path, date: g.date, name: `${g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`}` } : null;
-  let html = `<div class="nav">${backBtn('#/', 'Back')}<span class="cap">${esc(compName)}</span>${pick && g.state !== 'post' ? followBtn('game', g.id, pick) : '<span class="spacer"></span>'}</div>`;
+  // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
+  const covered = g && !following('game', g.id) && isMine(g, picks);
+  const right = !pick || g.state === 'post' ? '<span class="spacer"></span>' : covered ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick);
+  let html = `<div class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}<span class="cap">${esc(compName)}</span>${right}</div>`;
   if (!g) return html + (e.err ? errorCard('Couldn’t load this game.') : skel(3, true));
   ctx.live = g.state === 'in' || (g.state === 'pre' && new Date(g.date) - Date.now() < 10 * 60e3);
   ctx.wasLive = ctx.live;
@@ -192,3 +207,6 @@ export default function match([sport, slug, id], ctx) {
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
   return html;
 }
+match.actions = {
+  subs(d, el, e, ctx) { openSubs.has(d.id) ? openSubs.delete(d.id) : openSubs.add(d.id); ctx.redraw(); },
+};

@@ -30,10 +30,10 @@ export function keyLabel(key) {
   const s = sg(key + 'T04:00:00Z'); // noon SGT on that day
   return `${s.wd} ${s.d} ${s.mo}`;
 }
+// The seam under a kick-off time. Rows sit under dated headers, so use the plain weekday (or date when
+// more than a week out) rather than "Tonight", which clashes with a "Tomorrow" header for 03:00 games.
 export function shortDay(d) {
   const s = sg(d), t = todayKey();
-  if (s.key === t) return s.h >= 18 ? 'Tonight' : 'Today';
-  if (s.key === addDays(t, 1)) return s.h < 5 ? 'Tonight' : 'Tmrw';
   return s.key > addDays(t, 6) ? `${s.d} ${s.mo}` : s.wd;
 }
 

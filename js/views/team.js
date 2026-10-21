@@ -27,7 +27,7 @@ export default function team([sport, slug, id], ctx) {
   const t = info.v;
   const bg = readable(t?.color || NEUTRAL), ink = inkOn(bg, t?.alt);
   const style = `--skin-bg:${bg};--skin-ink:${ink};--skin-card:color-mix(in srgb, ${bg} 88%, #000);--skin-line:color-mix(in srgb, ${ink} 16%, transparent)`;
-  let html = `<div class="teampage" style="${style}"><div class="nav" style="color:${ink}">${backBtn('#/follow', 'Follow')}</div>`;
+  let html = `<div class="teampage" style="${style}"><div class="nav" style="color:${ink}">${backBtn(ctx.back?.href || '#/follow', ctx.back?.label || 'Follow')}</div>`;
   if (!t) return html + (info.err ? errorCard('Couldn’t load this team.') : skel(4, true)) + '</div>';
 
   const games = (sched.v || []).filter((g) => g.home.id === id || g.away.id === id);

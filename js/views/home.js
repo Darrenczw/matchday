@@ -59,9 +59,9 @@ export default function home(params, ctx) {
     any = true;
     html += `<section id="d-${k}"><div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${k === t && done.length ? `<span>${done.length} finished</span>` : ''}</div>${list.map((g) => gameRow(g)).join('')}${done.map((g) => gameRow(g)).join('')}</section>`;
   }
+  const later = e.v?.later || [];
   if (!any && !live.length && !later.length) html += `<div class="empty"><h2>Quiet week</h2><p>None of your picks play in the next 7 days.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
 
-  const later = e.v?.later || [];
   if (later.length) html += `<div class="sect"><h2 class="cap">Later</h2><span>Next game for teams with none this week</span></div>${later.map((g) => gameRow(g)).join('')}`;
 
   const past = games.filter((g) => g.state === 'post' && sg(g.date).key < t).reverse();
