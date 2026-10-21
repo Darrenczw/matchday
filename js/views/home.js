@@ -100,7 +100,8 @@ export default function home(params, ctx) {
   const has = new Set([...ahead.map((g) => nightKey(g.date)), ...(e.v?.season || []).filter(() => f === 'all')]);
   const on = curDay || t;
   html += `<div class="filterbar">${strip(days, t, on, has)}`
-    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<span class="stripm" aria-hidden="true">${monthOf(on)}</span></div></div>`;
+    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<button class="stripm" data-act="pick" aria-haspopup="dialog" aria-label="Pick a date. Showing ${monthOf(on)}"><b>${monthOf(on)}</b>${icon('cal')}</button></div></div>`;
+  if (pick) html += picker(days, t, on, has);
   setTimeout(() => { placeStrip(); track(); }, 0);
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
@@ -145,6 +146,37 @@ export default function home(params, ctx) {
   if (pendingJump && !loading) setTimeout(() => { const k = pendingJump; pendingJump = null; home.actions.jump({ k }); }, 0);
   return html + `<p class="foot" id="homefoot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
+
+// ---------- Date and month picker (Darren, 22 Oct 2026): the month name in the bar opens a sheet at the bottom,
+// in thumb reach. Month chips across the top, then that month's days (Monday first) with a dot where you have
+// games. Tap a day to jump there; the list loads up to it if it's further ahead.
+let pick = null; // 'YYYY-MM' while the sheet is open
+function picker(days, t, on, has) {
+  // Three months back (earlier results load on a jump) to the end of the strip.
+  const first = addDays(t, -91), last = days[days.length - 1];
+  const months = [...new Set(keyRange(first, last).map((k) => k.slice(0, 7)))];
+  const m = pick, [y, mo] = m.split('-').map(Number);
+  const start = `${m}-01`, dow = new Date(`${start}T00:00:00Z`).getUTCDay(), lead = (dow + 6) % 7;
+  const len = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const cells = [...Array(lead).fill(''), ...Array.from({ length: len }, (_, i) => `${m}-${String(i + 1).padStart(2, '0')}`)];
+  const chip = (x) => `<button class="mchip" data-act="pickm" data-m="${x}" aria-pressed="${x === m}">${MONTHS[+x.slice(5) - 1].slice(0, 3)}${x.slice(0, 4) !== t.slice(0, 4) ? ` ${x.slice(2, 4)}` : ''}</button>`;
+  const day = (k) => {
+    if (!k) return '<span></span>';
+    const x = sg(k + 'T04:00:00Z'), out = k < first || k > last;
+    return `<button class="pd${k === t ? ' today' : ''}${k === on ? ' cur' : ''}${has.has(k) ? ' has' : ''}" data-act="pickd" data-k="${k}"${out ? ' disabled' : ''} aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games' : ''}">${x.d}</button>`;
+  };
+  return `<div class="sheetbg" data-act="pickx"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Pick a date">
+<div class="sheethd"><h2 class="cap">Go to a date</h2><button class="btn sm ghost" data-act="pickd" data-k="${t}">Today</button><button class="btn sm icon ghost" data-act="pickx" aria-label="Close">${icon('x')}</button></div>
+<div class="chips mchips" role="group" aria-label="Month">${months.map(chip).join('')}</div>
+<p class="pmonth">${MONTHS[mo - 1]} ${y}</p>
+<div class="pgrid" aria-hidden="true">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => `<span class="pw">${d}</span>`).join('')}</div>
+<div class="pgrid" role="group" aria-label="${MONTHS[mo - 1]} ${y}">${cells.map(day).join('')}</div>
+<p class="note">Dots mark days with your games that are already known. Tap any day to go there.</p></div>`;
+}
+// Run after the next drawn frame (the screen draws in requestAnimationFrame).
+const afterPaint = (fn) => requestAnimationFrame(() => setTimeout(fn, 0));
+const closePick = () => { pick = null; homeCtx?.redraw(); afterPaint(() => document.querySelector('.stripm')?.focus()); };
+addEventListener('keydown', (e) => { if (pick && e.key === 'Escape') closePick(); });
 
 // The season strip is ~300 buttons; build it again only when today, the highlighted day or the dots change.
 let stripKey = '', stripHtml = '';
@@ -218,7 +250,7 @@ function track() {
       const l = btn.offsetLeft - strip.offsetLeft, r = l + btn.offsetWidth;
       if (l < strip.scrollLeft + 8 || r > strip.scrollLeft + strip.clientWidth - 8) strip.scrollTo({ left: l - strip.clientWidth / 2 + btn.offsetWidth / 2, behavior: smooth() });
     }
-    const m = bar.querySelector('.stripm'); if (m) m.textContent = monthOf(k);
+    const m = bar.querySelector('.stripm b'); if (m) m.textContent = monthOf(k);
   }
   if (innerHeight + scrollY > document.documentElement.scrollHeight - 900 && more < MAX_WEEKS && homeCtx && !document.querySelector('#view .skel')) { more++; homeCtx.redraw(); }
 }
@@ -226,6 +258,10 @@ let tr = 0;
 addEventListener('scroll', () => { clearTimeout(tr); tr = setTimeout(track, 40); }, { passive: true });
 
 home.actions = {
+  pick(d, el, e, ctx) { pick = (curDay || nightToday()).slice(0, 7); ctx.redraw(); afterPaint(() => document.querySelector('.sheet [aria-pressed="true"]')?.focus()); },
+  pickm(d, el, e, ctx) { pick = d.m; ctx.redraw(); afterPaint(() => { const c = document.querySelector(`.sheet [data-m="${d.m}"]`); c?.scrollIntoView({ inline: 'center', block: 'nearest' }); c?.focus(); }); },
+  pickx() { closePick(); },
+  pickd(d) { pick = null; homeCtx?.redraw(); afterPaint(() => home.actions.jump({ k: d.k })); },
   // Tap a day: jump to it, loading weeks up to it first if it's further ahead. A day without games goes to the next one that has some.
   jump(d) {
     const k = d.k, t = nightToday();
