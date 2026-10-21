@@ -1,5 +1,5 @@
 // Matchday service worker. Bump VERSION on every deploy.
-const VERSION = 'md-v5';
+const VERSION = 'md-v6';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'data/rights.json',
   'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/ui.js',

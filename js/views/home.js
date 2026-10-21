@@ -68,7 +68,7 @@ export default function home(params, ctx) {
   if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  if (ahead.length) html += `<div class="sect"><h2 class="cap">Coming up</h2></div>`;
+  if (ahead.length) html += `<div class="sect" id="coming"><h2 class="cap">Coming up</h2></div>`;
   let day = '';
   for (const g of ahead) {
     const k = sg(g.date).key;
@@ -90,5 +90,12 @@ home.actions = {
     const el = document.getElementById(`d-${d.k}`);
     scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
   },
-  sport(d) { set('homeSport', d.s); scrollTo({ top: 0 }); },
+  // Tapping a sport shows that sport and goes straight to its next game (Coming up, soonest first).
+  sport(d) {
+    set('homeSport', d.s);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById('coming');
+      scrollTo({ top: el ? Math.max(0, el.getBoundingClientRect().top + scrollY - barH()) : 0, behavior: smooth() });
+    }));
+  },
 };
