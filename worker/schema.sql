@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS games (
   home_abbr TEXT, away_abbr TEXT,  -- for the app's backup (/api/games)
   home_score TEXT, away_score TEXT, -- null before kick-off
   clock TEXT, period INTEGER, status_name TEXT, detail TEXT,
+  backup_at INTEGER,               -- last look-up in a backup source while ESPN was down
   checked_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,     -- last change iOS should see
   source TEXT DEFAULT 'espn'      -- where the row last came from: espn | nflverse | footballdata | tsdb
@@ -47,5 +48,6 @@ CREATE TABLE IF NOT EXISTS fetches (at INTEGER NOT NULL, ua TEXT);
 CREATE INDEX IF NOT EXISTS fetches_at ON fetches (at);
 CREATE TABLE IF NOT EXISTS runs (at INTEGER NOT NULL, ok INTEGER NOT NULL, checked INTEGER, note TEXT);
 CREATE INDEX IF NOT EXISTS runs_at ON runs (at);
--- Small values: espn_ok_at = last time ESPN answered the helper.
+-- Small values: espn_ok_at, espn_down_since (ESPN is down when this is later than espn_ok_at), nflverse_at (last good
+-- read), nflverse_try_at, backup_at.
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);

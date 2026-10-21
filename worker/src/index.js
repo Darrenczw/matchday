@@ -1,7 +1,7 @@
 // Matchday calendar helper: the subscribed calendar feed, a small API for the app, and the 2-minute check.
 import { calendar } from '../../js/ics.js';
 import { reasonsWith } from '../../js/rules.js';
-import { syncRun, inCal, tracked } from './sync.js';
+import { syncRun, inCal, tracked, readMeta } from './sync.js';
 import { tvLines } from './tv.js';
 
 const DAY = 864e5;
@@ -58,6 +58,7 @@ async function status(req, env, o) {
     .map(({ id, path, sport, home, away, start_utc, time_valid, status: st, prev_start }) => ({ id, path, sport, home, away, start_utc, time_valid, status: st, prev_start }));
   return {
     feedUrl: feedUrl(req, o.feed_token), games: rows.length, lastFetch: last || null, lastCheck: lastOk, lastRun: lastRun || null,
+    ...health(await readMeta(env)),
     pending: last ? pending : [], checkedById: Object.fromEntries(rows.map((r) => [r.id, r.checked_at])),
     unconfirmed: rows.filter((r) => r.unconfirmed && r.start_utc > now).sort((a, b) => a.start_utc - b.start_utc)
       .map(({ id, path, sport, home, away, start_utc, second_start, second_note }) => ({ id, path, sport, home, away, start_utc, second_start, second_note })),
@@ -69,6 +70,12 @@ async function status(req, env, o) {
 // The app's backup (TECH-DESIGN section 14): followed and calendar games in a window, in the app's own game shape
 // (js/espn.js norm()), without colours or logos. GET /api/games?from=<ms>&to=<ms>, at most 15 days.
 const STATE = { live: 'in', final: 'post' };
+// Where the data stands (TECH-DESIGN 14.5, 14.9): when ESPN last answered, since when it has been failing
+// (null while it answers), and the last good read from each backup source.
+const health = (m) => ({
+  espnOkAt: m.espn_ok_at || null, espnDownSince: (m.espn_down_since || 0) > (m.espn_ok_at || 0) ? m.espn_down_since : null,
+  nflverseAt: m.nflverse_at || null, backupAt: m.backup_at || null,
+});
 export function gameOut(r) {
   const side = (h) => ({ id: r[`${h}_id`], abbr: r[`${h}_abbr`] || '', name: r[`${h}_full`] || r[h], short: r[h], score: r[`${h}_score`] ?? null, home: h === 'home' });
   return {
@@ -85,8 +92,7 @@ async function games(url, env) {
   const picks = await readPicks(env);
   const rows = ((await env.DB.prepare('SELECT * FROM games WHERE start_utc BETWEEN ?1 AND ?2 ORDER BY start_utc').bind(from, to).all()).results || [])
     .filter((r) => tracked(r, picks));
-  const ok = await env.DB.prepare("SELECT value FROM meta WHERE key = 'espn_ok_at'").first();
-  return { at: now, espnOkAt: ok ? Number(ok.value) : null, games: rows.map(gameOut) };
+  return { at: now, ...health(await readMeta(env)), games: rows.map(gameOut) };
 }
 
 export default {

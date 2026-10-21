@@ -2,19 +2,27 @@
 // kick-off times more often as each game gets closer (TECH-DESIGN sections 3 and 4).
 import { NICE } from '../../js/names.js';
 import { secondRun } from './second.js';
+import { backupRun, backupDue, nflverse } from './backup.js';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports';
 const UA = { 'user-agent': 'Mozilla/5.0 (Matchday personal app)' }; // ESPN refuses requests with no browser-style agent
 const MIN = 60e3, HOUR = 60 * MIN, DAY = 24 * HOUR;
 export const BUDGET = 6; // ESPN calls per run: keeps each run inside the free plan's 10 ms of CPU
 
-let espnOk = 0; // last time ESPN answered, written to meta at the end of each run (the app's backup reports it)
+// When ESPN last answered and last failed, written to meta at the end of each run (TECH-DESIGN 14.9).
+let espnOk = 0, espnFail = 0, espnLast = ''; // espnLast: 'ok' or 'fail', whichever happened last
+// Outage drill on the practice helper only: `wrangler deploy --env test --var ESPN_DOWN_TEST:1` makes every ESPN
+// call fail, to test the backup end to end. Deploy again without it to end the drill.
+let drill = false;
 async function get(url) {
-  const r = await fetch(url, { headers: UA });
-  if (!r.ok) throw new Error(`ESPN ${r.status} ${url.replace(SITE, '')}`);
-  const d = await r.json();
-  espnOk = Date.now();
-  return d;
+  try {
+    if (drill) throw new Error('ESPN 503 (drill)');
+    const r = await fetch(url, { headers: UA });
+    if (!r.ok) throw new Error(`ESPN ${r.status} ${url.replace(SITE, '')}`);
+    const d = await r.json();
+    espnOk = Date.now(); espnLast = 'ok';
+    return d;
+  } catch (e) { espnFail = Date.now(); espnLast = 'fail'; throw e; }
 }
 
 // ESPN's "dates=" is a US date. A US date key for a moment in time:
@@ -162,18 +170,29 @@ async function discover(key, cursor, now, budget, picks) {
   return { rows, calls, cursor: ymd, done: false };
 }
 
-// Remember when ESPN last answered (only if it did during this run).
+const setMeta = (env, key, value) => env.DB.prepare('INSERT INTO meta (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = ?2').bind(key, String(value)).run();
+export async function readMeta(env) {
+  return Object.fromEntries(((await env.DB.prepare('SELECT key, value FROM meta').all()).results || []).map((m) => [m.key, Number(m.value)]));
+}
+// Remember what ESPN did this run. ESPN is down when a call failed after the last one that worked; returns that.
 async function noteEspn(env, since) {
-  if (espnOk >= since) await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('espn_ok_at', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1").bind(String(espnOk)).run();
+  const m = await readMeta(env);
+  if (espnLast === 'ok' && espnOk >= since) { await setMeta(env, 'espn_ok_at', espnOk); m.espn_ok_at = espnOk; }
+  if (espnLast === 'fail' && espnFail >= since && !((m.espn_down_since || 0) > (m.espn_ok_at || 0))) {
+    m.espn_down_since = Math.max(espnFail, (m.espn_ok_at || 0) + 1); // always after the last success, even in the same millisecond
+    await setMeta(env, 'espn_down_since', m.espn_down_since);
+  }
+  return { down: (m.espn_down_since || 0) > (m.espn_ok_at || 0), meta: m };
 }
 
 // ---------- One scheduled run
 export async function syncRun(env, { onlyDiscover = false } = {}) {
   const now = Date.now();
-  let calls = 0, checked = 0;
+  drill = env.ESPN_DOWN_TEST === '1';
+  let calls = 0, checked = 0, picks = {}, failed = null;
   const notes = [];
   try {
-    const picks = JSON.parse((await env.DB.prepare('SELECT json FROM picks WHERE id = 1').first())?.json || '{}');
+    picks = JSON.parse((await env.DB.prepare('SELECT json FROM picks WHERE id = 1').first())?.json || '{}');
     const cal = picks.cal || {};
     const keys = jobKeys(cal, picks.follow);
     const jobs = new Map(((await env.DB.prepare('SELECT * FROM jobs').all()).results || []).map((j) => [j.key, j]));
@@ -189,35 +208,41 @@ export async function syncRun(env, { onlyDiscover = false } = {}) {
         .bind(j.key, res.done ? now + 6 * HOUR : now, res.done ? null : res.cursor).run();
       if (!res.done) break; // a league walk uses the rest of this run
     }
-    if (onlyDiscover) { await noteEspn(env, now); return { calls, checked }; }
 
     // 2. Time checks: tracked games that are due (times, and scores while live), one scoreboard per league and US date.
-    const rows = ((await env.DB.prepare('SELECT * FROM games WHERE start_utc BETWEEN ?1 AND ?2').bind(now - 6 * HOUR, now + 14 * DAY).all()).results || [])
-      .filter((r) => tracked(r, picks) && r.status !== 'final' && r.status !== 'canceled');
-    const groups = new Map();
-    for (const r of rows) {
-      const every = checkEvery(r, now);
-      if (!every || now - r.checked_at < every - 20e3) continue;
-      const k = `${r.path}|${usDate(r.start_utc)}`;
-      if (!groups.has(k)) groups.set(k, { path: r.path, ymd: usDate(r.start_utc), ids: new Set(), soonest: r.start_utc });
-      const g = groups.get(k);
-      g.ids.add(r.id);
-      g.soonest = Math.min(g.soonest, r.start_utc);
-    }
-    for (const g of [...groups.values()].sort((a, b) => a.soonest - b.soonest)) {
-      if (calls >= BUDGET) { notes.push('more checks waiting'); break; }
-      const fresh = (await scoreboard(g.path, g.ymd)).filter((r) => r && g.ids.has(r.id));
-      calls++;
-      checked += await upsert(env, fresh, now);
-      // A game missing from its old date was moved to another day: find it there.
-      const missing = [...g.ids].filter((id) => !fresh.some((r) => r.id === id));
-      if (missing.length) {
-        notes.push(`not on ${g.ymd}: ${missing.join(',')}`);
-        await env.DB.prepare(`UPDATE games SET checked_at = ?1 WHERE id IN (${missing.map(() => '?').join(',')})`).bind(now, ...missing).run();
-        await env.DB.prepare('UPDATE jobs SET next_at = 0').run(); // rediscover, so the moved game is found on its new date
+    if (!onlyDiscover) {
+      const rows = ((await env.DB.prepare('SELECT * FROM games WHERE start_utc BETWEEN ?1 AND ?2').bind(now - 6 * HOUR, now + 14 * DAY).all()).results || [])
+        .filter((r) => tracked(r, picks) && r.status !== 'final' && r.status !== 'canceled');
+      const groups = new Map();
+      for (const r of rows) {
+        const every = checkEvery(r, now);
+        if (!every || now - r.checked_at < every - 20e3) continue;
+        const k = `${r.path}|${usDate(r.start_utc)}`;
+        if (!groups.has(k)) groups.set(k, { path: r.path, ymd: usDate(r.start_utc), ids: new Set(), soonest: r.start_utc });
+        const g = groups.get(k);
+        g.ids.add(r.id);
+        g.soonest = Math.min(g.soonest, r.start_utc);
+      }
+      for (const g of [...groups.values()].sort((a, b) => a.soonest - b.soonest)) {
+        if (calls >= BUDGET) { notes.push('more checks waiting'); break; }
+        const fresh = (await scoreboard(g.path, g.ymd)).filter((r) => r && g.ids.has(r.id));
+        calls++;
+        checked += await upsert(env, fresh, now);
+        // A game missing from its old date was moved to another day: find it there.
+        const missing = [...g.ids].filter((id) => !fresh.some((r) => r.id === id));
+        if (missing.length) {
+          notes.push(`not on ${g.ymd}: ${missing.join(',')}`);
+          await env.DB.prepare(`UPDATE games SET checked_at = ?1 WHERE id IN (${missing.map(() => '?').join(',')})`).bind(now, ...missing).run();
+          await env.DB.prepare('UPDATE jobs SET next_at = 0').run(); // rediscover, so the moved game is found on its new date
+        }
       }
     }
+  } catch (err) { failed = err; } // ESPN (or the database) failed: the steps below still run, the run is still marked failed
 
+  let espn = { down: false, meta: {} };
+  try { espn = await noteEspn(env, now); } catch (e) { notes.push(`meta: ${String(e.message || e).slice(0, 60)}`); }
+  if (!onlyDiscover) {
+    const cal = picks.cal || {};
     // 3. Second source (TheSportsDB): daily, and once in the last 3 hours, a few calls per run.
     try {
       const s = await secondRun(env, (r) => inCal(r, cal), now);
@@ -225,18 +250,36 @@ export async function syncRun(env, { onlyDiscover = false } = {}) {
       if (s.note) notes.push(`2nd: ${s.note}`);
     } catch (e) { notes.push(`2nd failed: ${String(e.message || e).slice(0, 80)}`); } // never blocks the ESPN checks
 
-    // 4. Tidy: old games, fetch log and run log.
-    await env.DB.batch([
-      env.DB.prepare('DELETE FROM games WHERE start_utc < ?').bind(now - 8 * DAY),
-      env.DB.prepare('DELETE FROM fetches WHERE at < ?').bind(now - 14 * DAY),
-      env.DB.prepare('DELETE FROM runs WHERE at < ?').bind(now - 3 * DAY),
-      env.DB.prepare('INSERT INTO runs (at, ok, checked, note) VALUES (?, 1, ?, ?)').bind(now, checked, `${calls} calls${notes.length ? '; ' + notes.join('; ') : ''}`),
-    ]);
-    await noteEspn(env, now);
-    return { calls, checked };
-  } catch (err) {
-    await noteEspn(env, now).catch(() => {});
-    await env.DB.prepare('INSERT INTO runs (at, ok, checked, note) VALUES (?, 0, ?, ?)').bind(now, checked, String(err.message || err).slice(0, 300)).run();
-    throw err;
+    // 4. Backup while ESPN is down: finals from nflverse (NFL) and TheSportsDB (the rest). Never kick-off times.
+    // nflverse is also read every 6 hours as a health check.
+    try {
+      const recent = espn.down ? ((await env.DB.prepare('SELECT * FROM games WHERE start_utc BETWEEN ?1 AND ?2').bind(now - 2 * DAY, now).all()).results || [])
+        .filter((r) => tracked(r, picks) && backupDue(r, now)) : [];
+      let nfl = null;
+      const nflDue = recent.filter((r) => r.sport === 'football');
+      if (nflDue.length || now - (espn.meta.nflverse_try_at || 0) >= 6 * HOUR) {
+        // Reading nflverse is the heaviest step (about 28 ms of CPU). Note the attempt first, so if Cloudflare
+        // ever stops a run for CPU, the next runs don't try again straight away.
+        await setMeta(env, 'nflverse_try_at', now);
+        if (nflDue.length) await env.DB.prepare(`UPDATE games SET backup_at = ?1 WHERE id IN (${nflDue.map(() => '?').join(',')})`).bind(now, ...nflDue.map((r) => r.id)).run();
+        try { nfl = await nflverse(); await setMeta(env, 'nflverse_at', now); } catch (e) { notes.push(String(e.message || e).slice(0, 80)); }
+      }
+      if (recent.length) {
+        const b = await backupRun(env, recent, nfl, now);
+        notes.push(`backup: ${b.finals} finals, ${b.calls} calls${b.note ? `, ${b.note}` : ''}`);
+        if (b.calls && !b.note) await setMeta(env, 'backup_at', now);
+      }
+    } catch (e) { notes.push(`backup failed: ${String(e.message || e).slice(0, 80)}`); }
   }
+
+  // 5. Tidy: old games, fetch log and run log.
+  const note = `${failed ? String(failed.message || failed).slice(0, 200) + '; ' : ''}${calls} calls${notes.length ? '; ' + notes.join('; ') : ''}`;
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM games WHERE start_utc < ?').bind(now - 8 * DAY),
+    env.DB.prepare('DELETE FROM fetches WHERE at < ?').bind(now - 14 * DAY),
+    env.DB.prepare('DELETE FROM runs WHERE at < ?').bind(now - 3 * DAY),
+    env.DB.prepare('INSERT INTO runs (at, ok, checked, note) VALUES (?, ?, ?, ?)').bind(now, failed ? 0 : 1, checked, note.slice(0, 300)),
+  ]);
+  if (failed) throw failed;
+  return { calls, checked };
 }
