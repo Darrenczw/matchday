@@ -7,6 +7,7 @@ import { toast } from './ui.js';
 import { esc } from './util.js';
 import { ground } from './ground.js';
 import { swipe } from './swipe.js';
+import './prefetch.js';
 import home from './views/home.js';
 import followView from './views/follow.js';
 import comp from './views/comp.js';

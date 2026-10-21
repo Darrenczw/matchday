@@ -198,7 +198,32 @@ export async function leagueTeams(path) {
   for (const g of st.groups) for (const r of g.rows) seen.set(r.team.id, r.team);
   return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
-export const summary = (path, id, live = false) => get(`${SITE}/${path}/summary?event=${id}`, live ? 8e3 : MIN);
+// ---------- Match summaries, for near-instant match pages. A finished game's summary never changes much, so it
+// is kept on the phone (Cache API, the last 80) and shown straight away, even after the app restarts. Other games
+// come from memory when fetched in the last minute (prefetch.js warms that), else from the network.
+const SUMS = 'md-sum', KEEP = 80;
+const sumCache = () => (typeof caches !== 'undefined' ? caches.open(SUMS).catch(() => null) : Promise.resolve(null));
+async function storeSum(url, j) {
+  const c = await sumCache(); if (!c) return;
+  await c.put(url, new Response(JSON.stringify(j), { headers: { 'content-type': 'application/json', 'x-md-saved': String(Date.now()) } }));
+  const keys = await c.keys();
+  for (const k of keys.slice(0, Math.max(0, keys.length - KEEP))) await c.delete(k); // oldest first
+}
+export async function summary(path, id, live = false) {
+  const url = `${SITE}/${path}/summary?event=${id}`;
+  const g = known.get(String(id));
+  if (g?.state === 'post' && !live) {
+    const hit = await sumCache().then((c) => c?.match(url)).catch(() => null);
+    if (hit) {
+      // Saved soon after the final whistle? Stats can still be corrected: refresh it quietly for next time.
+      if (+hit.headers.get('x-md-saved') < new Date(g.date).getTime() + 5 * HOUR) get(url, MIN).then((j) => storeSum(url, j)).catch(() => {});
+      return hit.json();
+    }
+  }
+  const j = await get(url, live ? 8e3 : MIN);
+  if (j?.header?.competitions?.[0]?.status?.type?.completed) storeSum(url, j).catch(() => {});
+  return j;
+}
 
 export async function standings(path) {
   const d = await get(`${V2}/${path}/standings`, 30 * MIN);

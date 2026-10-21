@@ -1,11 +1,12 @@
 // Home: "My games". Live first while a game is on, then results (newest first), then coming up (soonest first). All in SGT.
 import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
 import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
-import { gamesFor, isLive, soon, net, sortGames } from '../espn.js';
+import { gamesFor, isLive, soon, net, sortGames, known } from '../espn.js';
 import { compLogo, compImg, kitsFor, crest, kitEdge } from '../identity.js';
 import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow } from '../ui.js';
 import { calReady, status as calStatus } from '../cal.js';
 import { useTables } from '../suggest.js';
+import { prefetchVisible } from '../prefetch.js';
 
 let ver = 0;
 // The sport filter lives for this visit only: a fresh start always opens on All, so no sport is ever hidden by surprise.
@@ -75,7 +76,14 @@ export default function home(params, ctx) {
   let base = e.v?.games;
   let stale = null;
   if (e.v) save('snap', { t: Date.now(), sig: s, games: base });
-  else { const snap = load('snap', null); if (snap?.sig === s) { base = snap.games; stale = snap.t; } }
+  else {
+    const snap = load('snap', null);
+    if (snap?.sig === s) {
+      base = snap.games; stale = snap.t;
+      // The saved copy also gives match pages their header at once, before the feed answers.
+      for (const g of base) if (!known.has(g.id)) known.set(g.id, g);
+    }
+  }
   const ext = chunks(ctx);
   const loading = ext.some((x) => !x.v && !x.err);
   const byId = new Map();
@@ -112,6 +120,7 @@ export default function home(params, ctx) {
   useTables(ctx, all.filter((g) => g.state === 'pre' && nightKey(g.date) <= addDays(t, 6)).map((g) => g.path)); // reasons that need a league table
   ctx.live = all.some(isLive) || all.some(soon);
   ctx.wasLive = ctx.live;
+  prefetchVisible(); // the games on screen, so tapping one opens it at once
 
   const label = SPORTS.find(([k]) => k === f)[1];
   if (f !== 'all' && !followed.has(f)) {
@@ -150,29 +159,46 @@ export default function home(params, ctx) {
 // ---------- Date and month picker (Darren, 22 Oct 2026): the month name in the bar opens a sheet at the bottom,
 // in thumb reach. Month chips across the top, then that month's days (Monday first) with a dot where you have
 // games. Tap a day to jump there; the list loads up to it if it's further ahead.
-let pick = null; // 'YYYY-MM' while the sheet is open
+let pick = null; // 'YYYY-MM' the sheet opens at, while it is open
+// Every month in one scrolling calendar, so you can flick through the season; the month chips jump to one.
 function picker(days, t, on, has) {
   // Three months back (earlier results load on a jump) to the end of the strip.
   const first = addDays(t, -91), last = days[days.length - 1];
   const months = [...new Set(keyRange(first, last).map((k) => k.slice(0, 7)))];
-  const m = pick, [y, mo] = m.split('-').map(Number);
-  const start = `${m}-01`, dow = new Date(`${start}T00:00:00Z`).getUTCDay(), lead = (dow + 6) % 7;
-  const len = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-  const cells = [...Array(lead).fill(''), ...Array.from({ length: len }, (_, i) => `${m}-${String(i + 1).padStart(2, '0')}`)];
-  const chip = (x) => `<button class="mchip" data-act="pickm" data-m="${x}" aria-pressed="${x === m}">${MONTHS[+x.slice(5) - 1].slice(0, 3)}${x.slice(0, 4) !== t.slice(0, 4) ? ` ${x.slice(2, 4)}` : ''}</button>`;
+  const chip = (x) => `<button class="mchip" data-act="pickm" data-m="${x}" aria-pressed="${x === pick}">${MONTHS[+x.slice(5) - 1].slice(0, 3)}${x.slice(0, 4) !== t.slice(0, 4) ? ` ${x.slice(2, 4)}` : ''}</button>`;
   const day = (k) => {
     if (!k) return '<span></span>';
     const x = sg(k + 'T04:00:00Z'), out = k < first || k > last;
     return `<button class="pd${k === t ? ' today' : ''}${k === on ? ' cur' : ''}${has.has(k) ? ' has' : ''}" data-act="pickd" data-k="${k}"${out ? ' disabled' : ''} aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games' : ''}">${x.d}</button>`;
   };
+  const month = (m) => {
+    const [y, mo] = m.split('-').map(Number);
+    const lead = (new Date(`${m}-01T00:00:00Z`).getUTCDay() + 6) % 7, len = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+    const cells = [...Array(lead).fill(''), ...Array.from({ length: len }, (_, i) => `${m}-${String(i + 1).padStart(2, '0')}`)];
+    return `<section class="pm" id="pm-${m}" aria-label="${MONTHS[mo - 1]} ${y}"><p class="pmonth">${MONTHS[mo - 1]} ${y}</p><div class="pgrid">${cells.map(day).join('')}</div></section>`;
+  };
   return `<div class="sheetbg" data-act="pickx"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Pick a date">
 <div class="sheethd"><h2 class="cap">Go to a date</h2><button class="btn sm ghost" data-act="pickd" data-k="${t}">Today</button><button class="btn sm icon ghost" data-act="pickx" aria-label="Close">${icon('x')}</button></div>
 <div class="chips mchips" role="group" aria-label="Month">${months.map(chip).join('')}</div>
-<p class="pmonth">${MONTHS[mo - 1]} ${y}</p>
-<div class="pgrid" aria-hidden="true">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => `<span class="pw">${d}</span>`).join('')}</div>
-<div class="pgrid" role="group" aria-label="${MONTHS[mo - 1]} ${y}">${cells.map(day).join('')}</div>
-<p class="note">Dots mark days with your games that are already known. Tap any day to go there.</p></div>`;
+<div class="pgrid pwk" aria-hidden="true">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => `<span class="pw">${d}</span>`).join('')}</div>
+<div class="pscroll">${months.map(month).join('')}<p class="note">Dots mark days with your games that are already known. Tap any day to go there.</p></div></div>`;
 }
+// Scroll the calendar to a month (instantly on open, smoothly from a chip).
+function toMonth(m, smoothly) {
+  const box = document.querySelector('.sheet .pscroll'), sec = document.getElementById(`pm-${m}`);
+  if (box && sec) box.scrollTo({ top: sec.offsetTop - box.offsetTop, behavior: smoothly ? smooth() : 'auto' });
+  document.querySelector(`.sheet [data-m="${m}"]`)?.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
+// As the calendar scrolls, the chip of the month at the top lights up.
+addEventListener('scroll', (e) => {
+  const box = e.target;
+  if (!(box instanceof Element) || !box.classList.contains('pscroll')) return;
+  let m = null;
+  for (const sec of box.querySelectorAll('.pm')) { if (sec.offsetTop - box.offsetTop <= box.scrollTop + 40) m = sec.id.slice(3); else break; }
+  if (!m || m === pick) return;
+  pick = m; // so the next redraw keeps this chip lit
+  for (const c of document.querySelectorAll('.sheet .mchip')) c.setAttribute('aria-pressed', String(c.dataset.m === m));
+}, { capture: true, passive: true });
 // Run after the next drawn frame (the screen draws in requestAnimationFrame).
 const afterPaint = (fn) => requestAnimationFrame(() => setTimeout(fn, 0));
 const closePick = () => { pick = null; homeCtx?.redraw(); afterPaint(() => document.querySelector('.stripm')?.focus()); };
@@ -252,14 +278,15 @@ function track() {
     }
     const m = bar.querySelector('.stripm b'); if (m) m.textContent = monthOf(k);
   }
+  prefetchVisible();
   if (innerHeight + scrollY > document.documentElement.scrollHeight - 900 && more < MAX_WEEKS && homeCtx && !document.querySelector('#view .skel')) { more++; homeCtx.redraw(); }
 }
 let tr = 0;
 addEventListener('scroll', () => { clearTimeout(tr); tr = setTimeout(track, 40); }, { passive: true });
 
 home.actions = {
-  pick(d, el, e, ctx) { pick = (curDay || nightToday()).slice(0, 7); ctx.redraw(); afterPaint(() => document.querySelector('.sheet [aria-pressed="true"]')?.focus()); },
-  pickm(d, el, e, ctx) { pick = d.m; ctx.redraw(); afterPaint(() => { const c = document.querySelector(`.sheet [data-m="${d.m}"]`); c?.scrollIntoView({ inline: 'center', block: 'nearest' }); c?.focus(); }); },
+  pick(d, el, e, ctx) { pick = (curDay || nightToday()).slice(0, 7); ctx.redraw(); afterPaint(() => { toMonth(pick, false); document.querySelector('.sheet [aria-pressed="true"]')?.focus({ preventScroll: true }); }); },
+  pickm(d) { toMonth(d.m, true); },
   pickx() { closePick(); },
   pickd(d) { pick = null; homeCtx?.redraw(); afterPaint(() => home.actions.jump({ k: d.k })); },
   // Tap a day: jump to it, loading weeks up to it first if it's further ahead. A day without games goes to the next one that has some.

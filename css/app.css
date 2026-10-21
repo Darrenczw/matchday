@@ -82,7 +82,12 @@ body:has(#bar .pagerbar) .toast { bottom: calc(122px + var(--safe-bottom)); }
 .mchips { padding-bottom: 4px; }
 .mchip { flex: none; min-height: 40px; padding: 0 14px; border-radius: 99px; background: var(--soft); font: 700 14px/1 var(--text); color: var(--ink); }
 .mchip[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
-.pmonth { padding: 10px 18px 4px; font: 800 18px/1 var(--cond); letter-spacing: .04em; text-transform: uppercase; }
+.sheet { display: flex; flex-direction: column; max-height: min(78vh, 640px); }
+.sheethd, .sheet .mchips, .sheet .pwk { flex: none; }
+.pscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.pwk { padding-top: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.pm { padding-bottom: 6px; }
+.pmonth { position: sticky; top: 0; z-index: 1; padding: 12px 18px 6px; background: var(--row); font: 800 18px/1 var(--cond); letter-spacing: .04em; text-transform: uppercase; }
 .pgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 14px; }
 .pgrid .pw { padding: 6px 0 2px; text-align: center; font: 700 11px/1 var(--text); color: var(--mute); }
 .pd { position: relative; min-height: 44px; border-radius: 10px; font: 800 17px/1 var(--cond); color: var(--ink); }

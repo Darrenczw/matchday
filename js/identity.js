@@ -97,10 +97,13 @@ export function clashNote(g, k) {
 }
 
 // ---------- Crests: resized through ESPN's image service; initials if a logo is missing or broken.
+// Two shared sizes, so a logo downloads once and is reused everywhere (rows, match header, tables, chips): every
+// crest up to 46px uses the 96px file, team and competition badges the 160px one. Kept by the service worker.
 export function logoSrc(url, px) {
   if (!url) return '';
   const m = url.match(/^https:\/\/a\.espncdn\.com(\/i\/.+\.png)$/);
-  return m ? `https://a.espncdn.com/combiner/i?img=${m[1]}&w=${px}&h=${px}` : url;
+  const w = px <= 140 ? 96 : 160;
+  return m ? `https://a.espncdn.com/combiner/i?img=${m[1]}&w=${w}&h=${w}` : url;
 }
 export function initials(name = '') {
   const w = String(name).replace(/[^\p{L}\p{N} ]/gu, '').split(/\s+/).filter(Boolean);

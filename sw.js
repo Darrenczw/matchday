@@ -1,18 +1,18 @@
 // Matchday service worker. Bump VERSION on every deploy.
-const VERSION = 'md-v19';
+const VERSION = 'md-v20';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'data/rights.json',
-  'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/rules.js', 'js/names.js', 'js/cal.js', 'js/ics.js', 'js/ui.js', 'js/ground.js', 'js/swipe.js',
+  'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/rules.js', 'js/names.js', 'js/cal.js', 'js/ics.js', 'js/ui.js', 'js/ground.js', 'js/swipe.js', 'js/prefetch.js',
   'js/views/home.js', 'js/views/follow.js', 'js/views/comp.js', 'js/views/team.js', 'js/views/match.js', 'js/views/week.js', 'js/views/settings.js',
   'fonts/Saira-var.woff2', 'fonts/SairaCondensed-700.woff2', 'fonts/SairaCondensed-800.woff2',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
-const DATA = 'md-data', IMG = 'md-img';
+const DATA = 'md-data', IMG = 'md-img', SUMS = 'md-sum'; // md-sum: finished-game summaries the app keeps
 
 // cache: 'reload' skips the browser's HTTP cache, so a new version never stores old files.
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => ![VERSION, DATA, IMG].includes(k)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => ![VERSION, DATA, IMG, SUMS].includes(k)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', (e) => {

@@ -4,6 +4,7 @@ import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
 import { reasons, freeHour, useTables } from '../suggest.js';
 import { followBtn, gameRow, skel, errorCard } from '../ui.js';
+import { prefetchVisible } from '../prefetch.js';
 
 const state = { f: 'all', open: new Set() };
 const PER_DAY = 4; // a busy NBA morning can have 10 games; show the first 4, the rest on tap
@@ -40,6 +41,7 @@ export default function week(params, ctx) {
   if (!e.v) return html + (e.err ? errorCard() : `<p class="status">${icon('clock')}<span>Checking this week’s fixtures against your free hours…</span></p>${skel(4)}`);
   const now = Date.now();
   useTables(ctx, e.v.map((g) => g.path)); // for Big games and Matters to your teams
+  prefetchVisible();
   const games = [...new Map(e.v.map((g) => [g.id, g])).values()]
     .filter((g) => g.state === 'pre' && !g.postponed && new Date(g.date) > now && (state.f === 'all' || g.sport === state.f))
     .filter((g) => reasons(g).length)

@@ -5,6 +5,7 @@ import { summary, norm, liveLabel, net, isMine, schedule, backup, known, standin
 import { kitsFor, clashNote, crest, edge, kitEdge, brand, inkOn, readable } from '../identity.js';
 import { allMarkets, KIND, rightsChecked, chanList } from '../tv.js';
 import { position, swipeTo } from '../swipe.js';
+import { prefetch } from '../prefetch.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
@@ -469,6 +470,9 @@ export default function match([sport, slug, id], ctx) {
     html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
+  // The games either side of this one in the list, so a swipe opens them at once.
+  const p = position(location.hash);
+  if (p && !navigator.connection?.saveData) setTimeout(() => { prefetch(p.next); prefetch(p.prev); }, 800);
   return html + pager();
 }
 match.actions = {
