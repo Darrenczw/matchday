@@ -91,7 +91,7 @@ html[data-theme="dark"] .darkkit { box-shadow: inset 0 0 0 1px rgba(255, 255, 25
 .hero .score { font: 800 104px/.8 var(--cond); letter-spacing: -.02em; }
 .hero .score.sm { font-size: 84px; }
 .hero .name { font: 700 13px/1.15 var(--text); text-transform: uppercase; letter-spacing: .06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.hero .name small, .mh .ha { display: block; margin-top: 4px; font: 700 12.5px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; opacity: .92; }
+.hero .name small, .mh .ha { display: block; margin-top: 4px; font: 700 12.5px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; }
 .state { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; max-width: 70%; padding: 5px 11px; border-radius: 99px; background: #fff; color: #121318; font: 700 11.5px/1 var(--text); white-space: nowrap; box-shadow: 0 2px 8px -2px rgba(0, 0, 0, .35); }
 .state > span { overflow: hidden; text-overflow: ellipsis; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #d6202a; flex: none; animation: pulse 1.6s ease-in-out infinite; }
@@ -134,6 +134,8 @@ a.li:active, .row:active { filter: brightness(.97); }
 .li .chev { color: var(--mute); width: 16px; height: 16px; }
 .note { padding: 10px 14px 14px; color: var(--mute); font: 500 12.5px/1.45 var(--text); }
 .note a { text-decoration: underline; text-underline-offset: 2px; }
+.note, .lede, .foot, .banner span, .li small.wrap { text-wrap: pretty; }
+.note a.inl { display: inline-block; padding: 11px 0; margin: -11px 0; }
 
 /* ---------- Buttons and tags */
 .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 14px; border-radius: 99px; font: 700 14px/1 var(--text); white-space: nowrap; flex: none; }
@@ -189,9 +191,9 @@ a.li:active, .row:active { filter: brightness(.97); }
 .mh .shirt { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; padding: 14px; }
 .mh .shirt.r { align-items: flex-end; text-align: right; }
 .mh .tn { font: 800 25px/1 var(--cond); text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
-.mh a.tn { display: inline-block; padding: 9px 0; margin: -9px 0; }
+.mh a.tn { display: inline-block; padding: 10px 0; margin: -10px 0; }
 .mh .sc { font: 800 92px/.82 var(--cond); letter-spacing: -.02em; }
-.mh .scorers { font: 600 12px/1.35 var(--text); opacity: .92; }
+.mh .scorers { font: 600 12px/1.35 var(--text); } /* full strength: the ink colour is what passes 4.5:1 */
 .mh .ko { position: absolute; left: 50%; top: 12px; bottom: 12px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 128px; padding: 12px 6px; border-radius: 12px; background: #fff; color: #121318; text-align: center; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .45); }
 .mh .ko b { font: 800 40px/1 var(--cond); }
 .mh .ko span { font: 600 12px/1.3 var(--text); color: #50535c; }
@@ -365,6 +367,7 @@ html[data-sport] .filterbar { background: color-mix(in srgb, var(--ground) 84%, 
 
 /* ---------- Settings */
 .switch { position: relative; width: 52px; height: 32px; flex: none; border-radius: 99px; background: var(--line); transition: background .2s; }
+.switch::before { content: ""; position: absolute; inset: -6px -4px; } /* 60 x 44 hit area; ::after is the knob */
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s; }
 .switch[aria-checked="true"] { background: var(--go); }
 .switch[aria-checked="true"]::after { transform: translateX(20px); }
@@ -384,10 +387,10 @@ html[data-sport] .filterbar { background: color-mix(in srgb, var(--ground) 84%, 
 
 @media (prefers-reduced-motion: reduce) { .dot, .skel { animation: none; } .switch, .switch::after { transition: none; } }
 
-/* ---------- This week: a game row inside a card, with its reasons and Follow underneath */
-.wk .row { margin: 0; border-radius: 0; box-shadow: none; }
-.wk .li { min-height: 52px; padding: 6px 14px; }
-.wk .why { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0; font: 700 13px/1.35 var(--text); color: var(--go); }
-.wk .why em { font-style: normal; }
-.wk .why span { color: var(--mute); font-weight: 500; white-space: pre; }
+/* ---------- This week: the game row, with Follow at the right end of its meta line */
+.wk { position: relative; margin: 0 var(--gutter) 8px; }
+.wk .row { margin: 0; }
+.wk .row .meta { min-height: 44px; padding-right: 100px; }
+.wk > .btn { position: absolute; right: 6px; bottom: 5px; }
+.wk .row .meta img { width: 18px; height: 18px; }
 

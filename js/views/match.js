@@ -1,9 +1,9 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
 import { esc, sg, countdown, icon, ago, dateText } from '../util.js';
 import { following, picks } from '../store.js';
-import { summary, norm, liveLabel, net, isMine, schedule, backup, known } from '../espn.js';
+import { summary, norm, liveLabel, net, isMine, schedule, backup, known, standings } from '../espn.js';
 import { kitsFor, clashNote, crest, edge, kitEdge } from '../identity.js';
-import { allMarkets, mainMarket, KIND, rightsChecked } from '../tv.js';
+import { allMarkets, mainMarket, KIND, rightsChecked, chanList } from '../tv.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
@@ -60,7 +60,7 @@ function tvTag(x) {
 }
 // Main market, big, with why ("Saturday 3pm blackout in the UK"). Shared by both layouts.
 function tvHead(m) {
-  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b>${m.kind === 'none' ? 'Not listed' : esc(m.channels.join(' / '))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
+  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b>${m.kind === 'none' ? 'Not listed' : esc(chanList(m.channels))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
 }
 function tvMain(g) {
   return `<div class="card"><h2>Where to watch</h2>${tvHead(mainMarket(g))}</div>`;
@@ -70,7 +70,7 @@ function tvAll(g) {
   const listed = rest.filter((x) => x.kind !== 'none'), none = rest.filter((x) => x.kind === 'none');
   let html = `<div class="card"><h2>Where to watch</h2>${tvHead(main)}`;
   // This is the full list, so every channel is named (rows elsewhere say "· 1 more").
-  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(x.channels.join(', '))}</span>${tvTag(x)}</div>`).join('');
+  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chanList(x.channels))}</span>${tvTag(x)}</div>`).join('');
   if (none.length) html += `<div class="tvrow"><span class="c" style="color:var(--mute)">Not listed: ${esc(none.map((x) => x.label).join(', '))}</span></div>`;
   html += `<p class="note">Exact = listed for this game. Likely = holds the rights this season${rightsChecked() ? ` (rights checked ${esc(dateText(rightsChecked()))})` : ''}. Tap Likely to see where it comes from.</p></div>`;
   return html;
@@ -277,7 +277,7 @@ function theGame(g, d, k) {
   const where = [venue?.fullName, venue?.address?.city, g.sport !== 'soccer' && venue?.address?.country && !['USA', 'Canada'].includes(venue.address.country) ? venue.address.country : ''].filter(Boolean).join(', ');
   const why = g.state === 'pre' ? reasons(g) : [];
   const clash = clashNote(g, k);
-  return `<div class="card"><h2>The game</h2><p class="note" style="padding-top:0;color:var(--ink);font-size:14px"><a href="${href.comp(g.path)}" style="text-decoration:none;font-weight:700">${esc(g.comp.name)}</a>${stage ? `, ${esc(stage)}` : ''}${where ? ` · ${esc(where)}` : ''}${why.length ? `<br><span class="tag why" style="margin-top:6px">${esc(why.join(' · '))}</span>` : ''}${clash ? `<span class="clashnote" style="margin-top:8px"><span class="sw" aria-hidden="true"><i style="background:${k.home.bg}"></i><i style="background:${g.away.color}"></i></span><span>${esc(clash)}</span></span>` : ''}</p></div>`;
+  return `<div class="card"><h2>The game</h2><p class="note" style="padding-top:0;color:var(--ink);font-size:14px"><a class="inl" href="${href.comp(g.path)}" style="text-decoration:none;font-weight:700">${esc(g.comp.name)}</a>${stage ? `, ${esc(stage)}` : ''}${where ? ` · ${esc(where)}` : ''}${why.length ? `<br><span class="tag why" style="margin-top:6px">${esc(why.join(' · '))}</span>` : ''}${clash ? `<span class="clashnote" style="margin-top:8px"><span class="sw" aria-hidden="true"><i style="background:${k.home.bg}"></i><i style="background:${g.away.color}"></i></span><span>${esc(clash)}</span></span>` : ''}</p></div>`;
 }
 
 // After full time: each team's next game ("Next: v Everton, Sat 24 Oct 22:00"), from its schedule.
@@ -289,10 +289,31 @@ function nextFor(g, x, ctx) {
   const home = n.home.id === id, opp = home ? n.away : n.home, s = sg(n.date);
   return `Next: ${home ? 'v' : 'at'} ${opp.short}, ${s.wd} ${s.d} ${s.mo} ${n.timeValid ? s.hm : 'TBC'}`;
 }
+const nth = (p) => `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'}`;
+// Where a team stands, counted inside its own table: its conference for NFL and NBA ("7th in the NFC",
+// "14th in the East"), its group in a group stage ("2nd in Group A"), else the league ("2nd in the Premier League").
+// Never counted across tables, and hidden when the team isn't found.
+function standingFor(g, d, ctx, id) {
+  if (g.sport !== 'soccer') {
+    const st = ctx.use(`table:${g.path}`, () => standings(g.path), 30 * 60e3).v;
+    for (const grp of st?.groups || []) {
+      const i = grp.rows.findIndex((r) => r.team.id === id);
+      if (i >= 0) return `${nth(grp.rows[i].rank || i + 1)} in the ${grp.abbr || grp.name}`;
+    }
+    return '';
+  }
+  const groups = (d.standings?.groups || []).map((x) => ({ name: x.header || x.name || '', entries: x.standings?.entries || [] })).filter((x) => x.entries.length);
+  for (const grp of groups) {
+    const i = grp.entries.findIndex((e) => e.id === id || e.team?.id === id);
+    if (i < 0) continue;
+    const name = groups.length > 1 ? grp.name.replace(/^\d{4}(-\d{2})?\s*/, '').replace(/\s*Standings$/i, '') : '';
+    return `${nth(i + 1)} in ${name || `the ${g.comp.name}`}`;
+  }
+  return '';
+}
 function formCard(g, d, k, ctx) {
   const five = d.lastFiveGames || [];
-  const table = (d.standings?.groups || []).flatMap((x) => x.standings?.entries || []);
-  const pos = (id) => { const i = table.findIndex((e) => e.id === id || e.team?.id === id); return i >= 0 ? i + 1 : null; };
+  let anyForm = false;
   const rows = [k.left, k.right].map((x) => {
     const f = five.find((y) => y.team?.id === x.team.id);
     // ESPN lists these oldest first, in every competition. Sort to be sure, and keep the newest 5 on the right.
@@ -303,12 +324,12 @@ function formCard(g, d, k, ctx) {
     // Football records come as wins-draws-losses ("6-0-1"), which reads like a US W-L-T record. Spell it out.
     const wdl = g.sport === 'soccer' && /^\d+-\d+-\d+$/.test(rec || '') ? rec.split('-') : null;
     const recTxt = wdl ? `W${wdl[0]} D${wdl[1]} L${wdl[2]}${pts ? ` · ${pts} pts` : ''}` : rec ? `Record ${rec}` : '';
-    const p = pos(x.team.id);
     const nx = g.state === 'post' ? nextFor(g, x, ctx) : '';
-    const sub = [p ? `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'} in the ${g.comp.name}` : '', recTxt].filter(Boolean).join(' · ');
-    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
+    const sub = [standingFor(g, d, ctx, x.team.id), recTxt].filter(Boolean).join(' · ');
+    if (res.length) anyForm = true;
+    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" role="img" aria-label="Last ${res.length}, oldest first: ${res.map((r) => ({ W: 'won', D: 'drew', L: 'lost' }[r] || r)).join(', ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
   });
-  return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now · last 5, newest right' : 'Last 5, all competitions'}</span></div>${rows.join('')}</div>`;
+  return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${[g.state === 'post' ? 'Table now' : '', anyForm ? (g.sport === 'soccer' ? 'last 5, all competitions' : 'last 5') : ''].filter(Boolean).join(' · ').replace(/^./, (c) => c.toUpperCase())}</span></div>${rows.join('')}</div>`;
 }
 
 // "today 17:46", "yesterday 17:46" or "Mon 17:46", so a check time never reads like a kick-off time.

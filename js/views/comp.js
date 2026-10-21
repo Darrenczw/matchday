@@ -26,7 +26,7 @@ function table(ctx, path) {
       const style = mine ? ` style="background:${bg};color:${inkOn(bg, t.alt)}${lum(bg) > 0.7 ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.15)' : ''}"` : '';
       const sw = `<span class="sw" aria-hidden="true"><i style="background:${t.color || '#888'}"></i><i style="background:${t.alt || t.color || '#888'}"></i></span>`;
       const cells = us ? `<span>${esc(r.w)}</span><span>${esc(r.l)}</span><span class="pts">${esc(r.pct)}</span>` : `<span>${esc(r.gp)}</span><span>${esc(r.gd)}</span><span class="pts">${esc(r.pts)}</span>`;
-      html += `<a class="tr" href="${href.team(path, t.id)}"${style} aria-label="${esc(us ? `${ord(r.rank)}, ${t.name}. Won ${r.w}, lost ${r.l}, win percentage ${r.pct}.` : `${ord(r.rank)}, ${t.name}. Played ${r.gp}, goal difference ${r.gd}, ${r.pts} points.`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
+      html += `<a class="tr" href="${href.team(path, t.id)}"${style} aria-label="${esc(us ? `${ord(r.rank)}, ${t.name}. Won ${r.w}, lost ${r.l}, win percentage ${r.pct}.` : `${ord(r.rank)}, ${t.name}. Played ${r.gp}, goal difference ${r.gd}, ${r.pts} points.`) + (followedTeam(path, t) ? ' You follow them.' : '')}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
     }
   }
   return html + '</div>';

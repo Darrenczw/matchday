@@ -1,5 +1,5 @@
 // This week: "Good for you" games with the reason, one tap to follow (PRD 7.8).
-import { esc, sg, todayKey, addDays, keyLabel } from '../util.js';
+import { sg, todayKey, addDays, keyLabel, icon } from '../util.js';
 import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
 import { reasons } from '../suggest.js';
@@ -17,13 +17,11 @@ function paths() {
   return p;
 }
 
-// The same game row as My games, plus a strip with every reason and the one-tap Follow.
+// The same game row as My games (reason in its meta line), with the one-tap Follow at the row's right end.
+// The button sits beside the link, not inside it.
 function card(g) {
-  const why = reasons(g);
-  const mine = isMine(g, picks);
   const pick = { id: g.id, path: g.path, date: g.date, name: g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}` };
-  const action = mine && !picks.games.some((x) => x.id === g.id) ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick, { label: 'Follow', lite: true });
-  return `<div class="card wk">${gameRow(g, { why: false })}<div class="li"><span class="grow why">${why.map((w) => `<em>${esc(w)}</em>`).join('<span aria-hidden="true"> · </span>')}</span>${action}</div></div>`;
+  return `<div class="wk">${gameRow(g, { room: 27, compName: false })}${followBtn('game', g.id, pick, { label: 'Follow', lite: true })}</div>`;
 }
 
 export default function week(params, ctx) {
@@ -39,22 +37,27 @@ export default function week(params, ctx) {
 <p class="lede">Games in your free hours, played overseas, on a streamer, or in the playoffs. Nothing is added until you tap Follow.</p>
 <div class="chips" role="group" aria-label="Sport">${[['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']].map(([k, l]) => `<button class="chip txt" data-act="f" data-f="${k}" aria-pressed="${state.f === k}">${l}</button>`).join('')}</div>`;
   if (!list.length) return html + `<div class="banner info">Suggestions are off for every sport. Turn them on in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
-  if (!e.v) return html + (e.err ? errorCard() : skel(4));
+  if (!e.v) return html + (e.err ? errorCard() : `<p class="status">${icon('clock')}<span>Checking this week’s fixtures against your free hours…</span></p>${skel(4)}`);
   const now = Date.now();
   const games = [...new Map(e.v.map((g) => [g.id, g])).values()]
     .filter((g) => g.state === 'pre' && !g.postponed && new Date(g.date) > now && (state.f === 'all' || g.sport === state.f))
     .filter((g) => reasons(g).length)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+  // This screen is for choosing: games already in My games are only counted, not shown again.
+  const fresh = games.filter((g) => !isMine(g, picks));
+  if (games.length && !fresh.length) return html + `<div class="banner info">Every game that suits you this week is already in My games.</div>`;
   if (!games.length) return html + `<div class="banner info">No games match your free hours and rules this week. You can change them in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
   const days = new Map();
-  for (const g of games) { const k = sg(g.date).key; days.set(k, [...(days.get(k) || []), g]); }
+  const had = new Map();
+  for (const g of games) { const k = sg(g.date).key; if (isMine(g, picks)) had.set(k, (had.get(k) || 0) + 1); else days.set(k, [...(days.get(k) || []), g]); }
   for (const [k, list] of days) {
     const open = state.open.has(k) || list.length <= PER_DAY + 1;
-    html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${list.length > 1 ? `<span>${list.length} games</span>` : ''}</div>`;
+    const note = [list.length > 1 ? `${list.length} games` : '', had.get(k) ? `+${had.get(k)} already in My games` : ''].filter(Boolean).join(' · ');
+    html += `<div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${note ? `<span>${note}</span>` : ''}</div>`;
     html += (open ? list : list.slice(0, PER_DAY)).map(card).join('');
     if (!open) html += `<button class="btn ghost more" data-act="more" data-k="${k}">Show ${list.length - PER_DAY} more</button>`;
   }
-  return html + `<p class="foot">${games.length} games. Football suggestions come from the Premier League, Champions League and the competitions you follow.</p>`;
+  return html + `<p class="foot">${fresh.length} game${fresh.length === 1 ? '' : 's'} to choose from${games.length > fresh.length ? `, plus ${games.length - fresh.length} already in My games` : ''}. Football suggestions come from the Premier League, Champions League and the competitions you follow.</p>`;
 }
 week.actions = {
   f(d, el, e, ctx) { state.f = d.f; ctx.redraw(); },

@@ -4,7 +4,7 @@ import { teamInfo, schedule } from '../espn.js';
 import { inkOn, readable, logoSrc, crest, NEUTRAL } from '../identity.js';
 import { teamFollowBtn, calBtn, teamPick, href, skel, errorCard, backBtn } from '../ui.js';
 import { sportOf, teamKey, settings } from '../store.js';
-import { mainMarket, chans, KIND } from '../tv.js';
+import { mainMarket, tvShort, KIND } from '../tv.js';
 
 function result(g, id) {
   const me = g.home.id === id ? g.home : g.away, them = g.home.id === id ? g.away : g.home;
@@ -17,7 +17,7 @@ function line(g, id, done) {
   // Results read from this team's side: its score first, then W, D or L.
   const me = home ? g.home : g.away, r = done && result(g, id);
   const right = done
-    ? `<div class="when"><b>${esc(me.score)}–${esc(opp.score)}</b><span>${s.wd} ${s.d} ${s.mo}</span></div>${r ? `<span class="fm ${r}" aria-label="${{ W: 'Won', D: 'Draw', L: 'Lost' }[r]}">${r}</span>` : ''}`
+    ? `<div class="when"><b>${esc(me.score)}–${esc(opp.score)}</b><span>${s.wd} ${s.d} ${s.mo}</span></div>${r ? `<span class="fm ${r}" role="img" aria-label="${{ W: 'Won', D: 'Draw', L: 'Lost' }[r]}">${r}</span>` : ''}`
     : `<div class="when"><b>${s.wd} ${s.d} ${s.mo}</b><span>${g.timeValid ? s.hm : 'TBC'}${g.postponed ? ' · Postponed' : ''}</span></div>`;
   return `<a class="li" href="${href.match(g)}">${crest(opp, 30, true)}<span class="grow"><span class="t">${home ? 'v' : 'at'} ${esc(opp.short)}</span><small>${esc(g.comp.name)}</small></span>${right}</a>`;
 }
@@ -40,12 +40,12 @@ export default function team([sport, slug, id], ctx) {
 
   const subBits = [t.nickname && !t.name.includes(t.nickname) ? `The ${t.nickname}` : '', t.abbr, t.standing || t.record].filter(Boolean);
   html += `<div class="ident"><div class="badge">${t.logo ? `<img src="${esc(logoSrc(t.logo, 156))}" alt="" data-ini="${esc(t.abbr)}">` : `<span class="ini" style="width:52px;height:52px">${esc(t.abbr)}</span>`}</div><div><h1>${esc(t.name)}</h1><p>${esc(subBits.join(' · '))}</p></div></div>
-<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${calBtn('team', teamKey(path, t.id), teamPick(path, t))}${form.length ? `<span class="formrow"><span style="font:600 13px var(--text)">Last 5</span><span class="forms" aria-label="Last ${form.length} results, oldest first: ${form.join(' ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span></span>` : ''}</div></div>`;
+<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${calBtn('team', teamKey(path, t.id), teamPick(path, t))}${form.length ? `<span class="formrow"><span style="font:600 13px var(--text)">Last 5</span><span class="forms" role="img" aria-label="Last ${form.length} results, oldest first: ${form.map((r) => ({ W: 'won', D: 'drew', L: 'lost' }[r])).join(', ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span></span>` : ''}</div></div>`;
 
   if (!sched.v) return html + (sched.err ? errorCard() : skel(3)) + '</div>';
   if (next[0]) {
     const m = mainMarket(next[0]);
-    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(next[0])}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(chans(m))}</span><small>${KIND[m.kind]} · tap for all ${settings.markets.length} markets</small></span>${icon('chev', 'chev')}</a></div>`;
+    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(next[0])}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${esc(tvShort(m))}</span><small>${KIND[m.kind]} · tap for all ${settings.markets.length} markets</small></span>${icon('chev', 'chev')}</a></div>`;
   }
   html += `<div class="card"><h2>Next games</h2>${next.length ? next.slice(0, 5).map((g) => line(g, id, false)).join('') : '<p class="note">No games scheduled in the feed yet.</p>'}</div>`;
   if (done.length) html += `<div class="card"><h2>Results</h2>${done.slice(0, 5).map((g) => line(g, id, true)).join('')}</div>`;

@@ -75,7 +75,7 @@ export default function home(params, ctx) {
   // Dates, then the sport filter, in one bar that stays at the top.
   const days = keyRange(t, addDays(t, 6));
   const has = new Set(ahead.map((g) => sg(g.date).key));
-  html += `<div class="filterbar"><div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
+  html += `<div class="filterbar"><div class="days" role="group" aria-label="Jump to a day">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games coming up' : k === t ? '' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
     + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}</div></div>`;
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
@@ -95,7 +95,7 @@ export default function home(params, ctx) {
   const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${resultRows(results, t)}`;
+  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Since ${sg(addDays(t, -3) + 'T04:00:00Z').wd}</span></div>${resultRows(results, t)}`;
   // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
   const wk = f === 'football' ? [...new Set(ahead.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
   const wkTxt = wk.length ? `<span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span>` : '';
@@ -123,7 +123,9 @@ function resultRows(results, t) {
   for (const [k, list] of byDay) {
     const all = k >= addDays(t, -1) || openDays.has(k);
     const shown = all ? list : list.filter(yourTeam), rest = list.length - shown.length;
-    html += shown.map((g) => gameRow(g)).join('');
+    // When a folded day is opened, its first newly shown row gets an id so focus can move to it.
+    const first = openDays.has(k) && k < addDays(t, -1) ? list.find((g) => !yourTeam(g)) : null;
+    html += shown.map((g) => (g === first ? gameRow(g).replace('<a class="row', `<a id="r-${k}" class="row`) : gameRow(g))).join('');
     if (rest) html += `<button class="btn ghost more" data-act="older" data-k="${k}">${keyLabel(k)} · ${rest} more result${rest > 1 ? 's' : ''}</button>`;
   }
   return html;
@@ -138,7 +140,8 @@ home.actions = {
     scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
   },
   // Tapping a sport shows that sport and goes straight to its next game (Coming up, soonest first).
-  older(d, el, e, ctx) { openDays.add(d.k); ctx.redraw(); },
+  // The button goes away when the day opens, so move focus to the first row it revealed (VoiceOver and keyboard).
+  older(d, el, e, ctx) { openDays.add(d.k); ctx.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(`r-${d.k}`)?.focus())); },
   sport(d, el, e, ctx) {
     cur = d.s; ctx.redraw();
     requestAnimationFrame(() => requestAnimationFrame(() => {

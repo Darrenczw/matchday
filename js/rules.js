@@ -4,16 +4,16 @@ import { sg } from './util.js';
 
 const STREAMERS = ['Netflix', 'Prime Video', 'YouTube', 'Disney+'];
 const HOME_COUNTRIES = ['USA', 'United States', 'Canada'];
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // g: { timeValid, date, sport, country, usTV, postseason, note }
 export function freeHourWith(g, prefs) {
   if (!g.timeValid) return null;
-  const s = sg(g.date), t = s.mins, prev = DAYS[(s.dow + 6) % 7];
+  const s = sg(g.date), t = s.mins;
   if (prefs.free.mornings && s.dow >= 1 && s.dow <= 5 && t >= 7 * 60 && t < 10 * 60 + 30) return 'Weekday morning';
-  if (prefs.free.evenings && t >= 19 * 60) return `${s.wdl} evening`;
-  if (prefs.free.evenings && t < 60) return `${prev} night`;
-  if (prefs.free.late && (s.dow === 6 || s.dow === 0) && t < 3 * 60) return `${prev} late night`;
+  // Named like the Settings switches, so a reason always points at the switch behind it, and never names
+  // a different day from the heading it sits under ("Wednesday night" under Thursday read like a bug).
+  if (prefs.free.evenings && (t >= 19 * 60 || t < 60)) return 'Evening';
+  if (prefs.free.late && (s.dow === 6 || s.dow === 0) && t < 3 * 60) return 'Weekend late night';
   return null;
 }
 export function reasonsWith(g, prefs) {

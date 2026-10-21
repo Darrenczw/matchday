@@ -30,5 +30,7 @@ export function tvShort(x, more = true) {
   if (x.channels[0] === 'Not shown live') return '3pm blackout';
   return x.channels[0] + (more && x.channels.length > 1 ? ` · ${x.channels.length - 1} more` : '');
 }
-export const chans =(x, sep = ' or ') => (x.channels.length > 2 ? `${x.channels.slice(0, 2).join(', ')} and ${x.channels.length - 2} more` : x.channels.join(sep));
+// Every channel, written one way everywhere a full list shows: "Sky Sports, Channel 5 and DAZN".
+const LIST = new Intl.ListFormat('en-GB', { type: 'conjunction' });
+export const chanList = (channels) => LIST.format(channels);
 export const KIND = { exact: 'Exact', likely: 'Likely', none: 'Not listed' };

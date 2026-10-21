@@ -203,7 +203,7 @@ export const summary = (path, id, live = false) => get(`${SITE}/${path}/summary?
 export async function standings(path) {
   const d = await get(`${V2}/${path}/standings`, 30 * MIN);
   const groups = (d.children?.length ? d.children : [d]).map((ch) => ({
-    name: ch.name || '',
+    name: ch.name || '', abbr: ch.abbreviation || '',
     rows: (ch.standings?.entries || []).map((en) => {
       const s = Object.fromEntries((en.stats || []).map((x) => [x.name, x]));
       const v = (n) => s[n]?.displayValue ?? '';

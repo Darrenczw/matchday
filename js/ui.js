@@ -75,7 +75,7 @@ export function spoken(g, k, { tv = '', moved = null, why = '' } = {}) {
   return out.join('. ') + '.';
 }
 
-export function gameRow(g, { why = true, tv = true } = {}) {
+export function gameRow(g, { why = true, tv = true, room: budget = 44, compName = true } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
@@ -84,14 +84,15 @@ export function gameRow(g, { why = true, tv = true } = {}) {
   else mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>${shortDay(g.date)} · <i class="sep">${k.sep}</i></span>`;
   const bits = [];
   const comp = g.comp;
-  bits.push(`${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
+  // compName false = logo only, where the line also holds a button (This week). The spoken label still names it.
+  bits.push(compName || !comp.logo ? `${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>` : compImg(comp.logo, 18, comp.name));
   const moved = g.state === 'pre' ? movedFrom(g) : null;
   const why1 = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g)[0] : '';
   let tvSaid = '';
   if (tv && g.state !== 'post') {
     const m = mainMarket(g);
     // The meta line is one line: when it's full, drop "· 1 more" before the channel name gets cut.
-    const room = comp.name.length + m.label.length + tvShort(m).length + (why1 || '').length <= 44;
+    const room = (compName ? comp.name.length : 0) + m.label.length + tvShort(m).length + (why1 || '').length <= budget;
     bits.push(`<span class="tvt">${esc(m.label)} · ${esc(tvShort(m, room))}</span>`);
     tvSaid = tvSpoken(m);
   }

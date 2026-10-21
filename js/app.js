@@ -17,8 +17,9 @@ import settingsView from './views/settings.js';
 const ROUTES = [
   [/^#?\/?$/, home, 'home'],
   [/^#\/follow(?:\/(soccer|nfl|nba))?$/, followView, 'follow'],
-  [/^#\/c\/(\w+)\/([\w.]+)$/, comp, 'follow'],
-  [/^#\/t\/(\w+)\/([\w.]+)\/(\d+)$/, team, 'follow'],
+  // Team and competition pages keep the tab you came from lit (My games, Follow or This week).
+  [/^#\/c\/(\w+)\/([\w.]+)$/, comp, null],
+  [/^#\/t\/(\w+)\/([\w.]+)\/(\d+)$/, team, null],
   [/^#\/m\/(\w+)\/([\w.]+)\/(\d+)$/, match, null],
   [/^#\/week$/, week, 'week'],
   [/^#\/settings$/, settingsView, 'settings'],
