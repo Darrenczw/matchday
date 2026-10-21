@@ -2,7 +2,7 @@
 import { esc, todayKey, addDays, sg, keyLabel } from '../util.js';
 import { sportOf, teamKey, following } from '../store.js';
 import { compInfo, compList, standings, range, leagueTeams } from '../espn.js';
-import { brand, inkOn, logoSrc, crest, lum } from '../identity.js';
+import { brand, inkOn, readable, logoSrc, crest, lum } from '../identity.js';
 import { followBtn, teamFollowBtn, gameRow, href, skel, errorCard, backBtn } from '../ui.js';
 
 const tabs = {};
@@ -21,7 +21,8 @@ function table(ctx, path) {
     html += `<div class="hd" aria-hidden="true">${head}</div>`;
     for (const r of g.rows) {
       const t = r.team, mine = followedTeam(path, t) && t.color;
-      const style = mine ? ` style="background:${t.color};color:${inkOn(t.color, t.alt)}${lum(t.color) > 0.7 ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.15)' : ''}"` : '';
+      const bg = mine ? readable(t.color) : '';
+      const style = mine ? ` style="background:${bg};color:${inkOn(bg, t.alt)}${lum(bg) > 0.7 ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.15)' : ''}"` : '';
       const sw = `<span class="sw" aria-hidden="true"><i style="background:${t.color || '#888'}"></i><i style="background:${t.alt || t.color || '#888'}"></i></span>`;
       const cells = us ? `<span>${esc(r.w)}</span><span>${esc(r.l)}</span><span class="pts">${esc(r.pct)}</span>` : `<span>${esc(r.gp)}</span><span>${esc(r.gd)}</span><span class="pts">${esc(r.pts)}</span>`;
       html += `<a class="tr${r.note && !mine ? ' zone' : ''}" href="${href.team(path, t.id)}"${style} aria-label="${esc(`${r.rank}. ${t.name}`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;

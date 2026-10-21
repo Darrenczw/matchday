@@ -2,7 +2,7 @@
 import { esc, sg, icon } from '../util.js';
 import { sportOf } from '../store.js';
 import { teamInfo, schedule } from '../espn.js';
-import { inkOn, logoSrc, crest, NEUTRAL } from '../identity.js';
+import { inkOn, readable, logoSrc, crest, NEUTRAL } from '../identity.js';
 import { teamFollowBtn, href, skel, errorCard, backBtn } from '../ui.js';
 import { mainMarket, chans, KIND } from '../tv.js';
 
@@ -25,7 +25,7 @@ export default function team([sport, slug, id], ctx) {
   const info = ctx.use(`team:${sport}:${id}`, () => teamInfo(path, id), 3600e3);
   const sched = ctx.use(`sched:${sport}:${id}`, () => schedule(path, id), 10 * 60e3);
   const t = info.v;
-  const bg = t?.color || NEUTRAL, ink = inkOn(bg, t?.alt);
+  const bg = readable(t?.color || NEUTRAL), ink = inkOn(bg, t?.alt);
   const style = `--skin-bg:${bg};--skin-ink:${ink};--skin-card:color-mix(in srgb, ${bg} 88%, #000);--skin-line:color-mix(in srgb, ${ink} 16%, transparent)`;
   let html = `<div class="teampage" style="${style}"><div class="nav" style="color:${ink}">${backBtn('#/follow', 'Follow')}</div>`;
   if (!t) return html + (info.err ? errorCard('Couldn’t load this team.') : skel(4, true)) + '</div>';

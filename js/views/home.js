@@ -39,7 +39,7 @@ export default function home(params, ctx) {
 
   const days = keyRange(t, addDays(t, 6));
   const has = new Set((games || []).filter((g) => g.state !== 'post').map((g) => sg(g.date).key));
-  html += `<div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`;
+  html += `<div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`;
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
   if (e.err && stale) html += `<div class="banner amber">${icon('wifi')}<span>Can’t reach the score feed. Showing games from ${ago(stale)}.</span></div>`;
@@ -73,6 +73,6 @@ export default function home(params, ctx) {
 home.actions = {
   jump(d) {
     const el = document.getElementById(`d-${d.k}`);
-    if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 8, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - 8 : 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   },
 };

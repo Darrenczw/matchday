@@ -42,6 +42,15 @@ export function inkOn(bg, alt) {
   return contrast(bg, '#ffffff') > contrast(bg, '#121318') ? '#ffffff' : '#121318';
 }
 
+// A few brand colours sit where neither white nor ink text reaches 4.5:1 (Chargers blue 4.33,
+// Sunderland red 4.48). Darken those a touch until white text passes; the eye barely sees it.
+function mixBlack(h, t) { return '#' + rgb(h).map((v) => Math.round(v * (1 - t)).toString(16).padStart(2, '0')).join(''); }
+export function readable(bg) {
+  let b = bg;
+  for (let i = 0; i < 10 && Math.max(contrast(b, '#ffffff'), contrast(b, '#121318')) < 4.5; i++) b = mixBlack(b, 0.04);
+  return b;
+}
+
 export function colourName(h) {
   const [r, g, b] = rgb(h).map((v) => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
   if (d < 0.08) return l > 0.85 ? 'white' : l < 0.18 ? 'black' : 'grey';
@@ -74,7 +83,7 @@ export function kitsFor(g) {
     if (g.sport !== 'soccer') tries.push(['white', '#ffffff']);
     for (const [kind, c] of tries) if (c && !clash(hb, c)) { ab = c; worn = kind; break; }
   }
-  const pair = (t, bg) => ({ team: t, bg, ink: inkOn(bg, bg === t.color ? t.alt : t.color), light: lum(bg) > 0.7 });
+  const pair = (t, kit) => { const bg = readable(kit); return { team: t, bg, ink: inkOn(bg, kit === t.color ? t.alt : t.color), light: lum(bg) > 0.7 }; };
   const home = pair(g.home, hb), away = { ...pair(g.away, ab), worn };
   return g.sport === 'soccer' ? { left: home, right: away, sep: 'v', home, away } : { left: away, right: home, sep: '@', home, away };
 }
