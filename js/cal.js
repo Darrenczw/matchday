@@ -3,9 +3,8 @@
 import { load, save, emit, on, settings, sportOf, teamKey, DEMO } from './store.js';
 
 // Where the helper lives. Local tests use `wrangler dev`; the practice copy (?demo) uses the practice helper.
-// Filled in at the helper's first deploy (TECH-DESIGN section 10).
 const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-const LIVE = '', PRACTICE = '';
+const LIVE = 'https://matchday-cal.darren-chow-1.workers.dev', PRACTICE = 'https://matchday-cal-test.darren-chow-1.workers.dev';
 export const CAL_API = LOCAL ? 'http://127.0.0.1:8788' : DEMO ? PRACTICE : LIVE;
 
 export const cal = load('cal', { comps: [], teams: [], games: [] });

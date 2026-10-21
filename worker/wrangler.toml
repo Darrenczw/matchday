@@ -13,7 +13,7 @@ APP_ORIGIN = "https://darrenczw.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "matchday"
-database_id = "set-at-first-deploy"
+database_id = "6d6b4575-6904-4605-be9b-61e7612a9685"
 
 # Practice copy: its own Worker and database, used by the app's ?demo mode and for tests.
 [env.test]
@@ -25,4 +25,4 @@ APP_ORIGIN = "https://darrenczw.github.io"
 [[env.test.d1_databases]]
 binding = "DB"
 database_name = "matchday-test"
-database_id = "set-at-first-deploy"
+database_id = "910edf9c-6e8e-49af-b7b6-6546f23dd4b0"
