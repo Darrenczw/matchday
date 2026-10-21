@@ -51,6 +51,8 @@ async function api(path, opts = {}) {
 // Send the calendar picks, the Follow picks (the helper tracks them as the app's backup, TECH-DESIGN 14), TV market
 // order and "Good for you" rules (debounced: several taps, one upload).
 let pushTimer = 0;
+// The three old switches, for a calendar helper that doesn't read custom windows yet.
+const legacy = () => Object.fromEntries(['mornings', 'evenings', 'late'].map((k) => [k, !!settings.windows.find((w) => w.id === k)?.on]));
 export const syncState = { pushing: false, lastPush: load('calpush', 0), error: null };
 export function push() {
   if (!ready()) return;
@@ -58,7 +60,7 @@ export function push() {
   pushTimer = setTimeout(async () => {
     syncState.pushing = true; emit('calsync');
     try {
-      await api('/api/picks', { method: 'PUT', body: JSON.stringify({ cal, follow: { comps: picks.comps, teams: picks.teams, games: picks.games }, markets: settings.markets, prefs: { free: settings.free, rules: settings.rules } }) });
+      await api('/api/picks', { method: 'PUT', body: JSON.stringify({ cal, follow: { comps: picks.comps, teams: picks.teams, games: picks.games }, markets: settings.markets, prefs: { free: { ...legacy(), windows: settings.windows }, rules: settings.rules } }) });
       syncState.lastPush = Date.now(); save('calpush', syncState.lastPush); syncState.error = null;
     } catch (e) { syncState.error = calError(e); }
     syncState.pushing = false; emit('calsync');

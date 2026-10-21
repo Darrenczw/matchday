@@ -1,7 +1,7 @@
 // Settings: TV markets and their order, free hours, suggestion rules, calendar, look (PRD 7.10).
 import { esc, icon, ago, sg as sgt, dateText } from '../util.js';
 import { settings, set, MARKETS, clearPicks, followingAny, picks, DEMO } from '../store.js';
-import { FREE_WINDOWS } from '../suggest.js';
+import { windowName } from '../rules.js';
 import { rightsChecked } from '../tv.js';
 import { toast, calBtn } from '../ui.js';
 import { cal, calCfg, CAL_API, calReady, calAny, setUp, status, newLink, webcal, syncState, calError } from '../cal.js';
@@ -32,6 +32,36 @@ ${calAny() ? `<div class="h" style="padding-top:12px">In your calendar<span>Sepa
 <div class="li"><button class="btn sm ghost" data-act="copylink">Copy link</button><button class="btn sm ghost" data-act="newlink">Make a new link</button></div></div>`;
 }
 
+// ---------- My free hours: windows Darren sets himself (days plus from and to), no typing: day chips and time wheels.
+const DAY = [[1, 'M', 'Monday'], [2, 'T', 'Tuesday'], [3, 'W', 'Wednesday'], [4, 'T', 'Thursday'], [5, 'F', 'Friday'], [6, 'S', 'Saturday'], [0, 'S', 'Sunday']];
+const D3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const order = (days) => [...days].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+function daysText(days) {
+  const d = order(days), k = d.join();
+  if (k === '1,2,3,4,5,6,0') return 'Every day';
+  if (k === '1,2,3,4,5') return 'Mon to Fri';
+  // A run of three or more days reads as "Thu to Sun".
+  const run = d.length > 2 && d.every((x, i) => i === 0 || x === (d[i - 1] + 1) % 7);
+  return run ? `${D3[d[0]]} to ${D3[d[d.length - 1]]}` : d.map((x) => D3[x]).join(', ') || 'No days';
+}
+const crosses = (w) => w.to <= w.from;
+let editing = null;
+function freeHours() {
+  const ws = settings.windows;
+  const rows = ws.map((w) => {
+    const open = editing === w.id;
+    const sub = `${daysText(w.days)} · ${w.from} to ${w.to}${crosses(w) ? ' (next day)' : ''}`;
+    let h = `<div class="li fhw"><button class="grow" data-act="editwin" data-id="${esc(w.id)}" aria-expanded="${open}"><span class="t">${esc(windowName(w))}</span><small>${esc(sub)}</small></button>${sw(`win:${w.id}`, w.on, windowName(w))}</div>`;
+    if (open) {
+      h += `<div class="wined"><div class="daychips" role="group" aria-label="Days">${DAY.map(([n, l, full]) => `<button data-act="winday" data-id="${esc(w.id)}" data-d="${n}" aria-pressed="${w.days.includes(n)}" aria-label="${full}">${l}</button>`).join('')}</div>
+<div class="times"><label>From<input type="time" step="900" value="${esc(w.from)}" data-input="wintime" data-id="${esc(w.id)}" data-k="from"></label><label>To<input type="time" step="900" value="${esc(w.to)}" data-input="wintime" data-id="${esc(w.id)}" data-k="to"></label></div>
+<div class="winacts"><button class="btn sm warn" data-act="delwin" data-id="${esc(w.id)}">Remove</button><button class="btn sm on" data-act="editwin" data-id="">${icon('check')}Done</button></div></div>`;
+    }
+    return h;
+  }).join('');
+  return `<div class="card"><h2>My free hours</h2>${rows}<div class="li"><button class="btn sm ghost" data-act="addwin">${icon('plus')}Add a window</button></div><p class="note">All times are Singapore time. A window that ends before it starts runs past midnight. Games in these hours get a “Good for you” tag, named after the window.</p></div>`;
+}
+
 const sw = (path, on, label) => `<button class="switch" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="toggle" data-path="${path}"></button>`;
 
 export default function settingsView(params, ctx) {
@@ -45,9 +75,9 @@ export default function settingsView(params, ctx) {
 <button class="mv" data-act="mv" data-i="${i}" data-d="-1" aria-label="Move ${esc(MARKETS[m])} up" ${i === 0 ? 'disabled' : ''}>${icon('up')}</button><button class="mv" data-act="mv" data-i="${i}" data-d="1" aria-label="Move ${esc(MARKETS[m])} down" ${i === ms.length - 1 ? 'disabled' : ''}>${icon('down')}</button></div>`).join('');
   html += `</div><p class="note">Drag, or use the arrows. Rights table checked ${esc(rightsChecked() ? dateText(rightsChecked()) : '…')}, with a source for every entry.</p></div>`;
 
-  html += `<div class="card"><h2>My free hours</h2>${FREE_WINDOWS.map((w) => `<div class="li"><span class="grow"><span class="t">${w.label}</span><small>${w.sub}</small></span>${sw(`free.${w.key}`, settings.free[w.key], w.label)}</div>`).join('')}<p class="note">All times are Singapore time. Games in these hours get a “Good for you” tag.</p></div>`;
+  html += freeHours();
 
-  const rules = [['rules.overseas', 'Played overseas', 'NFL and NBA games outside the US and Canada'], ['rules.streaming', 'On a streamer', 'Netflix, Prime Video, YouTube, Disney+'], ['rules.playoffs', 'Playoffs and finals', 'All three sports']];
+  const rules = [['rules.big', 'Big games', 'Top-of-table clashes and the famous derbies'], ['rules.near', 'Matters to your teams', 'Games between teams near yours in the table'], ['rules.overseas', 'Played overseas', 'NFL and NBA games outside the US and Canada'], ['rules.streaming', 'On a streamer', 'Netflix, Prime Video, YouTube, Disney+'], ['rules.playoffs', 'Playoffs and finals', 'All three sports']];
   html += `<div class="card"><h2>Also suggest</h2>${rules.map(([p, l, s]) => `<div class="li"><span class="grow"><span class="t">${l}</span><small>${s}</small></span>${sw(p, p.split('.').reduce((o, k) => o[k], settings), l)}</div>`).join('')}
 <div class="h" style="padding-top:16px">Suggest from<span>Sports on This week</span></div>
 ${[['suggest.soccer', 'Football'], ['suggest.nfl', 'NFL'], ['suggest.nba', 'NBA']].map(([p, l]) => `<div class="li" style="min-height:48px"><span class="grow"><span class="t">${l}</span></span>${sw(p, p.split('.').reduce((o, k) => o[k], settings), `Suggest ${l}`)}</div>`).join('')}</div>`;
@@ -72,7 +102,22 @@ settingsView.actions = {
     if (!confirm('Make a new calendar link? The old one stops working, and you’ll need to subscribe again on your iPhone.')) return;
     try { await newLink(); ctx.forget('calstatus'); toast('New link made. Tap Subscribe to add it.'); } catch (err) { toast(`Couldn’t make a new link. ${calError(err)}`); }
   },
-  toggle(d) { set(d.path, !d.path.split('.').reduce((o, k) => o[k], settings)); },
+  toggle(d) {
+    if (d.path.startsWith('win:')) return setWin(d.path.slice(4), (w) => ({ ...w, on: !w.on }));
+    set(d.path, !d.path.split('.').reduce((o, k) => o[k], settings));
+  },
+  editwin(d, el, e, ctx) { editing = editing === d.id || !d.id ? null : d.id; ctx.redraw(); },
+  addwin(d, el, e, ctx) {
+    const w = { id: `w${Date.now().toString(36)}`, days: [6, 0], from: '10:00', to: '19:00', on: true };
+    set('windows', [...settings.windows, w]); editing = w.id; ctx.redraw();
+  },
+  delwin(d, el, e, ctx) {
+    const before = settings.windows, gone = before.find((w) => w.id === d.id);
+    set('windows', before.filter((w) => w.id !== d.id)); editing = null;
+    toast(`${windowName(gone)} removed`, () => set('windows', before));
+  },
+  winday(d) { const n = +d.d; setWin(d.id, (w) => ({ ...w, days: w.days.includes(n) ? w.days.filter((x) => x !== n) : [...w.days, n] })); },
+  wintime(v, el) { if (/^\d\d:\d\d$/.test(v)) setWin(el.dataset.id, (w) => ({ ...w, [el.dataset.k]: v })); },
   mv(d) {
     const a = [...settings.markets], i = +d.i, j = i + +d.d;
     if (j < 0 || j >= a.length) return;
@@ -85,6 +130,8 @@ settingsView.actions = {
     clearPicks(); toast('All picks cleared');
   },
 };
+
+function setWin(id, fn) { set('windows', settings.windows.map((w) => (w.id === id ? fn(w) : w))); }
 
 // Drag to reorder markets (pointer events, works with touch).
 let drag = null;

@@ -12,12 +12,13 @@ export function save(k, v) {
 }
 
 export { MARKETS } from './names.js';
+import { windowsOf } from './rules.js';
 
 const DEFAULTS = {
   markets: ['uk', 'us', 'ca', 'sg', 'my', 'hk', 'kr', 'mena'],
   theme: 'auto',
   free: { mornings: true, evenings: true, late: true },
-  rules: { overseas: true, streaming: true, playoffs: true },
+  rules: { overseas: true, streaming: true, playoffs: true, big: true, near: true },
   suggest: { nfl: true, nba: true, soccer: true },
 };
 const saved = load('settings', {});
@@ -25,6 +26,8 @@ export const settings = {
   ...DEFAULTS, ...saved,
   free: { ...DEFAULTS.free, ...saved.free }, rules: { ...DEFAULTS.rules, ...saved.rules }, suggest: { ...DEFAULTS.suggest, ...saved.suggest },
 };
+// Free-hour windows Darren edits himself (22 Oct 2026). Saved settings from before start from the old three switches.
+settings.windows = saved.windows || windowsOf({ free: settings.free });
 
 // Sample picks for the practice copy only. Labelled "Sample picks" on screen.
 const SAMPLE = {

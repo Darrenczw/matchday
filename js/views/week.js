@@ -2,7 +2,7 @@
 import { nightKey, nightToday, addDays, keyLabel, icon } from '../util.js';
 import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
-import { reasons, freeHour } from '../suggest.js';
+import { reasons, freeHour, useTables } from '../suggest.js';
 import { followBtn, gameRow, skel, errorCard } from '../ui.js';
 
 const state = { f: 'all', open: new Set() };
@@ -34,11 +34,12 @@ export default function week(params, ctx) {
     return res.flatMap((r) => r.value || []);
   }, 10 * 60e3);
   let html = `<header class="top"><h1>This week</h1><span class="sub">Good for you</span></header>
-<p class="lede">Games in your free hours, played overseas, on a streamer, or in the playoffs. Nothing is added until you tap Follow.</p>
+<p class="lede">Games in your free hours, big games, games that matter to your teams, and games played overseas, on a streamer or in the playoffs. Nothing is added until you tap Follow.</p>
 <div class="chips" role="group" aria-label="Sport">${[['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']].map(([k, l]) => `<button class="chip txt" data-act="f" data-f="${k}" aria-pressed="${state.f === k}">${l}</button>`).join('')}</div>`;
   if (!list.length) return html + `<div class="banner info">Suggestions are off for every sport. Turn them on in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;
   if (!e.v) return html + (e.err ? errorCard() : `<p class="status">${icon('clock')}<span>Checking this week’s fixtures against your free hours…</span></p>${skel(4)}`);
   const now = Date.now();
+  useTables(ctx, e.v.map((g) => g.path)); // for Big games and Matters to your teams
   const games = [...new Map(e.v.map((g) => [g.id, g])).values()]
     .filter((g) => g.state === 'pre' && !g.postponed && new Date(g.date) > now && (state.f === 'all' || g.sport === state.f))
     .filter((g) => reasons(g).length)

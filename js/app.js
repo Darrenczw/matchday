@@ -6,6 +6,7 @@ import { compInfo, known } from './espn.js';
 import { toast } from './ui.js';
 import { esc } from './util.js';
 import { ground } from './ground.js';
+import { swipe } from './swipe.js';
 import home from './views/home.js';
 import followView from './views/follow.js';
 import comp from './views/comp.js';
@@ -50,7 +51,7 @@ function load(key, e) {
 
 // ---------- Drawing: render to a string, then update only what changed, so a focused input
 // keeps its keyboard and logos don't flicker.
-let raf = 0;
+let raf = 0, lastFloat = null;
 export function draw() { cancelAnimationFrame(raf); raf = requestAnimationFrame(paint); }
 function paint() {
   if (!route) return;
@@ -69,6 +70,10 @@ function paint() {
     morphChildren(main, t.content);
   }
   ground(ctx.sport);
+  // Floating controls (the game pager) live outside the page, so a swipe slides the page and not them.
+  const fl = main.querySelector(':scope > .pagerbar'), bar = document.getElementById('bar');
+  if (fl) { bar.replaceChildren(fl); } else if (!main.querySelector('.pagerbar') && route.view !== lastFloat) bar.replaceChildren();
+  lastFloat = route.view;
   // The tab title says where you are (VoiceOver reads it too): "Arsenal v Everton · Matchday".
   const where = ctx.title || main.querySelector('h1')?.textContent || '';
   const title = `${where && where !== 'My games' ? `${where} · ` : ''}Matchday${DEMO ? ' (sample picks)' : ''}`;
@@ -147,7 +152,9 @@ function labelFor(h) {
 const stack = [];
 addEventListener('hashchange', () => {
   const h = location.hash || '#/';
-  if (stack.length > 1 && stack[stack.length - 2] === h) stack.pop(); else stack.push(h);
+  // A swipe to the next game replaces this screen, so Back still returns to the list it came from.
+  if (swipe.replacing) { swipe.replacing = false; stack[stack.length - 1] = h; }
+  else if (stack.length > 1 && stack[stack.length - 2] === h) stack.pop(); else stack.push(h);
   go();
 });
 stack.push(location.hash || '#/');

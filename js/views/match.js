@@ -1,9 +1,10 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
 import { esc, sg, countdown, icon, ago, dateText } from '../util.js';
-import { following, picks } from '../store.js';
+import { following, picks, teamKey } from '../store.js';
 import { summary, norm, liveLabel, net, isMine, schedule, backup, known, standings } from '../espn.js';
 import { kitsFor, clashNote, crest, edge, kitEdge, brand, inkOn, readable } from '../identity.js';
-import { allMarkets, mainMarket, KIND, rightsChecked, chanList } from '../tv.js';
+import { allMarkets, KIND, rightsChecked, chanList } from '../tv.js';
+import { position, swipeTo } from '../swipe.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
@@ -13,6 +14,14 @@ const openSubs = new Set();
 // NBA and NFL list away first, so say which side is which.
 const ha = (g, x) => (g.sport === 'soccer' ? '' : `<span class="ha">${x.team.home ? 'Home' : 'Away'}</span>`);
 const tchip = (x) => `<span class="tchip" style="background:${x.bg};color:${x.ink};${edge(x.bg)}">${esc(x.team.abbr)}</span>`;
+// "3 of 8" with previous / next, for the list this game was opened from: a pill above the tab bar, in thumb
+// reach, that also tells you swiping works.
+function pager() {
+  const p = position(location.hash);
+  if (!p) return '';
+  const b = (dir, to, label) => `<button class="pg" data-act="swipe" data-d="${dir}" aria-label="${label}"${to ? '' : ' disabled'}>${icon(dir > 0 ? 'chev' : 'back')}</button>`;
+  return `<nav class="pagerbar" aria-label="Games in this list">${b(-1, p.prev, 'Previous game')}<span>${p.i + 1} of ${p.n}</span>${b(1, p.next, 'Next game')}</nav>`;
+}
 // Competitions are brands too (PRODUCT.md): a strip in the competition's own colour with its logo, so a
 // Champions League night never looks like a cup tie. It opens the competition page.
 function compStrip(g, d) {
@@ -66,19 +75,13 @@ function tvTag(x) {
   if (!x.source) return `<span class="tag ${cls}">${KIND[x.kind]}</span>`;
   return `<a class="tag ${cls} src" href="${esc(x.source)}" target="_blank" rel="noopener" aria-label="${esc(`${KIND[x.kind]}: source for ${x.label}`)}">${KIND[x.kind]}</a>`;
 }
-// Main market, big, with why ("Saturday 3pm blackout in the UK"). Shared by both layouts.
-function tvHead(m) {
-  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b${m.channels.length > 1 ? ' class="list"' : ''}>${m.kind === 'none' ? 'Not listed' : esc(chanList(m.channels))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
-}
-function tvMain(g) {
-  return `<div class="card"><h2>Where to watch</h2>${tvHead(mainMarket(g))}</div>`;
-}
+// Where to watch: every market on an equal row, in Darren's market order (Darren, 22 Oct 2026: UK, SG
+// and the rest matter the same, so none is drawn bigger). Rows elsewhere still show the first market.
 function tvAll(g) {
-  const [main, ...rest] = allMarkets(g);
-  const listed = rest.filter((x) => x.kind !== 'none'), none = rest.filter((x) => x.kind === 'none');
-  let html = `<div class="card"><h2>Where to watch</h2>${tvHead(main)}`;
-  // This is the full list, so every channel is named (rows elsewhere say "· 1 more").
-  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chanList(x.channels))}</span>${tvTag(x)}</div>`).join('');
+  const all = allMarkets(g);
+  const listed = all.filter((x) => x.kind !== 'none'), none = all.filter((x) => x.kind === 'none');
+  let html = '<div class="card"><h2>Where to watch</h2>';
+  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chanList(x.channels))}${x.channels[0] === 'Not shown live' && x.note ? `<small>${esc(x.note)}</small>` : ''}</span>${tvTag(x)}</div>`).join('');
   if (none.length) html += `<div class="tvrow"><span class="c" style="color:var(--mute)">Not listed: ${esc(none.map((x) => x.label).join(', '))}</span></div>`;
   html += `<p class="note">Exact = listed for this game. Likely = holds the rights this season${rightsChecked() ? ` (rights checked ${esc(dateText(rightsChecked()))})` : ''}. Tap Likely to see where it comes from.</p></div>`;
   return html;
@@ -210,8 +213,10 @@ function gameLeaders(g, d, k) {
 
 // One team at a time, like the team toggle on a box score.
 const boxTeam = new Map();
+// Box score and line-ups open on the team you follow (else the left one); the switch remembers your pick.
+const shownTeam = (g, k) => boxTeam.get(g.id) || [k.left, k.right].find((x) => following('team', teamKey(g.path, x.team.id)))?.team.id || k.left.team.id;
 function teamSwitch(g, k) {
-  const cur = boxTeam.get(g.id) || k.left.team.id;
+  const cur = shownTeam(g, k);
   return `<div class="seg" role="group" aria-label="Team" style="margin:4px 14px 10px">${[k.left, k.right].map((x) => `<button data-act="boxteam" data-g="${g.id}" data-t="${x.team.id}" aria-pressed="${cur === x.team.id}">${tchip(x)} ${esc(x.team.short)}</button>`).join('')}</div>`;
 }
 function table(cols, rows, totals) {
@@ -225,7 +230,7 @@ const pick = (labels, want, row) => want.map((w) => row[labels.indexOf(w)] ?? ''
 
 // NBA box score: starters, then bench, then who didn't play.
 function boxNBA(g, d, k) {
-  const id = boxTeam.get(g.id) || k.left.team.id;
+  const id = shownTeam(g, k);
   const s = d.boxscore?.players?.find((p) => p.team?.id === id)?.statistics?.[0];
   if (!s?.athletes?.length) return '';
   const cols = ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'FT', 'STL', 'BLK', 'TO', '+/-'];
@@ -243,7 +248,7 @@ const NFL_UNITS = [
   ['interceptions', 'Interceptions', ['INT', 'YDS', 'TD']], ['kicking', 'Kicking', ['FG', 'XP', 'PTS', 'LONG']],
 ];
 function playersNFL(g, d, k) {
-  const id = boxTeam.get(g.id) || k.left.team.id;
+  const id = shownTeam(g, k);
   const groups = d.boxscore?.players?.find((p) => p.team?.id === id)?.statistics || [];
   if (!groups.length) return '';
   const parts = NFL_UNITS.map(([key, title, cols, max]) => {
@@ -272,15 +277,61 @@ function scoringNFL(g, d, k, newestFirst) {
   return `<div class="card"><div class="h">Scoring summary<span>${newestFirst ? 'Newest first' : 'In order'}</span></div>${html}</div>`;
 }
 
+// ---------- Line-ups (football): one pitch per team in its kit, players placed by formation, then subs
+// and bench. The team switch is shared with the box score (Darren picked this layout, 22 Oct 2026).
+// Depth on the pitch (0 = goalkeeper) and side (0 = far left, 4 = far right), from ESPN's position codes.
+function depth(pos = '') {
+  if (/^G/.test(pos)) return 0;
+  if (/WB/.test(pos)) return 1.5;
+  if (/^(CD|LB|RB|D|SW)/.test(pos)) return 1;
+  if (/^DM/.test(pos)) return 2;
+  if (/^(CM|LM|RM|M)/.test(pos)) return 3;
+  if (/^(AM|LW|RW|W)/.test(pos)) return 4;
+  return 5; // F, CF, ST, LF, RF
+}
+const side = (pos = '') => (/^L/.test(pos) ? 0 : /-L$/.test(pos) ? 1 : /^R/.test(pos) ? 4 : /-R$/.test(pos) ? 3 : 2);
+function rowsFor(xi, formation) {
+  const sorted = [...xi].sort((a, b) => depth(a.position?.abbreviation) - depth(b.position?.abbreviation) || (+a.formationPlace || 0) - (+b.formationPlace || 0));
+  const lines = (formation || '').split('-').map(Number).filter(Boolean);
+  let out;
+  if (lines.length && lines.reduce((a, b) => a + b, 0) === sorted.length - 1) {
+    out = [sorted.slice(0, 1)]; let i = 1;
+    for (const n of lines) { out.push(sorted.slice(i, i + n)); i += n; }
+  } else { // no formation from ESPN: group by depth instead
+    const by = new Map(); for (const p of sorted) { const dd = Math.floor(depth(p.position?.abbreviation)); by.set(dd, [...(by.get(dd) || []), p]); }
+    out = [...by.values()];
+  }
+  return out.map((row) => row.sort((a, b) => side(a.position?.abbreviation) - side(b.position?.abbreviation) || (+a.formationPlace || 0) - (+b.formationPlace || 0)));
+}
+const surname = (a = {}) => a.lastName || (a.shortName || a.displayName || '').replace(/^[A-Z]\.\s+/, '');
+const ARROW_IN = '<svg class="arr" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>';
+const ARROW_OUT = '<svg class="arr" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>';
+const BALL = '<svg class="ball" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.6l2.2 1.6-.8 2.6H4.6l-.8-2.6z"/></svg>';
 function lineups(g, d, k) {
   if (g.sport !== 'soccer') return '';
   const r = d.rosters || [];
   const of = (x) => r.find((y) => y.team?.id === x.team.id);
-  const L = of(k.left), R = of(k.right);
-  const xi = (ro) => (ro?.roster || []).filter((p) => p.starter);
-  if (!xi(L).length && !xi(R).length) return `<div class="card"><h2>Line-ups</h2><p class="note">Line-ups not out yet. They usually come about an hour before kick-off.</p></div>`;
-  const col = (x, ro) => `<div><h3>${crest(x.team, 22)}${esc(x.team.abbr)}${ro?.formation ? ` <span style="color:var(--mute);font-weight:700">${esc(ro.formation)}</span>` : ''}</h3>${xi(ro).map((p) => `<p><i>${esc(p.jersey)}</i>${esc(p.athlete?.displayName)}</p>`).join('')}</div>`;
-  return `<div class="card"><h2>Line-ups</h2><div class="xi">${col(k.left, L)}${col(k.right, R)}</div></div>`;
+  if (![k.left, k.right].some((x) => (of(x)?.roster || []).some((p) => p.starter))) return `<div class="card"><h2>Line-ups</h2><p class="note">Line-ups not out yet. They usually come about an hour before kick-off.</p></div>`;
+  const id = shownTeam(g, k), x = id === k.right.team.id ? k.right : k.left, ro = of(x);
+  const all = ro?.roster || [], xi = all.filter((p) => p.starter);
+  // What happened to each player: goals, cards, and the sub minute, from the key events.
+  const ev = new Map(), add = (aid, v) => aid && ev.set(aid, [...(ev.get(aid) || []), v]);
+  const swaps = [];
+  for (const e of d.keyEvents || []) {
+    const [a, b] = e.participants || [], min = e.clock?.displayValue || '';
+    if (/substitution/i.test(e.type?.text || '')) { if (e.team?.id === x.team.id) swaps.push({ min, on: a?.athlete, off: b?.athlete }); add(b?.athlete?.id, { off: min }); continue; }
+    if (isGoal(e) && !/own goal/i.test(e.type?.text || '')) add(a?.athlete?.id, { goal: min });
+    else if (isCard(e)) add(a?.athlete?.id, { card: /red/i.test(e.type.text) ? 'r' : 'y' });
+  }
+  const marks = (aid) => (ev.get(aid) || []).map((m) => (m.goal ? BALL : m.card ? `<i class="cd ${m.card}"></i>` : m.off ? `<span class="off">${ARROW_OUT}${esc(m.off)}</span>` : '')).join('');
+  const said = (p) => [p.jersey && `number ${p.jersey}`, p.athlete?.displayName, ...(ev.get(p.athlete?.id) || []).map((m) => (m.goal ? `scored ${m.goal}` : m.card ? (m.card === 'r' ? 'red card' : 'yellow card') : `subbed off ${m.off}`))].filter(Boolean).join(', ');
+  const rows = rowsFor(xi, ro?.formation).reverse(); // forwards at the top, attacking up the page
+  const pitch = `<div class="pitch${kitEdge(x)}" style="background:${x.bg};color:${x.ink}" role="list" aria-label="${esc(`${x.team.name || x.team.short} starting eleven${ro?.formation ? `, ${ro.formation}` : ''}`)}"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><rect x="3" y="3" width="94" height="134" rx="2"/><path d="M3 70h94"/><circle cx="50" cy="70" r="11"/><rect x="24" y="3" width="52" height="20"/><rect x="24" y="117" width="52" height="20"/><rect x="38" y="3" width="24" height="7"/><rect x="38" y="130" width="24" height="7"/></svg>${rows.map((row) => `<div class="pl-row">${row.map((p) => `<div class="pl" role="listitem" aria-label="${esc(said(p))}"><span class="sh">${esc(p.jersey || '')}</span><span class="nm" aria-hidden="true">${esc(surname(p.athlete))}</span><span class="mk" aria-hidden="true">${marks(p.athlete?.id)}</span></div>`).join('')}</div>`).join('')}</div>`;
+  const subsHtml = swaps.length ? `<div class="h" style="padding-top:12px">Subs<span>${swaps.length} made</span></div>${swaps.map((s) => `<div class="swap"><span class="min">${esc(s.min)}</span><span class="in">${ARROW_IN}${esc(s.on?.displayName || '')}</span><span class="out">${ARROW_OUT}${esc(s.off?.displayName || '')}</span><span class="sr">${esc(`${s.min}, ${s.on?.displayName || ''} on for ${s.off?.displayName || ''}`)}</span></div>`).join('')}` : '';
+  const onIds = new Set(swaps.map((s) => s.on?.id));
+  const bench = all.filter((p) => !p.starter && !onIds.has(p.athlete?.id)).map((p) => surname(p.athlete));
+  const benchHtml = bench.length ? `<p class="note"><b style="color:var(--ink)">${swaps.length ? 'Unused' : 'Bench'}:</b> ${esc(bench.join(', '))}</p>` : '';
+  return `<div class="card"><div class="h">Line-ups${ro?.formation ? `<span>${esc(x.team.abbr)} ${esc(ro.formation)}</span>` : ''}</div>${teamSwitch(g, k)}${pitch}${subsHtml}${benchHtml}</div>`;
 }
 
 function theGame(g, d, k) {
@@ -413,14 +464,15 @@ export default function match([sport, slug, id], ctx) {
   if (g.state === 'pre') {
     html += statusLines(g, ctx) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k, ctx) + lineups(g, d, k);
   } else if (g.state === 'in') {
-    html += tvMain(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
+    html += tvAll(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
   } else {
     html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
-  return html;
+  return html + pager();
 }
 match.actions = {
   subs(d, el, e, ctx) { openSubs.has(d.id) ? openSubs.delete(d.id) : openSubs.add(d.id); ctx.redraw(); },
   boxteam(d, el, e, ctx) { boxTeam.set(d.g, d.t); ctx.redraw(); },
+  swipe(d) { swipeTo(+d.d); },
 };

@@ -1,6 +1,6 @@
 // ESPN public feed: fetching, caching and turning events into one simple game shape.
 // Unofficial and undocumented (PRD 9). Called only from this phone, at low volume.
-import { sg, addDays, keyRange, ymd, todayKey } from './util.js';
+import { sg, addDays, keyRange, ymd, todayKey, nightKey } from './util.js';
 import { hex, compLogo, regionOf, setTeamHook } from './identity.js';
 import { load, save, emit, sportOf, teamKey } from './store.js';
 import { NICE } from './names.js';
@@ -294,7 +294,9 @@ export async function gamesFor(picks, { k0, k1, live = false } = {}) {
     const next = sortGames(all.filter((g) => mine(g) && g.state === 'pre' && sg(g.date).key > k1))[0];
     if (next && !later.some((x) => x.id === next.id)) later.push(next);
   }
-  return { games: sortGames(games), later: sortGames(later), failed: res.filter((r) => r.status === 'rejected').length, total: res.length };
+  // Nights with a followed game anywhere in the season (team schedules cover it all), for the date strip's dots.
+  const season = [...new Set(all.filter((g) => isMine(g, picks) && g.state !== 'post').map((g) => nightKey(g.date)))];
+  return { games: sortGames(games), later: sortGames(later), season, failed: res.filter((r) => r.status === 'rejected').length, total: res.length };
 }
 // ---------- Backup (R3, TECH-DESIGN 14.4): the calendar helper serves the same games from its own copy,
 // kept fresh from ESPN while it answers and from free sources when it doesn't. No stats or line-ups.
