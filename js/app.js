@@ -61,12 +61,11 @@ function paint() {
   }
   settleScroll();
 }
-// Where a screen opens: back where you left it, at the top, or (My games) at "now" once games have drawn.
+// Where a screen opens: back where you left it, or at the top.
 function settleScroll() {
   const sc = route?.scroll;
   if (sc == null) return;
-  if (sc === 'anchor') { if (route.view.anchor?.()) route.scroll = null; return; }
-  scrollTo(0, sc === 'top' ? 0 : sc);
+  scrollTo(0, sc);
   route.scroll = null;
 }
 function morph(a, b) {
@@ -100,8 +99,7 @@ function go() {
     ctx.back = stack.length > 1 ? { href: stack[stack.length - 2], label: labelFor(stack[stack.length - 2]) } : null;
     if (tab) lastTab = tab;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.tab === lastTab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-    const fresh = route.view.anchor ? 'anchor' : 'top';
-    route.scroll = tabReset || scrolls[h] == null ? fresh : scrolls[h];
+    route.scroll = tabReset || scrolls[h] == null ? 0 : scrolls[h];
     tabReset = false;
     lastHtml = '';
     main.innerHTML = '';
@@ -132,15 +130,14 @@ addEventListener('hashchange', () => {
 stack.push(location.hash || '#/');
 
 // ---------- Tab bar, as on iOS: a tab opens its main screen at the top; tapping the tab you're on
-// scrolls it to the top (My games: to "now" first).
+// scrolls it to the top.
 document.querySelector('.tabs').addEventListener('click', (e) => {
   const a = e.target.closest('a');
   if (!a) return;
   e.preventDefault();
   const root = a.getAttribute('href'), cur = location.hash || '#/';
   if (cur === root || (root === '#/' && (cur === '#' || cur === '#/'))) {
-    if (route?.view.tabTap) route.view.tabTap();
-    else scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     return;
   }
   tabReset = true;

@@ -1,4 +1,4 @@
-// Home: "My games". One timeline, oldest result first, opening at the latest game. All in SGT.
+// Home: "My games". Results (newest first), then live, then coming up (soonest first). All in SGT.
 import { esc, sg, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
 import { picks, followingAny, DEMO, load, save, settings, set, sportOf } from '../store.js';
 import { gamesFor, isLive, soon, net } from '../espn.js';
@@ -43,12 +43,14 @@ export default function home(params, ctx) {
   const t = todayKey();
   const sub = DEMO ? 'Sample picks · SGT' : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
   let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>`;
-  html += `<div class="filterbar"><div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>`;
 
   const games = all?.filter(keep);
+  const ahead = (games || []).filter((g) => g.state === 'pre' || g.postponed);
+  // Dates, then the sport filter, in one bar that stays at the top.
   const days = keyRange(t, addDays(t, 6));
-  const has = new Set((games || []).filter((g) => g.state !== 'post').map((g) => sg(g.date).key));
-  html += `<div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`;
+  const has = new Set(ahead.map((g) => sg(g.date).key));
+  html += `<div class="filterbar"><div class="days" role="list">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button role="listitem" class="${k === t ? 'today ' : ''}${has.has(k) ? 'has' : ''}" data-act="jump" data-k="${k}" ${has.has(k) || k === t ? '' : 'disabled'} aria-label="${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', has games' : ', no games'}">${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`
+    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>`;
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
   if (e.err && stale) html += `<div class="banner amber">${icon('wifi')}<span>Can’t reach the score feed. Showing games from ${ago(stale)}.</span></div>`;
@@ -57,54 +59,36 @@ export default function home(params, ctx) {
   ctx.live = all.some(isLive) || all.some(soon);
   ctx.wasLive = ctx.live;
 
-  // One timeline, oldest first. The screen opens at "now": the latest live or finished game (id="now").
-  const started = games.filter((g) => g.state !== 'pre');
-  const nowId = (games.filter(isLive)[0] || started[started.length - 1])?.id;
-  const byDay = new Map();
-  for (const g of games) { const k = sg(g.date).key; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(g); }
-  for (const [k, list] of byDay) {
-    const done = list.filter((g) => g.state === 'post').length;
-    const rows = list.map((g) => {
-      const html = isLive(g) ? hero(g) : gameRow(g);
-      return g.id === nowId ? html.replace(/^<a /, '<a id="now" ') : html;
-    }).join('');
-    html += `<section id="d-${k}"><div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${k === t && done && done < list.length ? `<span>${done} finished</span>` : ''}</div>${rows}</section>`;
-  }
-  const later = (e.v?.later || []).filter(keep);
   const label = SPORTS.find(([k]) => k === f)[1];
-  if (f !== 'all' && !followed.has(f)) html += `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
-  else if (!games.some((g) => g.state !== 'post') && !later.length) html += `<div class="empty"><h2>Quiet week</h2><p>None of your ${f === 'all' ? 'picks' : `${label} picks`} play in the next 7 days.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
+  if (f !== 'all' && !followed.has(f)) {
+    return html + `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
+  }
+  // Results first, newest at the top. Then anything live. Then what's coming, soonest at the top.
+  const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
+  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
+  const live = games.filter(isLive);
+  if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
+  if (ahead.length) html += `<div class="sect"><h2 class="cap">Coming up</h2></div>`;
+  let day = '';
+  for (const g of ahead) {
+    const k = sg(g.date).key;
+    if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}"><h3 class="dayh">${keyLabel(k)}</h3>`; day = k; }
+    html += gameRow(g);
+  }
+  if (day) html += '</section>';
+  const later = (e.v?.later || []).filter(keep);
+  if (!ahead.length && !live.length && !later.length) html += `<div class="empty"><h2>Quiet week</h2><p>None of your ${f === 'all' ? 'picks' : `${label} picks`} play in the next 7 days.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
   if (later.length) html += `<div class="sect"><h2 class="cap">Later</h2><span>Next game for teams with none this week</span></div>${later.map((g) => gameRow(g)).join('')}`;
-  html += `<p class="foot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p><i data-ready hidden></i>`;
-  return html;
+  return html + `<p class="foot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
 
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
-const barH = () => (document.querySelector('.filterbar')?.offsetHeight || 0) + 6;
-// Where "now" is: the most recent game at the top, with its day label when it opens the day.
-function nowTop() {
-  const el = document.getElementById('now');
-  if (!el) return 0;
-  const sec = el.closest('section');
-  const target = sec && sec.querySelector('.row, .hero') === el ? sec : el;
-  return Math.max(0, target.getBoundingClientRect().top + scrollY - barH());
-}
-// Called by the app after drawing; returns false until the games are on screen.
-home.anchor = (behavior = 'auto') => {
-  if (!document.querySelector('[data-ready]')) return false;
-  scrollTo({ top: nowTop(), behavior });
-  return true;
-};
-// Tapping My games while on it: go to "now"; tap again there to go to the very top.
-home.tabTap = () => {
-  const y = nowTop();
-  scrollTo({ top: Math.abs(scrollY - y) < 8 ? 0 : y, behavior: smooth() });
-};
+const barH = () => (document.querySelector('.filterbar')?.offsetHeight || 0) + 4;
 
 home.actions = {
   jump(d) {
     const el = document.getElementById(`d-${d.k}`);
     scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
   },
-  sport(d) { set('homeSport', d.s); requestAnimationFrame(() => requestAnimationFrame(() => home.anchor())); },
+  sport(d) { set('homeSport', d.s); scrollTo({ top: 0 }); },
 };

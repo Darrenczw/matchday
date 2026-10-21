@@ -46,7 +46,7 @@ export function gameRow(g, { why = true, tv = true } = {}) {
   bits.push(`${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
   if (tv && g.state !== 'post') {
     const m = mainMarket(g);
-    bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(m.channels[0] + (m.channels.length > 1 ? ` +${m.channels.length - 1}` : ''))}</span>`);
+    bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(m.channels[0] + (m.channels.length > 1 ? ` +${m.channels.length - 1}` : ''))}</span>`);
   }
   const moved = g.state === 'pre' ? movedFrom(g) : null;
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
