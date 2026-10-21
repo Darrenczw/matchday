@@ -18,12 +18,20 @@ export const ALIAS = {
   'Alavés': 'Deportivo Alavés',
   'Deportivo': 'Deportivo de A Coruña',
   'Racing Santander': 'Racing de Santander',
+  'AFC Bournemouth': 'Bournemouth',
+  'Stade Rennais': 'Rennes',
+  'Feyenoord Rotterdam': 'Feyenoord',
+  'LASK Linz': 'LASK',
+  'OFI Crete': 'OFI',
 };
+// Letters that NFD doesn't split into a plain letter and an accent ("Białystok", "Lillestrøm").
+const PLAIN = { ł: 'l', Ł: 'L', ø: 'o', Ø: 'O', æ: 'ae', Æ: 'Ae', ß: 'ss', đ: 'd', Đ: 'D', ı: 'i' };
+const plain = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[łŁøØæÆßđĐı]/g, (c) => PLAIN[c]);
 
 // For comparing names: no accents, case, punctuation, numbers or club prefixes and suffixes ("VfB Stuttgart",
 // "1. FC Union Berlin", "SC Paderborn 07" and "AS Roma" become "stuttgart", "union berlin", "paderborn", "roma").
-const CLUB = new Set(['fc', 'afc', 'cf', 'sc', 'ac', 'as', 'ss', 'ssc', 'us', 'vfb', 'vfl', 'tsg', 'sv', 'bsc', 'rcd', 'cd', 'ud', 'sd', 'club', 'de', 'the']);
-export const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+const CLUB = new Set(['fc', 'afc', 'cf', 'sc', 'ac', 'as', 'ss', 'ssc', 'us', 'vfb', 'vfl', 'tsg', 'sv', 'bsc', 'rcd', 'cd', 'ud', 'sd', 'fk', 'sk', 'nk', 'aj', 'club', 'de', 'the']);
+export const norm = (s) => plain(s).toLowerCase()
   .replace(/&/g, ' and ').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((w) => w && !CLUB.has(w) && !/^\d+$/.test(w)).join(' ');
 // Words that make a different team with the same club name: never matched loosely.
 const OTHER = /\b(women|w|ladies|femenino|feminin|frauen|u\d\d|ii|b|reserves|youth|academy)\b/;
@@ -41,7 +49,7 @@ export function sameTeam(a, b) {
 // For the search query, spaces as underscores. TheSportsDB mostly uses short club names ("Stuttgart", "Roma"),
 // so short() drops the prefixes and numbers that norm() ignores: "1. FC Union Berlin" → "Union Berlin".
 export const short = (s) => s.split(/\s+/).filter((w) => norm(w)).join(' ');
-export const tsdbName = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/\s+/g, '_');
+export const tsdbName = (name) => plain(name).replace(/&/g, 'and').replace(/\s+/g, '_');
 // The searches to try, in order: TheSportsDB's name (alias, else ESPN's), then the short names, then the other way round.
 export function searches(r) {
   const n = (x) => ALIAS[x] || x;

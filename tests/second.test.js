@@ -172,3 +172,13 @@ Deno.test('a saved id that now answers with another game is forgotten, and the g
   r = await row(e);
   assertEquals([r.tsdb_id, r.second_note], ['2494100', 'agree']);
 });
+
+Deno.test('letters NFD keeps (ł, ø) are made plain; FK/SK/NK/AJ drop; the European-cup names from the week test', async () => {
+  const { sameTeam, searches } = await import('../worker/src/second.js');
+  assert(sameTeam('Jagiellonia Bialystok', 'Jagiellonia Białystok'));
+  assert(sameTeam('Lillestrom', 'Lillestrøm'));
+  assert(sameTeam('SK Sturm Graz', 'Sturm Graz') && sameTeam('NK Celje', 'Celje') && sameTeam('AJ Auxerre', 'Auxerre') && sameTeam('Viking FK', 'Viking'));
+  assertEquals(searches({ home_full: 'AFC Bournemouth', away_full: 'AC Milan' })[0], 'Bournemouth_vs_AC_Milan');
+  assertEquals(searches({ home_full: 'AJ Auxerre', away_full: 'Le Mans' })[1], 'Auxerre_vs_Le_Mans');
+  assertEquals(searches({ home_full: 'Juventus', away_full: 'Stade Rennais' })[0], 'Juventus_vs_Rennes');
+});
