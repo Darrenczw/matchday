@@ -22,6 +22,7 @@ name = "matchday-cal-test"
 crons = ["*/2 * * * *"]
 [env.test.vars]
 APP_ORIGIN = "https://darrenczw.github.io"
+CAL_NAME = "Matchday practice"
 [[env.test.d1_databases]]
 binding = "DB"
 database_name = "matchday-test"

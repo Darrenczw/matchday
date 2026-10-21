@@ -40,7 +40,7 @@ async function feed(token, req, env, ctx) {
     why: reasonsWith({ timeValid: !!r.time_valid, date: r.start_utc, sport: r.sport, country: r.country, usTV: JSON.parse(r.us_tv || '[]'), postseason: !!r.postseason, note: r.note }, prefs).join(' · '),
   }));
   ctx.waitUntil(env.DB.prepare('INSERT INTO fetches (at, ua) VALUES (?, ?)').bind(now, (req.headers.get('user-agent') || '').slice(0, 200)).run());
-  return new Response(calendar(games, { now }), {
+  return new Response(calendar(games, { now, name: env.CAL_NAME || 'Matchday' }), {
     headers: { 'content-type': 'text/calendar; charset=utf-8', 'cache-control': 'no-store, max-age=0', 'content-disposition': 'inline; filename="matchday.ics"' },
   });
 }
@@ -52,13 +52,17 @@ async function status(req, env, o) {
   const last = await env.DB.prepare('SELECT at, ua FROM fetches ORDER BY at DESC LIMIT 1').first();
   const lastRun = await env.DB.prepare('SELECT at, ok, note FROM runs ORDER BY at DESC LIMIT 1').first();
   const lastOk = (await env.DB.prepare('SELECT MAX(at) AS at FROM runs WHERE ok = 1').first())?.at || null;
-  const rows = ((await env.DB.prepare('SELECT id, path, sport, home, away, home_id, away_id, start_utc, time_valid, status, prev_start, moved_at, updated_at, checked_at FROM games WHERE start_utc >= ?')
+  const rows = ((await env.DB.prepare('SELECT id, path, sport, home, away, home_id, away_id, start_utc, time_valid, status, prev_start, moved_at, updated_at, checked_at, unconfirmed, second_start, second_note, second_checked_at FROM games WHERE start_utc >= ?')
     .bind(now - 3 * 3600e3).all()).results || []).filter((r) => inCal(r, picks.cal));
   const pending = rows.filter((r) => !last || r.updated_at > last.at).sort((a, b) => a.start_utc - b.start_utc)
     .map(({ id, path, sport, home, away, start_utc, time_valid, status: st, prev_start }) => ({ id, path, sport, home, away, start_utc, time_valid, status: st, prev_start }));
   return {
     feedUrl: feedUrl(req, o.feed_token), games: rows.length, lastFetch: last || null, lastCheck: lastOk, lastRun: lastRun || null,
-    pending: last ? pending : [], checkedById: Object.fromEntries(rows.map((r) => [r.id, r.checked_at])), now,
+    pending: last ? pending : [], checkedById: Object.fromEntries(rows.map((r) => [r.id, r.checked_at])),
+    unconfirmed: rows.filter((r) => r.unconfirmed && r.start_utc > now).sort((a, b) => a.start_utc - b.start_utc)
+      .map(({ id, path, sport, home, away, start_utc, second_start, second_note }) => ({ id, path, sport, home, away, start_utc, second_start, second_note })),
+    // Second source per game: [note, checked at, its time]; note = agree | differ | postponed | notime | nomatch
+    secondById: Object.fromEntries(rows.filter((r) => r.second_note).map((r) => [r.id, [r.second_note, r.second_checked_at, r.second_start]])), now,
   };
 }
 

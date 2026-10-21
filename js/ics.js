@@ -45,7 +45,11 @@ export function description(g) {
   const lines = [g.comp];
   if (g.status === 'postponed') lines.push('POSTPONED. A new date will replace this when it is set.');
   if (g.prev_start && g.moved_at) lines.push(`Moved from ${when(g.prev_start)} (changed ${day(g.moved_at)})`);
-  if (g.unconfirmed) lines.push('Time unconfirmed: two sources disagree. Showing the ESPN time.');
+  if (g.unconfirmed) {
+    lines.push(g.second_start ? `Time unconfirmed: TheSportsDB says ${when(g.second_start)}. Showing ESPN's time until they agree.`
+      : g.second_note === 'postponed' ? "Time unconfirmed: TheSportsDB lists this game as postponed. Showing ESPN's time."
+        : 'Time unconfirmed: two sources disagree. Showing the ESPN time.');
+  }
   if (g.tv?.length) lines.push(...g.tv);
   if (g.why) lines.push(`Good for you: ${g.why}`);
   if (g.checked_at) lines.push(`Time checked ${sg(g.checked_at).hm} SGT`);

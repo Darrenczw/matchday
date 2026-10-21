@@ -1,6 +1,7 @@
 // Keeps the games table current: finds every game for the calendar picks (discovery) and re-checks
 // kick-off times more often as each game gets closer (TECH-DESIGN sections 3 and 4).
 import { NICE } from '../../js/names.js';
+import { secondRun } from './second.js';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports';
 const UA = { 'user-agent': 'Mozilla/5.0 (Matchday personal app)' }; // ESPN refuses requests with no browser-style agent
@@ -39,7 +40,7 @@ export function rowFrom(e, path, leagueName) {
   const venue = [c.venue?.fullName, c.venue?.address?.city].filter(Boolean).join(', ');
   return {
     id: String(e.id), path, sport, start_utc: Date.parse(e.date || c.date), time_valid: e.timeValid !== false && c.timeValid !== false ? 1 : 0, status,
-    home: name(H), away: name(A), home_id: String(H.team?.id || H.id), away_id: String(A.team?.id || A.id), venue,
+    home: name(H), away: name(A), home_full: H.team?.displayName || name(H), away_full: A.team?.displayName || name(A), home_id: String(H.team?.id || H.id), away_id: String(A.team?.id || A.id), venue,
     comp: sport === 'football' ? 'NFL' : sport === 'basketball' ? 'NBA' : NICE[slug] || e.league?.shortName || leagueName || slug,
     country: c.venue?.address?.country || '', us_tv: JSON.stringify([...tv]),
     postseason: sport !== 'soccer' && (e.season?.type === 3 || e.seasonType?.type === 3) ? 1 : 0, note: c.notes?.[0]?.headline || '',
@@ -47,9 +48,10 @@ export function rowFrom(e, path, leagueName) {
 }
 
 // Insert or update. Only a new time, a time becoming known, or postponed/cancelled counts as a change
-// iOS must see (raises seq, sets updated_at). A real move also records where it moved from.
-const UPSERT = `INSERT INTO games (id, path, sport, start_utc, time_valid, status, home, away, home_id, away_id, venue, comp, country, us_tv, postseason, note, seq, checked_at, updated_at)
-VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, 0, ?17, ?17)
+// iOS must see (raises seq, sets updated_at). A real move also records where it moved from, re-compares
+// with the second source's last time, and asks for a fresh second-source check.
+const UPSERT = `INSERT INTO games (id, path, sport, start_utc, time_valid, status, home, away, home_id, away_id, venue, comp, country, us_tv, postseason, note, home_full, away_full, seq, checked_at, updated_at)
+VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?18, ?19, 0, ?17, ?17)
 ON CONFLICT(id) DO UPDATE SET
   seq = games.seq + (CASE WHEN games.start_utc != excluded.start_utc OR games.time_valid != excluded.time_valid
     OR (games.status IN ('postponed','canceled')) != (excluded.status IN ('postponed','canceled')) THEN 1 ELSE 0 END),
@@ -57,6 +59,14 @@ ON CONFLICT(id) DO UPDATE SET
     OR (games.status IN ('postponed','canceled')) != (excluded.status IN ('postponed','canceled')) THEN excluded.checked_at ELSE games.updated_at END,
   prev_start = CASE WHEN games.time_valid = 1 AND excluded.time_valid = 1 AND games.start_utc != excluded.start_utc THEN games.start_utc ELSE games.prev_start END,
   moved_at = CASE WHEN games.time_valid = 1 AND excluded.time_valid = 1 AND games.start_utc != excluded.start_utc THEN excluded.checked_at ELSE games.moved_at END,
+  unconfirmed = CASE WHEN excluded.status IN ('postponed','canceled') THEN 0
+    WHEN games.start_utc = excluded.start_utc AND games.time_valid = excluded.time_valid THEN games.unconfirmed
+    WHEN excluded.time_valid = 0 OR games.second_start IS NULL THEN 0 ELSE abs(excluded.start_utc - games.second_start) > 300000 END,
+  second_note = CASE WHEN excluded.status IN ('postponed','canceled') OR excluded.time_valid = 0 THEN NULL
+    WHEN games.start_utc = excluded.start_utc OR games.second_start IS NULL THEN games.second_note
+    WHEN abs(excluded.start_utc - games.second_start) > 300000 THEN 'differ' ELSE 'agree' END,
+  second_checked_at = CASE WHEN games.start_utc != excluded.start_utc THEN 0 ELSE games.second_checked_at END,
+  home_full = excluded.home_full, away_full = excluded.away_full,
   path = excluded.path, start_utc = excluded.start_utc, time_valid = excluded.time_valid, status = excluded.status,
   home = excluded.home, away = excluded.away, home_id = excluded.home_id, away_id = excluded.away_id, venue = excluded.venue,
   comp = excluded.comp, country = excluded.country, us_tv = excluded.us_tv, postseason = excluded.postseason, note = excluded.note,
@@ -65,7 +75,7 @@ export async function upsert(env, rows, now) {
   const ok = rows.filter(Boolean);
   for (let i = 0; i < ok.length; i += 50) {
     await env.DB.batch(ok.slice(i, i + 50).map((r) => env.DB.prepare(UPSERT).bind(r.id, r.path, r.sport, r.start_utc, r.time_valid, r.status,
-      r.home, r.away, r.home_id, r.away_id, r.venue, r.comp, r.country, r.us_tv, r.postseason, r.note, now)));
+      r.home, r.away, r.home_id, r.away_id, r.venue, r.comp, r.country, r.us_tv, r.postseason, r.note, now, r.home_full || r.home, r.away_full || r.away)));
   }
   return ok.length;
 }
@@ -180,7 +190,14 @@ export async function syncRun(env, { onlyDiscover = false } = {}) {
       }
     }
 
-    // 3. Tidy: old games, fetch log and run log.
+    // 3. Second source (TheSportsDB): daily, and once in the last 3 hours, a few calls per run.
+    try {
+      const s = await secondRun(env, (r) => inCal(r, cal), now);
+      if (s.calls) notes.push(`2nd: ${s.calls} calls, ${s.checked} checked${s.waiting ? `, ${s.waiting} waiting` : ''}`);
+      if (s.note) notes.push(`2nd: ${s.note}`);
+    } catch (e) { notes.push(`2nd failed: ${String(e.message || e).slice(0, 80)}`); } // never blocks the ESPN checks
+
+    // 4. Tidy: old games, fetch log and run log.
     await env.DB.batch([
       env.DB.prepare('DELETE FROM games WHERE start_utc < ?').bind(now - 8 * DAY),
       env.DB.prepare('DELETE FROM fetches WHERE at < ?').bind(now - 14 * DAY),

@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS games (
   seq INTEGER NOT NULL DEFAULT 0,  -- raised on every change iOS should see
   prev_start INTEGER, moved_at INTEGER,
   unconfirmed INTEGER DEFAULT 0, second_checked_at INTEGER,
+  home_full TEXT, away_full TEXT,  -- full team names, for matching the second source
+  tsdb_id TEXT, second_start INTEGER,
+  second_note TEXT,                -- agree | differ | postponed | notime | nomatch
   checked_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,     -- last change iOS should see
   source TEXT DEFAULT 'espn'

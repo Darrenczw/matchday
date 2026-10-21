@@ -38,6 +38,8 @@ function calBanners(ctx) {
   if (moved) { const n = sg(moved.start_utc); out.push(`<div class="banner amber">${icon('clock')}<span>${esc(name(moved))}: kick-off moved to ${n.wd} ${n.hm}. Your Calendar app hasn’t picked it up yet. Open Calendar to refresh.</span></div>`); }
   else if (off) out.push(`<div class="banner amber">${icon('alert')}<span>${esc(name(off))} is postponed. Your Calendar app hasn’t picked it up yet. Open Calendar to refresh.</span></div>`);
   else if (st.pending.length) out.push(`<div class="banner amber">${icon('cal')}<span>${st.pending.length} calendar change${st.pending.length > 1 ? 's' : ''} not on your iPhone yet. Open the Calendar app to refresh.</span></div>`);
+  const u = st.unconfirmed?.[0];
+  if (u) { const t = u.second_start && sg(u.second_start); out.push(`<div class="banner amber">${icon('alert')}<span>${esc(name(u))}: time unconfirmed. ${t ? `ESPN and TheSportsDB disagree (TheSportsDB says ${t.wd} ${t.hm}).` : 'TheSportsDB lists it as postponed.'} Your calendar shows ESPN’s time until they agree.${st.unconfirmed.length > 1 ? ` ${st.unconfirmed.length - 1} more game${st.unconfirmed.length > 2 ? 's' : ''} like this.` : ''}</span></div>`); }
   return out.join('');
 }
 
