@@ -11,7 +11,7 @@ export function save(k, v) {
   try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch { /* storage full or blocked: the app still works for this visit */ }
 }
 
-export const MARKETS = { uk: 'UK', us: 'US', ca: 'Canada', sg: 'Singapore', my: 'Malaysia', hk: 'Hong Kong', kr: 'South Korea', mena: 'MENA' };
+export { MARKETS } from './names.js';
 
 const DEFAULTS = {
   markets: ['uk', 'us', 'ca', 'sg', 'my', 'hk', 'kr', 'mena'],

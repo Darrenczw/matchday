@@ -3,6 +3,7 @@
 import { sg, addDays, keyRange, ymd, todayKey } from './util.js';
 import { hex, compLogo, regionOf, setTeamHook } from './identity.js';
 import { load, save, emit, sportOf, teamKey } from './store.js';
+import { NICE } from './names.js';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports';
 const V2 = 'https://site.api.espn.com/apis/v2/sports';
@@ -68,14 +69,7 @@ function teamFrom(x, sport) {
   return t;
 }
 
-// ---------- Competition names: short, as people say them.
-const NICE = {
-  'eng.1': 'Premier League', 'uefa.champions': 'Champions League', 'uefa.europa': 'Europa League', 'uefa.europa.conf': 'Conference League',
-  'esp.1': 'LaLiga', 'ita.1': 'Serie A', 'ger.1': 'Bundesliga', 'fra.1': 'Ligue 1', 'eng.fa': 'FA Cup', 'eng.league_cup': 'Carabao Cup',
-  'eng.2': 'Championship', 'sco.1': 'Scottish Premiership', 'usa.1': 'MLS', 'sgp.1': 'Singapore Premier League', 'fifa.world': 'World Cup',
-  'uefa.nations': 'Nations League', 'afc.asian.cup': 'Asian Cup', 'ned.1': 'Eredivisie', 'por.1': 'Primeira Liga', 'ksa.1': 'Saudi Pro League',
-  'afc.champions': 'AFC Champions League Elite', 'club.friendly': 'Club friendly', 'fifa.friendly': 'International friendly',
-};
+// ---------- Competition names: short, as people say them (NICE in names.js).
 const leagues = load('leagues', {}); // path -> { name, logoId }
 export function compInfo(path) {
   if (path === 'football/nfl') return { path, name: 'NFL', logo: compLogo(path) };

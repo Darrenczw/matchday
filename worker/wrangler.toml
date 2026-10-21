@@ -1,0 +1,28 @@
+# Matchday calendar helper. Deploy: see TECH-DESIGN.md section 10. Run with Deno: deno run -A npm:wrangler@4 <command>
+name = "matchday-cal"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[triggers]
+crons = ["*/2 * * * *"]
+
+[vars]
+APP_ORIGIN = "https://darrenczw.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "matchday"
+database_id = "set-at-first-deploy"
+
+# Practice copy: its own Worker and database, used by the app's ?demo mode and for tests.
+[env.test]
+name = "matchday-cal-test"
+[env.test.triggers]
+crons = ["*/2 * * * *"]
+[env.test.vars]
+APP_ORIGIN = "https://darrenczw.github.io"
+[[env.test.d1_databases]]
+binding = "DB"
+database_name = "matchday-test"
+database_id = "set-at-first-deploy"

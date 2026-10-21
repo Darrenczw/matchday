@@ -9,3 +9,9 @@ spike/
 *.local.*
 .DS_Store
 .claude/
+.wrangler/
+node_modules/
+deno.lock
+worker/.wrangler/
+worker/node_modules/
+worker/deno.lock
