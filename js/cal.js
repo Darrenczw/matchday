@@ -35,6 +35,14 @@ export function removeCal(kind, key) {
 
 // ---------- Talking to the helper
 const ready = () => !!(CAL_API && calCfg.editKey);
+// What a helper failure means for Darren, in plain words, with what to do. Never the raw error text.
+export function calError(err) {
+  const m = String(err?.message || err || '');
+  if (/Not allowed|401/.test(m)) return 'The calendar helper no longer accepts this phone, so changes aren’t reaching your calendar. Ask Claude to reset the calendar helper, then set it up again.';
+  if (/Already set up|409/.test(m)) return 'The calendar is already set up on another phone or browser. Ask Claude to reset it if that wasn’t you.';
+  if (/fetch|network|Load failed|TypeError/i.test(m) || err?.name === 'TypeError') return 'Couldn’t reach the calendar helper. Check your connection.';
+  return 'The calendar helper had a problem.';
+}
 async function api(path, opts = {}) {
   const r = await fetch(CAL_API + path, { ...opts, headers: { 'content-type': 'application/json', ...(calCfg.editKey ? { authorization: `Bearer ${calCfg.editKey}` } : {}), ...opts.headers } });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Calendar helper ${r.status}`);
@@ -52,7 +60,7 @@ export function push() {
     try {
       await api('/api/picks', { method: 'PUT', body: JSON.stringify({ cal, follow: { comps: picks.comps, teams: picks.teams, games: picks.games }, markets: settings.markets, prefs: { free: settings.free, rules: settings.rules } }) });
       syncState.lastPush = Date.now(); save('calpush', syncState.lastPush); syncState.error = null;
-    } catch (e) { syncState.error = e.message; }
+    } catch (e) { syncState.error = calError(e); }
     syncState.pushing = false; emit('calsync');
   }, 600);
 }

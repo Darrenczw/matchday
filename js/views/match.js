@@ -385,7 +385,7 @@ export default function match([sport, slug, id], ctx) {
   // Until the summary arrives, draw the header from the game the row was built from, so a tap never blanks.
   // ESPN down: the backup copy of this game (from My games) still gives the header.
   const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : known.get(id) || (e.err ? backup.byId.get(id) : null) || null;
-  const pick = g ? { id: g.id, path, date: g.date, name: `${g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`}` } : null;
+  const pick = g ? { id: g.id, path, date: g.date, name: g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}` } : null;
   // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
   const covered = g && !following('game', g.id) && isMine(g, picks);
   const right = !pick || g.state === 'post' ? '<span class="spacer"></span>' : covered ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick);

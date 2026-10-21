@@ -178,12 +178,14 @@ export function followBtn(kind, key, item, { size = 'sm', label = 'Follow', lite
   return `<button class="btn ${size} go${lite ? ' lite' : ''}" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false" aria-label="${esc(`${label}${who}`)}">${icon('plus')}${label}</button>`;
 }
 // Calendar button: its own layer, next to Follow. compact = icon only (match and league headers).
+// Spoken with what it adds ("Add Arsenal to your iPhone calendar"), since the compact one is an icon only.
 export function calBtn(kind, key, item, { compact = false, covered = '' } = {}) {
   const on = inCal(kind, key);
   const cls = `btn sm ${on || covered ? 'on' : 'ghost'}${compact ? ' icon' : ''}`;
-  if (covered && !on) return `<span class="${cls}" role="img" aria-label="In your calendar through ${esc(covered)}">${icon('cal')}${compact ? '' : 'In calendar'}</span>`;
-  if (on) return `<button class="${cls}" data-act="uncal" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true" aria-label="In your calendar. Tap to remove">${icon('cal')}${compact ? '' : 'In calendar'}</button>`;
-  return `<button class="${cls}" data-act="cal" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false" aria-label="Add to your iPhone calendar">${icon('calplus')}${compact ? '' : 'Calendar'}</button>`;
+  const what = item?.name || (kind === 'game' ? 'this game' : kind === 'team' ? 'this team' : 'this competition');
+  if (covered && !on) return `<span class="${cls}" role="img" aria-label="${esc(`${what} is in your calendar through ${covered}`)}">${icon('cal')}${compact ? '' : 'In calendar'}</span>`;
+  if (on) return `<button class="${cls}" data-act="uncal" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true" aria-label="${esc(`${what} is in your iPhone calendar. Tap to remove`)}">${icon('cal')}${compact ? '' : 'In calendar'}</button>`;
+  return `<button class="${cls}" data-act="cal" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false" aria-label="${esc(`Add ${what} to your iPhone calendar`)}">${icon('calplus')}${compact ? '' : 'Calendar'}</button>`;
 }
 export const teamPick = (path, t) => ({ path, id: t.id, name: t.name, abbr: t.abbr, logo: t.logo });
 export const teamFollowBtn = (path, t, opts) => followBtn('team', teamKey(path, t.id), teamPick(path, t), opts);
