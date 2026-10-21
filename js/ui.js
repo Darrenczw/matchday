@@ -16,13 +16,15 @@ export const href = {
 // ---------- Kick-off moved? Remember each game's time; if it changes, show "Moved from" for 7 days.
 const seen = load('seen', {});
 let seenTimer = 0;
+// Times are compared as instants: ESPN writes "…T19:00Z", the backup "…T19:00:00.000Z" for the same kick-off.
+const same = (a, b) => new Date(a).getTime() === new Date(b).getTime();
 export function movedFrom(g) {
   const s = seen[g.id];
   if (!s) { seen[g.id] = { d: g.date, v: g.timeValid }; queueSave(); return null; }
-  if (s.d !== g.date && s.v && g.timeValid) { seen[g.id] = { d: g.date, v: true, prev: s.d, at: Date.now() }; queueSave(); }
+  if (!same(s.d, g.date) && s.v && g.timeValid) { seen[g.id] = { d: g.date, v: true, prev: s.d, at: Date.now() }; queueSave(); }
   else if (s.d !== g.date || s.v !== g.timeValid) { seen[g.id] = { ...s, d: g.date, v: g.timeValid }; queueSave(); }
   const x = seen[g.id];
-  return x.prev && Date.now() - x.at < 7 * 864e5 ? x.prev : null;
+  return x.prev && !same(x.prev, x.d) && Date.now() - x.at < 7 * 864e5 ? x.prev : null;
 }
 function queueSave() { clearTimeout(seenTimer); seenTimer = setTimeout(() => save('seen', seen), 1000); }
 export const movedText = (prev) => { const p = sg(prev); return `Moved from ${p.wd} ${p.hm}`; };
