@@ -50,6 +50,7 @@ export function gameRow(g, { why = true, tv = true } = {}) {
     bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(m.channels[0] + (m.channels.length > 1 ? ` · ${m.channels.length - 1} more` : ''))}</span>`);
   }
   const moved = g.state === 'pre' ? movedFrom(g) : null;
+  if (g.viaBackup) bits.push('<span class="tag likely">Backup</span>');
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
   else if (moved) bits.push(`<span class="moved">${movedText(moved)}</span>`);
   else if (why && g.state === 'pre') { const r = reasons(g); if (r[0]) bits.push(`<em>${esc(r[0])}</em>`); }

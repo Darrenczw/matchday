@@ -4,6 +4,7 @@ import { sg, addDays, keyRange, ymd, todayKey } from './util.js';
 import { hex, compLogo, regionOf, setTeamHook } from './identity.js';
 import { load, save, emit, sportOf, teamKey } from './store.js';
 import { NICE } from './names.js';
+import * as calMod from './cal.js'; // read as a namespace: backupGames() arrives with the helper's R3 update
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports';
 const V2 = 'https://site.api.espn.com/apis/v2/sports';
@@ -267,6 +268,13 @@ export async function gamesFor(picks, { k0, k1, live = false } = {}) {
     ...picks.games.map((x) => Promise.all([day(x.path, addDays(sg(x.date).key, -1), live), day(x.path, sg(x.date).key, live)]).then((a) => a.flat())),
   ];
   const res = await Promise.allSettled(jobs);
+  // R3: ESPN not answering (every call failed, or only old saved copies for 3 minutes)? Ask the helper.
+  const espnDown = res.length && (res.every((r) => r.status === 'rejected') || (net.offline && net.staleSince && Date.now() - net.staleSince > BACKUP_AFTER));
+  if (espnDown) {
+    const b = await fromHelper(picks, k0, k1);
+    if (b) return b;
+  }
+  backup.on = false;
   const byId = new Map();
   for (const r of res) for (const g of r.value || []) byId.set(g.id, better(byId.get(g.id), g));
   const all = [...byId.values()];
@@ -282,6 +290,30 @@ export async function gamesFor(picks, { k0, k1, live = false } = {}) {
   }
   return { games: sortGames(games), later: sortGames(later), failed: res.filter((r) => r.status === 'rejected').length, total: res.length };
 }
+// ---------- Backup (R3, TECH-DESIGN 14.4): the calendar helper serves the same games from its own copy,
+// kept fresh from ESPN while it answers and from free sources when it doesn't. No stats or line-ups.
+const BACKUP_AFTER = 3 * MIN;
+export const backup = { on: false, at: 0, espnOkAt: 0, byId: new Map() };
+function fromBackup(x) {
+  const g = { ...x, league: x.path.split('/')[1], comp: compInfo(x.path), usTV: x.usTV || [], note: x.note || '', viaBackup: true };
+  for (const side of ['home', 'away']) {
+    const t = { ...x[side] }, k = ids[`${x.sport}:${t.id}`] || {};
+    t.color ||= k.color || null; t.alt ||= k.alt || null; t.logo ||= k.logo || ''; t.logoDark ||= k.logoDark || ''; t.abbr ||= k.abbr || '';
+    t.short ||= k.short || t.name || ''; t.name ||= k.name || t.short;
+    g[side] = t;
+  }
+  return g;
+}
+async function fromHelper(picks, k0, k1) {
+  if (!calMod.backupGames) return null;
+  const from = new Date(`${k0}T00:00:00+08:00`).getTime(), to = new Date(`${addDays(k1, 1)}T00:00:00+08:00`).getTime();
+  const r = await calMod.backupGames(from, to).catch(() => null);
+  if (!r?.games) return null;
+  const games = r.games.map(fromBackup).filter((g) => isMine(g, picks));
+  Object.assign(backup, { on: true, at: r.at || Date.now(), espnOkAt: r.espnOkAt || 0, byId: new Map(games.map((g) => [g.id, g])) });
+  return { games: sortGames(games), later: [], failed: 0, total: 0, backup: { at: backup.at, espnOkAt: backup.espnOkAt } };
+}
+
 // Team schedules can be minutes old; for games around now, read the live scoreboard instead.
 async function freshen(games, live) {
   const now = Date.now();

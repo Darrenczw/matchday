@@ -1,7 +1,7 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
 import { esc, sg, countdown, icon, ago } from '../util.js';
 import { following, picks } from '../store.js';
-import { summary, norm, liveLabel, net, isMine, schedule } from '../espn.js';
+import { summary, norm, liveLabel, net, isMine, schedule, backup } from '../espn.js';
 import { kitsFor, clashNote, crest, edge } from '../identity.js';
 import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine } from '../ui.js';
@@ -320,7 +320,8 @@ export default function match([sport, slug, id], ctx) {
   ctx.sport = sport;
   const e = ctx.use(`sum:${id}`, () => summary(path, id, ctx.wasLive), ctx.wasLive ? 8e3 : 60e3);
   const d = e.v;
-  const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : null;
+  // ESPN down: the backup copy of this game (from My games) still gives the header.
+  const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : e.err ? backup.byId.get(id) || null : null;
   const compName = g?.comp.name || '';
   const pick = g ? { id: g.id, path, date: g.date, name: `${g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`}` } : null;
   // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
@@ -337,7 +338,8 @@ export default function match([sport, slug, id], ctx) {
   ctx.live = g.state === 'in' || (g.state === 'pre' && new Date(g.date) - Date.now() < 10 * 60e3);
   ctx.wasLive = ctx.live;
   const k = kitsFor(g);
-  html += header(g, k, d);
+  html += header(g, k, d || {});
+  if (!d) return html + `<div class="banner amber">${icon('wifi')}<span>ESPN isn’t answering. This is the backup copy of the game: stats, line-ups and key moments come back when ESPN does.</span></div><p class="foot">Times are Singapore time.</p>`;
   // Football: key moments, stats, line-ups. NBA: quarters, leaders, box score, team stats.
   // NFL: quarters, scoring summary, leaders, team stats, player stats by unit.
   const us = (live) => (g.sport === 'basketball'

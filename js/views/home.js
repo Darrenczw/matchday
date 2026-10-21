@@ -62,7 +62,7 @@ export default function home(params, ctx) {
   if (f !== 'all') ctx.sport = f;
 
   const t = todayKey();
-  const sub = DEMO ? 'Sample picks · SGT' : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
+  const sub = DEMO ? 'Sample picks · SGT' : e.v?.backup ? `Backup · updated ${sg(e.v.backup.at).hm}` : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
   let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>` + calBanners(ctx);
 
   const games = all?.filter(keep);
@@ -75,7 +75,8 @@ export default function home(params, ctx) {
     + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}</div></div>`;
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
-  if (e.err && stale) html += `<div class="banner amber">${icon('wifi')}<span>Can’t reach the score feed. Showing games from ${ago(stale)}.</span></div>`;
+  if (e.v?.backup) html += `<div class="banner amber">${icon('wifi')}<span>ESPN isn’t answering, so these games come from the backup${e.v.backup.espnOkAt ? ` (ESPN last answered at ${sg(e.v.backup.espnOkAt).hm})` : ''}. Live scores pause until ESPN is back. It switches back on its own.</span></div>`;
+  else if (e.err && stale) html += `<div class="banner amber">${icon('wifi')}<span>Can’t reach the score feed. Showing games from ${ago(stale)}.</span></div>`;
   else if (e.v?.failed) html += `<div class="banner amber">${icon('alert')}<span>${e.v.failed} of your picks didn’t load. Showing the rest. It will try again.</span></div>`;
 
   ctx.live = all.some(isLive) || all.some(soon);
