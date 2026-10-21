@@ -2,10 +2,8 @@
 import { esc, sg, todayKey, addDays, keyLabel } from '../util.js';
 import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
-import { kitsFor, crest } from '../identity.js';
 import { reasons } from '../suggest.js';
-import { mainMarket } from '../tv.js';
-import { followBtn, href, skel, errorCard } from '../ui.js';
+import { followBtn, gameRow, skel, errorCard } from '../ui.js';
 
 const state = { f: 'all', open: new Set() };
 const PER_DAY = 4; // a busy NBA morning can have 10 games; show the first 4, the rest on tap
@@ -19,15 +17,13 @@ function paths() {
   return p;
 }
 
+// The same game row as My games, plus a strip with every reason and the one-tap Follow.
 function card(g) {
-  const k = kitsFor(g), s = sg(g.date), why = reasons(g), m = mainMarket(g);
-  const half = (x, r) => `<div class="p${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${r ? `<b>${esc(x.team.abbr)}</b>${crest(x.team, 26, true)}` : `${crest(x.team, 26, true)}<b>${esc(x.team.abbr)}</b>`}</div>`;
+  const why = reasons(g);
   const mine = isMine(g, picks);
-  const pick = { id: g.id, path: g.path, date: g.date, name: g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}` };
+  const pick = { id: g.id, path: g.path, date: g.date, name: g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}` };
   const action = mine && !picks.games.some((x) => x.id === g.id) ? '<span class="tag exact">In My games</span>' : followBtn('game', g.id, pick, { label: 'Follow', lite: true });
-  return `<div class="card"><a class="row" style="margin:0;border-radius:0;box-shadow:none;grid-template-columns:1fr 1fr" href="${href.match(g)}">${half(k.left)}${half(k.right, true)}</a>
-<div class="li" style="border:0;align-items:center"><span class="grow"><span class="t" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num" style="font-size:20px">${s.wd} ${g.timeValid ? s.hm : 'TBC'}</span>${why.map((w) => `<span class="tag why">${esc(w)}</span>`).join('')}</span>
-<small>${esc(g.comp.name)} · ${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : esc(m.channels[0] + (m.channels.length > 1 ? ` · ${m.channels.length - 1} more` : ''))}</small></span>${action}</div></div>`;
+  return `<div class="card wk">${gameRow(g, { why: false })}<div class="li"><span class="grow why">${why.map((w) => `<em>${esc(w)}</em>`).join('<span aria-hidden="true"> · </span>')}</span>${action}</div></div>`;
 }
 
 export default function week(params, ctx) {

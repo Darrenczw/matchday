@@ -94,6 +94,8 @@ function noteLeague(path, L) {
 }
 
 // ---------- One game shape for scoreboards, team schedules and match summaries.
+// Every game seen this visit, by id: a match page draws its header from it at once, before the summary loads.
+export const known = new Map();
 export function norm(e, path, src = 'sb') {
   const c = e.competitions?.[0] || e;
   if (e.league?.slug && path.startsWith('soccer/')) { path = `soccer/${e.league.slug}`; noteLeague(path, e.league); }
@@ -108,7 +110,7 @@ export function norm(e, path, src = 'sb') {
     (b.names || []).forEach((n) => tv.add(n));
     if (b.media?.shortName) tv.add(b.media.shortName);
   }
-  return {
+  const g = {
     id: String(e.id || c.id), path, sport, league: path.split('/')[1], comp: compInfo(path), src,
     date: e.date || c.date, timeValid: e.timeValid !== false && c.timeValid !== false,
     state: ty.state || 'pre', completed: !!ty.completed, statusName: ty.name || '', detail: ty.shortDetail || ty.detail || '',
@@ -124,6 +126,8 @@ export function norm(e, path, src = 'sb') {
     // Football: goals with their minute, for the goal timeline.
     goals: sport === 'soccer' ? (c.details || []).filter((x) => x.scoringPlay && !x.shootout).map((x) => ({ m: parseInt(x.clock?.displayValue, 10) || Math.ceil((x.clock?.value || 0) / 60), t: String(x.team?.id || ''), who: x.athletesInvolved?.[0]?.shortName || '', og: !!x.ownGoal })) : [],
   };
+  known.set(g.id, g);
+  return g;
 }
 
 // Live label: "82'", "HT", "Q4 · 1:14".
@@ -183,7 +187,9 @@ export async function teamInfo(path, id) {
   const sport = sportOf(path);
   const [t, sched] = await Promise.all([coreTeam(sport, id), get(`${SITE}/${sport === 'soccer' ? 'soccer/all' : path}/teams/${id}/schedule`, 10 * MIN).catch(() => null)]);
   const T = sched?.team || {};
-  return { ...t, standing: T.standingSummary || '', record: T.recordSummary || '' };
+  // "2nd in English Premier League" → "2nd in Premier League", matching the names used everywhere else.
+  const standing = (T.standingSummary || '').replace(/ in (English|Spanish|German|Italian|French|Scottish|Dutch|Portuguese|Saudi) /, ' in the ').replace(/\bLALIGA\b/, 'LaLiga');
+  return { ...t, standing, record: T.recordSummary || '' };
 }
 // Every team in a league or tournament, from its standings (which allow browser calls).
 export async function leagueTeams(path) {

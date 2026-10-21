@@ -16,7 +16,6 @@ export { MARKETS } from './names.js';
 const DEFAULTS = {
   markets: ['uk', 'us', 'ca', 'sg', 'my', 'hk', 'kr', 'mena'],
   theme: 'auto',
-  homeSport: 'all',
   free: { mornings: true, evenings: true, late: true },
   rules: { overseas: true, streaming: true, playoffs: true },
   suggest: { nfl: true, nba: true, soccer: true },

@@ -1,10 +1,10 @@
 // Match page. What comes first changes with the game state: before, live, full time (PRD 7.6).
-import { esc, sg, countdown, icon, ago } from '../util.js';
+import { esc, sg, countdown, icon, ago, dateText } from '../util.js';
 import { following, picks } from '../store.js';
-import { summary, norm, liveLabel, net, isMine, schedule, backup } from '../espn.js';
-import { kitsFor, clashNote, crest, edge } from '../identity.js';
-import { allMarkets, mainMarket, chans, KIND, rightsChecked } from '../tv.js';
-import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine } from '../ui.js';
+import { summary, norm, liveLabel, net, isMine, schedule, backup, known } from '../espn.js';
+import { kitsFor, clashNote, crest, edge, kitEdge } from '../identity.js';
+import { allMarkets, mainMarket, KIND, rightsChecked } from '../tv.js';
+import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
 
@@ -13,17 +13,26 @@ const openSubs = new Set();
 // NBA and NFL list away first, so say which side is which.
 const ha = (g, x) => (g.sport === 'soccer' ? '' : `<span class="ha">${x.team.home ? 'Home' : 'Away'}</span>`);
 const tchip = (x) => `<span class="tchip" style="background:${x.bg};color:${x.ink};${edge(x.bg)}">${esc(x.team.abbr)}</span>`;
+// The header is drawn for the eye; VoiceOver gets one plain summary first (score, who won, scorers),
+// and the team names stay as links to each team's page.
+const tname = (g, x) => `<a class="tn" href="${href.team(g.path, x.team.id)}">${esc(x.team.short)}</a>`;
 function header(g, k, d) {
   const s = sg(g.date);
   if (g.state === 'pre') {
     const moved = movedFrom(g);
-    const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<span><span class="tn">${esc(x.team.short)}</span>${ha(g, x)}</span></div>`;
-    return `<section class="mh pre">${side(k.left)}${side(k.right, true)}<div class="ko"><b>${g.timeValid ? s.hm : 'TBC'}</b><span>${s.wd} ${s.d} ${s.mo} · SGT</span>${g.postponed ? '<span class="moved">Postponed</span>' : moved ? `<span class="moved">${movedText(moved)}</span>` : `<span class="cd">${g.timeValid ? countdown(g.date) : 'Time to be confirmed'}</span>`}</div></section>`;
+    const pair = g.sport === 'soccer' ? `${g.home.name} v ${g.away.name}` : `${g.away.name} at ${g.home.name}`;
+    const said = `${pair}. ${s.wdl} ${s.d} ${s.mo}, ${g.timeValid ? `${s.hm} Singapore time` : 'time to be confirmed'}. ${g.postponed ? 'Postponed' : moved ? movedText(moved) : g.timeValid ? `Starts ${countdown(g.date)}` : ''}. ${g.comp.name}.`;
+    const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<span>${tname(g, x)}<span aria-hidden="true">${ha(g, x)}</span></span></div>`;
+    return `<h1 class="sr">${esc(said.replace('. .', '.'))}</h1><section class="mh pre">${side(k.left)}${side(k.right, true)}<div class="ko" aria-hidden="true"><b>${g.timeValid ? s.hm : 'TBC'}</b><span>${s.wd} ${s.d} ${s.mo} · SGT</span>${g.postponed ? '<span class="moved">Postponed</span>' : moved ? `<span class="moved">${movedText(moved)}</span>` : `<span class="cd">${g.timeValid ? countdown(g.date) : 'Time to be confirmed'}</span>`}</div></section>`;
   }
   const sc = scorers(g, d);
-  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<b class="sc">${esc(x.team.score ?? '0')}</b><span><span class="tn">${esc(x.team.short)}</span>${ha(g, x)}${sc[x.team.id] ? `<span class="scorers" style="display:block">${esc(sc[x.team.id])}</span>` : ''}</span></div>`;
-  const pill = g.state === 'in' ? `<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))} · Live</span></div>` : `<div class="state"><span>${esc(g.sport === 'soccer' ? 'Full time' : 'Final')}${g.detail && !/^(FT|Final)$/i.test(g.detail) ? ` · ${esc(g.detail)}` : ''} · ${s.wd} ${s.d} ${s.mo}</span></div>`;
-  return `<section class="mh sp-${g.sport}">${side(k.left)}${side(k.right, true)}${pill}</section>`;
+  const a = +(k.left.team.score ?? 0), b = +(k.right.team.score ?? 0);
+  const won = (x) => g.state === 'post' && a !== b && (x === k.left ? a > b : b > a);
+  const goals = [k.left, k.right].filter((x) => sc[x.team.id]).map((x) => `${x.team.name}: ${sc[x.team.id]}`).join('. ');
+  const said = spoken(g, k) + (goals ? ` Goals. ${goals}.` : '');
+  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 46, true)}<b class="sc${won(x) ? ' win' : ''}" aria-hidden="true">${esc(x.team.score ?? '0')}</b><span>${tname(g, x)}<span aria-hidden="true">${ha(g, x)}${sc[x.team.id] ? `<span class="scorers" style="display:block">${esc(sc[x.team.id])}</span>` : ''}</span></span></div>`;
+  const pill = g.state === 'in' ? `<div class="state" aria-hidden="true"><i class="dot"></i><span>${esc(liveLabel(g))} · Live</span></div>` : `<div class="state" aria-hidden="true"><span>${esc(g.sport === 'soccer' ? 'Full time' : 'Final')}${g.detail && !/^(FT|Final)$/i.test(g.detail) ? ` · ${esc(g.detail)}` : ''} · ${s.wd} ${s.d} ${s.mo}</span></div>`;
+  return `<h1 class="sr">${esc(said)}</h1><section class="mh sp-${g.sport}">${side(k.left)}${side(k.right, true)}${pill}</section>`;
 }
 function scorers(g, d) {
   const out = {};
@@ -39,18 +48,31 @@ function scorers(g, d) {
 }
 const isGoal = (e) => /goal|penalty - scored/i.test(e.type?.text || '') && !/disallowed|missed|saved/i.test(e.type?.text || '');
 const isCard = (e) => /card/i.test(e.type?.text || '');
+// ESPN writes "Yellow Card"; the app writes sentence case.
+const sentence = (t = '') => t.charAt(0) + t.slice(1).toLowerCase();
 
+// Exact / Likely / Not listed. A Likely tag opens its source. "Not shown live" is a fact, but not a
+// "do this", so its Exact tag is grey rather than green.
+function tvTag(x) {
+  const cls = x.channels[0] === 'Not shown live' ? 'likely' : x.kind;
+  if (!x.source) return `<span class="tag ${cls}">${KIND[x.kind]}</span>`;
+  return `<a class="tag ${cls} src" href="${esc(x.source)}" target="_blank" rel="noopener" aria-label="${esc(`${KIND[x.kind]}: source for ${x.label}`)}">${KIND[x.kind]}</a>`;
+}
+// Main market, big, with why ("Saturday 3pm blackout in the UK"). Shared by both layouts.
+function tvHead(m) {
+  return `<div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b>${m.kind === 'none' ? 'Not listed' : esc(m.channels.join(' / '))}</b>${tvTag(m)}</div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}</p>` : ''}`;
+}
 function tvMain(g) {
-  const m = mainMarket(g);
-  return `<div class="card"><h2>Where to watch</h2><div class="tvmain"><span class="mk">${esc(m.m.toUpperCase())}</span><b>${m.kind === 'none' ? 'Not listed' : esc(m.channels.join(' / '))}</b><span class="tag ${m.kind}">${KIND[m.kind]}</span></div>${m.note ? `<p class="note" style="padding-top:0">${esc(m.note)}${m.source ? ` · <a href="${esc(m.source)}" target="_blank" rel="noopener">source</a>` : ''}</p>` : ''}</div>`;
+  return `<div class="card"><h2>Where to watch</h2>${tvHead(mainMarket(g))}</div>`;
 }
 function tvAll(g) {
   const [main, ...rest] = allMarkets(g);
   const listed = rest.filter((x) => x.kind !== 'none'), none = rest.filter((x) => x.kind === 'none');
-  let html = `<div class="card"><h2>Where to watch</h2><div class="tvmain"><span class="mk">${esc(main.m.toUpperCase())}</span><b>${main.kind === 'none' ? 'Not listed' : esc(main.channels.join(' / '))}</b><span class="tag ${main.kind}">${KIND[main.kind]}</span></div>`;
-  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chans(x, ', '))}${x.source ? ` <a class="src" href="${esc(x.source)}" target="_blank" rel="noopener" aria-label="Source for ${esc(x.label)}">source</a>` : ''}</span><span class="tag ${x.kind}">${KIND[x.kind]}</span></div>`).join('');
+  let html = `<div class="card"><h2>Where to watch</h2>${tvHead(main)}`;
+  // This is the full list, so every channel is named (rows elsewhere say "· 1 more").
+  html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(x.channels.join(', '))}</span>${tvTag(x)}</div>`).join('');
   if (none.length) html += `<div class="tvrow"><span class="c" style="color:var(--mute)">Not listed: ${esc(none.map((x) => x.label).join(', '))}</span></div>`;
-  html += `<p class="note">Exact = listed for this game. Likely = holds the rights this season${rightsChecked() ? ` (checked ${esc(rightsChecked())})` : ''}. Game-by-game listings for markets outside the US come with the TV helper.</p></div>`;
+  html += `<p class="note">Exact = listed for this game. Likely = holds the rights this season${rightsChecked() ? ` (rights checked ${esc(dateText(rightsChecked()))})` : ''}. Tap Likely to see where it comes from.</p></div>`;
   return html;
 }
 
@@ -66,7 +88,7 @@ function moments(g, d, k, newestFirst) {
       if (!isGoal(e) && !isCard(e) && !/var/i.test(e.type?.text || '')) continue;
       const p = e.participants || [];
       const who = p[0]?.athlete?.displayName || e.text || '';
-      const sub = isGoal(e) ? (p[1] ? `Assist ${p[1].athlete?.displayName}` : /own goal/i.test(e.type.text) ? 'Own goal' : /penalty/i.test(e.type.text) ? 'Penalty' : '') : isCard(e) ? e.type.text : e.type?.text;
+      const sub = isGoal(e) ? (p[1] ? `Assist ${p[1].athlete?.displayName}` : /own goal/i.test(e.type.text) ? 'Own goal' : /penalty/i.test(e.type.text) ? 'Penalty' : '') : isCard(e) ? sentence(e.type.text) : e.type?.text;
       list.push({ min: e.clock?.displayValue || '', team: e.team?.id, who, sub, kind: isGoal(e) ? 'goal' : /red/i.test(e.type.text) ? 'red' : isCard(e) ? 'yellow' : 'var' });
     }
   }
@@ -273,14 +295,20 @@ function formCard(g, d, k, ctx) {
   const pos = (id) => { const i = table.findIndex((e) => e.id === id || e.team?.id === id); return i >= 0 ? i + 1 : null; };
   const rows = [k.left, k.right].map((x) => {
     const f = five.find((y) => y.team?.id === x.team.id);
-    const res = (f?.events || []).map((e) => e.gameResult).filter(Boolean).slice(0, 5).reverse();
-    const rec = d.header?.competitions?.[0]?.competitors?.find((c) => c.id === x.team.id)?.record?.[0]?.summary;
+    // ESPN lists these oldest first, in every competition. Sort to be sure, and keep the newest 5 on the right.
+    const res = [...(f?.events || [])].sort((p, q) => new Date(p.gameDate) - new Date(q.gameDate)).map((e) => e.gameResult).filter(Boolean).slice(-5);
+    const recs = d.header?.competitions?.[0]?.competitors?.find((c) => c.id === x.team.id)?.record || [];
+    const rec = recs.find((r) => r.type === 'total')?.summary || recs[0]?.summary;
+    const pts = recs.find((r) => r.type === 'points')?.summary;
+    // Football records come as wins-draws-losses ("6-0-1"), which reads like a US W-L-T record. Spell it out.
+    const wdl = g.sport === 'soccer' && /^\d+-\d+-\d+$/.test(rec || '') ? rec.split('-') : null;
+    const recTxt = wdl ? `W${wdl[0]} D${wdl[1]} L${wdl[2]}${pts ? ` · ${pts} pts` : ''}` : rec ? `Record ${rec}` : '';
     const p = pos(x.team.id);
     const nx = g.state === 'post' ? nextFor(g, x, ctx) : '';
-    const sub = [p ? `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'} in the ${g.comp.name}` : '', rec ? `Record ${rec}` : ''].filter(Boolean).join(' · ');
+    const sub = [p ? `${p}${['th', 'st', 'nd', 'rd'][(p % 100 > 10 && p % 100 < 14) ? 0 : p % 10] || 'th'} in the ${g.comp.name}` : '', recTxt].filter(Boolean).join(' · ');
     return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" aria-label="Form, oldest first: ${res.join(' ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
   });
-  return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now' : 'Last 5, newest right'}</span></div>${rows.join('')}</div>`;
+  return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${g.state === 'post' ? 'Table now · last 5, newest right' : 'Last 5, all competitions'}</span></div>${rows.join('')}</div>`;
 }
 
 // "today 17:46", "yesterday 17:46" or "Mon 17:46", so a check time never reads like a kick-off time.
@@ -320,8 +348,9 @@ export default function match([sport, slug, id], ctx) {
   ctx.sport = sport;
   const e = ctx.use(`sum:${id}`, () => summary(path, id, ctx.wasLive), ctx.wasLive ? 8e3 : 60e3);
   const d = e.v;
+  // Until the summary arrives, draw the header from the game the row was built from, so a tap never blanks.
   // ESPN down: the backup copy of this game (from My games) still gives the header.
-  const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : e.err ? backup.byId.get(id) || null : null;
+  const g = d?.header ? norm({ ...d.header, competitions: [{ ...d.header.competitions[0], venue: d.gameInfo?.venue }] }, path) : known.get(id) || (e.err ? backup.byId.get(id) : null) || null;
   const compName = g?.comp.name || '';
   const pick = g ? { id: g.id, path, date: g.date, name: `${g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`}` } : null;
   // Covered by a team or competition follow: say so, rather than offering a Follow that changes nothing.
@@ -338,8 +367,10 @@ export default function match([sport, slug, id], ctx) {
   ctx.live = g.state === 'in' || (g.state === 'pre' && new Date(g.date) - Date.now() < 10 * 60e3);
   ctx.wasLive = ctx.live;
   const k = kitsFor(g);
+  ctx.title = g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}`;
   html += header(g, k, d || {});
-  if (!d) return html + `<div class="banner amber">${icon('wifi')}<span>ESPN isn’t answering. This is the backup copy of the game: stats, line-ups and key moments come back when ESPN does.</span></div><p class="foot">Times are Singapore time.</p>`;
+  if (!d && !e.err) return html + skel(3);
+  if (!d) return html + `<div class="banner amber">${icon('wifi')}<span>${g.viaBackup ? 'ESPN isn’t answering. This is the backup copy of the game' : 'Couldn’t load this game’s details. This is what My games already had'}: stats, line-ups and key moments come back when ESPN answers. It tries again on its own.</span></div><p class="foot">Times are Singapore time.</p>`;
   // Football: key moments, stats, line-ups. NBA: quarters, leaders, box score, team stats.
   // NFL: quarters, scoring summary, leaders, team stats, player stats by unit.
   const us = (live) => (g.sport === 'basketball'

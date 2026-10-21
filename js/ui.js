@@ -1,8 +1,8 @@
 // Shared building blocks: game rows, the live hero, follow buttons, toasts, "moved" notes.
 import { esc, sg, shortDay, icon } from './util.js';
-import { kitsFor, crest, compImg, isDark, edge } from './identity.js';
+import { kitsFor, crest, compImg, isDark, edge, kitEdge } from './identity.js';
 import { liveLabel } from './espn.js';
-import { mainMarket } from './tv.js';
+import { mainMarket, tvShort } from './tv.js';
 import { reasons } from './suggest.js';
 import { load, save, following, teamKey } from './store.js';
 import { inCal } from './cal.js';
@@ -30,34 +30,77 @@ function queueSave() { clearTimeout(seenTimer); seenTimer = setTimeout(() => sav
 export const movedText = (prev) => { const p = sg(prev); return `Moved from ${p.wd} ${p.hm}`; };
 
 // ---------- Panels
-function panel(side, k, size = 26, extra = '') {
+// A team you follow by name gets a small star next to its code (the Follow tab's star), so it stands out
+// among a followed league's games. A star, not a stripe: the panel stays the team's kit.
+const STAR = '<svg class="fav" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z"/></svg>';
+const yours = (g, t) => following('team', teamKey(g.path, t.id));
+function panel(side, k, size = 26, fav = false) {
   const t = k.team, r = side === 'r';
-  const c = crest(t, size, true), name = `<b>${esc(t.abbr || t.short)}</b>`;
-  return `<div class="p${r ? ' r' : ''}${k.light ? ' lightkit' : ''}" style="background:${k.bg};color:${k.ink}">${r ? name + c : c + name}${extra}</div>`;
+  const c = crest(t, size, true), name = `<b>${esc(t.abbr || t.short)}</b>`, f = fav ? STAR : '';
+  return `<div class="p${r ? ' r' : ''}${kitEdge(k)}" style="background:${k.bg};color:${k.ink}">${r ? f + name + c : c + name + f}</div>`;
 }
-export function scoreText(k) { return `${esc(k.left.team.score ?? '')}–${esc(k.right.team.score ?? '')}`; }
+// At full time the winner's score is underlined, so a result reads at a glance (no mark for a draw).
+export function scoreText(k, done = false) {
+  const a = k.left.team.score ?? '', b = k.right.team.score ?? '';
+  const w = done && a !== '' && b !== '' && +a !== +b ? (+a > +b ? 'l' : 'r') : '';
+  const sc = (v, side) => (w === side ? `<u class="win">${esc(v)}</u>` : esc(v));
+  return `${sc(a, 'l')}–${sc(b, 'r')}`;
+}
+
+// ---------- What VoiceOver says for a game: the same facts the row shows, in the order you'd say them.
+// Full names, so "Spurs" (Tottenham) and "Spurs" (San Antonio) don't sound alike.
+const full = (t) => t.name || t.short;
+const pairName = (g) => (g.sport === 'soccer' ? `${full(g.home)} v ${full(g.away)}` : `${full(g.away)} at ${full(g.home)}`);
+export function tvSpoken(m) {
+  if (m.kind === 'none') return `${m.label} TV: not listed`;
+  if (m.channels[0] === 'Not shown live') return `${m.label} TV: not shown live, 3pm blackout`;
+  return `${m.label} TV: ${m.channels[0]}${m.channels.length > 1 ? ` and ${m.channels.length - 1} more` : ''}`;
+}
+export function spoken(g, k, { tv = '', moved = null, why = '' } = {}) {
+  const s = sg(g.date), L = k.left.team, R = k.right.team, when = `${s.wdl} ${s.d} ${s.mo}`;
+  const score = `${full(L)} ${L.score ?? 0}, ${full(R)} ${R.score ?? 0}`;
+  const out = [];
+  if (g.postponed) out.push(`${pairName(g)}. Postponed`);
+  else if (g.state === 'in') out.push(`Live, ${liveLabel(g)}. ${score}`);
+  else if (g.state === 'post') {
+    const a = +L.score, b = +R.score;
+    out.push(`${g.sport === 'soccer' ? 'Full time' : 'Final'}. ${score}. ${a === b ? 'Draw' : `${full(a > b ? L : R)} won`}. ${when}`);
+  } else out.push(`${pairName(g)}, ${when}, ${g.timeValid ? s.hm : 'time to be confirmed'}`);
+  out.push(g.comp.name);
+  if (tv) out.push(tv);
+  if (moved) out.push(movedText(moved));
+  if (why) out.push(`Good for you: ${why}`);
+  const mine = [g.home, g.away].filter((t) => yours(g, t)).map(full);
+  if (mine.length) out.push(`You follow ${mine.join(' and ')}`);
+  return out.join('. ') + '.';
+}
 
 export function gameRow(g, { why = true, tv = true } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
   else if (g.state === 'in') mid = `<b>${scoreText(k)}</b><span class="live"><i class="dot"></i>${esc(liveLabel(g))}</span>`;
-  else if (g.state === 'post') mid = `<b>${scoreText(k)}</b><span>${esc(g.sport === 'soccer' ? g.detail || 'FT' : 'Final')} · ${s.wd}</span>`;
-  else mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>${shortDay(g.date)} · ${k.sep}</span>`;
+  else if (g.state === 'post') mid = `<b>${scoreText(k, true)}</b><span>${esc(g.sport === 'soccer' ? g.detail || 'FT' : 'Final')} · ${s.wd}</span>`;
+  else mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>${shortDay(g.date)} · <i class="sep">${k.sep}</i></span>`;
   const bits = [];
   const comp = g.comp;
   bits.push(`${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
+  const moved = g.state === 'pre' ? movedFrom(g) : null;
+  const why1 = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g)[0] : '';
+  let tvSaid = '';
   if (tv && g.state !== 'post') {
     const m = mainMarket(g);
-    bits.push(`<span class="tvt">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(m.channels[0] + (m.channels.length > 1 ? ` · ${m.channels.length - 1} more` : ''))}</span>`);
+    // The meta line is one line: when it's full, drop "· 1 more" before the channel name gets cut.
+    const room = comp.name.length + m.label.length + tvShort(m).length + (why1 || '').length <= 44;
+    bits.push(`<span class="tvt">${esc(m.label)} · ${esc(tvShort(m, room))}</span>`);
+    tvSaid = tvSpoken(m);
   }
-  const moved = g.state === 'pre' ? movedFrom(g) : null;
   if (g.viaBackup) bits.push('<span class="tag likely">Backup</span>');
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
   else if (moved) bits.push(`<span class="moved">${movedText(moved)}</span>`);
-  else if (why && g.state === 'pre') { const r = reasons(g); if (r[0]) bits.push(`<em>${esc(r[0])}</em>`); }
-  const label = `${g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}`}, ${s.wdl} ${s.d} ${s.mo} ${g.timeValid ? s.hm : 'time to be confirmed'}, ${comp.name}`;
-  return `<a class="row${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(label)}">${panel('l', k.left)}<div class="mid">${mid}</div>${panel('r', k.right)}<div class="meta">${bits.join('<span aria-hidden="true">·</span>')}</div></a>`;
+  else if (why1) bits.push(`<em>${esc(why1)}</em>`);
+  const label = spoken(g, k, { tv: tvSaid, moved, why: why1 });
+  return `<a class="row${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(label)}">${panel('l', k.left, 26, yours(g, k.left.team))}<div class="mid">${mid}</div>${panel('r', k.right, 26, yours(g, k.right.team))}<div class="meta">${bits.join('<span aria-hidden="true">·</span>')}</div></a>`;
 }
 
 const POSS = '<svg class="poss" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.6 16.4C2.4 11 7.6 3.9 16.4 3.6c1.2 5.4-4 12.5-12.8 12.8z"/><path d="M7.6 12.4l4.8-4.8M8.6 9.6l1.8 1.8M10.2 8l1.8 1.8"/></svg>';
@@ -69,9 +112,9 @@ export function hero(g) {
   const side = (x, r) => {
     const sc = String(x.team.score ?? '0');
     const ball = g.sit?.poss === x.team.id ? POSS : '';
-    return `<div class="shirt${r ? ' r' : ''}${x.light ? ' lightkit' : ''}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 40, true)}<b class="score${sc.length > 2 ? ' sm' : ''}">${esc(sc)}</b><span class="name">${esc(x.team.short)}${ball}${g.sport !== 'soccer' ? `<small>${x.team.home ? 'Home' : 'Away'}</small>` : ''}</span></div>`;
+    return `<div class="shirt${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 40, true)}<b class="score${sc.length > 2 ? ' sm' : ''}">${esc(sc)}</b><span class="name">${esc(x.team.short)}${ball}${g.sport !== 'soccer' ? `<small>${x.team.home ? 'Home' : 'Away'}</small>` : ''}</span></div>`;
   };
-  return `<a class="hero sp-${g.sport}" href="${href.match(g)}" aria-label="${esc(`Live: ${k.left.team.short} ${k.left.team.score}, ${k.right.team.short} ${k.right.team.score}, ${liveLabel(g)}`)}">${side(k.left)}${side(k.right, true)}<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))}${tv ? ` · ${esc(tv)}` : ''}</span></div></a>${heroStrip(g, k)}`;
+  return `<a class="hero sp-${g.sport}" href="${href.match(g)}" aria-label="${esc(spoken(g, k, { tv: tvSpoken(m) }))}">${side(k.left)}${side(k.right, true)}<div class="state"><i class="dot"></i><span>${esc(liveLabel(g))}${tv ? ` · ${esc(tv)}` : ''}</span></div></a>${heroStrip(g, k)}`;
 }
 
 // ---------- Scoreboard details under the live hero (R4): each sport in its own language.
@@ -120,8 +163,10 @@ export function goalLine(goals, now, k, label = '', cap = true) {
 // lite = outline, for Follow buttons repeated down a list, so green still stands out where it matters.
 export function followBtn(kind, key, item, { size = 'sm', label = 'Follow', lite = false } = {}) {
   const on = following(kind, key);
-  if (on) return `<button class="btn ${size} on" data-act="unfollow" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true">${icon('check')}Following</button>`;
-  return `<button class="btn ${size} go${lite ? ' lite' : ''}" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false">${icon('plus')}${label}</button>`;
+  // Spoken with the name, so a list of buttons isn't "Follow, Follow, Follow".
+  const who = item?.name ? ` ${item.name}` : '';
+  if (on) return `<button class="btn ${size} on" data-act="unfollow" data-kind="${kind}" data-key="${esc(key)}" aria-pressed="true" aria-label="${esc(`Following${who}`)}">${icon('check')}Following</button>`;
+  return `<button class="btn ${size} go${lite ? ' lite' : ''}" data-act="follow" data-kind="${kind}" data-item="${esc(JSON.stringify(item))}" aria-pressed="false" aria-label="${esc(`${label}${who}`)}">${icon('plus')}${label}</button>`;
 }
 // Calendar button: its own layer, next to Follow. compact = icon only (match and league headers).
 export function calBtn(kind, key, item, { compact = false, covered = '' } = {}) {

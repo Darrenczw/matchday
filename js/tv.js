@@ -24,5 +24,11 @@ export function market(g, m) {
 }
 export const allMarkets = (g) => settings.markets.map((m) => market(g, m));
 export const mainMarket = (g) => market(g, settings.markets[0]);
-export const chans = (x, sep = ' or ') => (x.channels.length > 2 ? `${x.channels.slice(0, 2).join(', ')} and ${x.channels.length - 2} more` : x.channels.join(sep));
+// One-line TV for game rows and cards: "Sky Sports · 1 more", "3pm blackout" or "Not listed".
+export function tvShort(x, more = true) {
+  if (x.kind === 'none') return 'Not listed';
+  if (x.channels[0] === 'Not shown live') return '3pm blackout';
+  return x.channels[0] + (more && x.channels.length > 1 ? ` · ${x.channels.length - 1} more` : '');
+}
+export const chans =(x, sep = ' or ') => (x.channels.length > 2 ? `${x.channels.slice(0, 2).join(', ')} and ${x.channels.length - 2} more` : x.channels.join(sep));
 export const KIND = { exact: 'Exact', likely: 'Likely', none: 'Not listed' };

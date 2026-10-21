@@ -2,8 +2,9 @@
 import { on, follow, unfollow, set, settings, picks, DEMO } from './store.js';
 import { addCal, removeCal } from './cal.js';
 import { rightsReady } from './tv.js';
-import { compInfo } from './espn.js';
+import { compInfo, known } from './espn.js';
 import { toast } from './ui.js';
+import { esc } from './util.js';
 import { ground } from './ground.js';
 import home from './views/home.js';
 import followView from './views/follow.js';
@@ -54,8 +55,12 @@ function paint() {
   if (!route) return;
   ctx.live = false;
   ctx.sport = '';
+  ctx.title = '';
   let html;
-  try { html = route.view(route.params, ctx); } catch (err) { console.error(err); html = `<div class="banner red">Something broke on this screen: ${err.message}</div>`; }
+  try { html = route.view(route.params, ctx); } catch (err) {
+    console.error(err);
+    html = `<div class="banner red"><span>Something broke on this screen. Go back or switch tabs, then try again.<small style="display:block;margin-top:4px;font-weight:500">${esc(err.message)}</small></span></div>`;
+  }
   if (html !== lastHtml) {
     lastHtml = html;
     const t = document.createElement('template');
@@ -63,6 +68,10 @@ function paint() {
     morphChildren(main, t.content);
   }
   ground(ctx.sport);
+  // The tab title says where you are (VoiceOver reads it too): "Arsenal v Everton · Matchday".
+  const where = ctx.title || main.querySelector('h1')?.textContent || '';
+  const title = `${where && where !== 'My games' ? `${where} · ` : ''}Matchday${DEMO ? ' (sample picks)' : ''}`;
+  if (document.title !== title) document.title = title;
   settleScroll();
 }
 // Where a screen opens: back where you left it, or at the top.
@@ -76,6 +85,8 @@ function morph(a, b) {
   if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b); return; }
   if (a.nodeType === 3 || a.nodeType === 8) { if (a.data !== b.data) a.data = b.data; return; }
   if (a.nodeType !== 1) return;
+  // A logo that changes gets a new element: patching src keeps showing the old logo until the new one loads.
+  if (a.tagName === 'IMG' && a.getAttribute('src') !== b.getAttribute('src')) { a.replaceWith(b); return; }
   for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
   for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
   if (a.tagName === 'INPUT') { if (document.activeElement !== a && a.value !== (b.getAttribute('value') ?? '')) a.value = b.getAttribute('value') ?? ''; return; }
@@ -93,6 +104,7 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 const scrolls = {};
 let prevHash = location.hash;
 let tabReset = false;
+let started = false;
 function go() {
   if (route) scrolls[prevHash] = scrollY; // remember where we left the previous screen
   const h = location.hash || '#/';
@@ -108,6 +120,9 @@ function go() {
     lastHtml = '';
     main.innerHTML = '';
     paint();
+    // A new screen: VoiceOver starts reading from its top, not from the button that was tapped.
+    if (started) main.focus({ preventScroll: true });
+    started = true;
     prevHash = h;
     return;
   }
@@ -123,6 +138,9 @@ function labelFor(h) {
   if (m) return compInfo(`${m[1]}/${m[2]}`).name;
   m = h.match(/^#\/t\/(\w+)\/[\w.]+\/(\d+)$/);
   if (m) return data.get(`team:${m[1]}:${m[2]}`)?.v?.short || 'Team';
+  m = h.match(/^#\/m\/(\w+)\/[\w.]+\/(\d+)$/);
+  const g = m && known.get(m[2]);
+  if (g) return g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`;
   return 'Back';
 }
 const stack = [];
@@ -226,5 +244,4 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw\b
     document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
   }).catch(() => {});
 }
-if (DEMO) document.title = 'Matchday (sample picks)';
 export { picks };

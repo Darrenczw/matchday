@@ -1,12 +1,16 @@
-// Home: "My games". Results (newest first), then live, then coming up (soonest first). All in SGT.
+// Home: "My games". Live first while a game is on, then results (newest first), then coming up (soonest first). All in SGT.
 import { esc, sg, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
-import { picks, followingAny, DEMO, load, save, settings, set, sportOf } from '../store.js';
+import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
 import { gamesFor, isLive, soon, net } from '../espn.js';
 import { compLogo, compImg } from '../identity.js';
 import { gameRow, hero, skel, errorCard } from '../ui.js';
 import { calReady, status as calStatus } from '../cal.js';
 
 let ver = 0;
+// The sport filter lives for this visit only: a fresh start always opens on All, so no sport is ever hidden by surprise.
+let cur = 'all';
+// Days of older league results the user opened ("Sun 18 Oct · 4 more results").
+const openDays = new Set();
 const sig = () => JSON.stringify(picks);
 let lastSig = '';
 
@@ -21,7 +25,7 @@ function empty() {
 <section class="empty"><h2>Pick what you follow</h2><p>Matchday shows only your games: clubs, national teams, whole leagues or single games. Nothing is picked for you.</p>
 <a class="btn go big" href="#/follow">${icon('search')}Find clubs and leagues</a></section>
 <div class="sect"><h2 class="cap">Or start with a whole league</h2></div>
-<div class="card">${QUICK.map((q) => `<div class="li">${compImg(q.item.logo, 32, q.item.name)}<span class="grow"><span class="t">${esc(q.item.name)}</span><small>${esc(q.sub)}</small></span><button class="btn sm go lite" data-act="follow" data-kind="${q.kind}" data-item="${esc(JSON.stringify(q.item))}">${icon('plus')}Follow</button></div>`).join('')}</div>`;
+<div class="card">${QUICK.map((q) => `<div class="li">${compImg(q.item.logo, 32, q.item.name)}<span class="grow"><span class="t">${esc(q.item.name)}</span><small>${esc(q.sub)}</small></span><button class="btn sm go lite" data-act="follow" data-kind="${q.kind}" data-item="${esc(JSON.stringify(q.item))}" aria-label="Follow ${esc(q.item.name)}">${icon('plus')}Follow</button></div>`).join('')}</div>`;
 }
 
 // Calendar lag watch and failures (PRD 7.9): amber when a change hasn't reached the iPhone yet,
@@ -57,7 +61,7 @@ export default function home(params, ctx) {
 
   // Sport filter: always there, so it's never a surprise; a sport you don't follow yet says so.
   const followed = new Set([...picks.comps, ...picks.teams, ...picks.games].map((x) => sportOf(x.path)));
-  const f = SPORTS.some(([k]) => k === settings.homeSport) ? settings.homeSport : 'all';
+  const f = cur;
   const keep = (g) => f === 'all' || g.sport === f;
   if (f !== 'all') ctx.sport = f;
 
@@ -91,7 +95,7 @@ export default function home(params, ctx) {
   const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
   const live = games.filter(isLive);
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${results.map((g) => gameRow(g)).join('')}`;
+  if (results.length) html += `<div class="sect"><h2 class="cap">Results</h2><span>Last 3 days</span></div>${resultRows(results, t)}`;
   // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
   const wk = f === 'football' ? [...new Set(ahead.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
   const wkTxt = wk.length ? `<span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span>` : '';
@@ -109,6 +113,22 @@ export default function home(params, ctx) {
   return html + `<p class="foot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
 
+// Today's and yesterday's results in full. Older ones show only your teams' games; the rest of a
+// followed league folds into one line per day, so the next game stays near the top.
+const yourTeam = (g) => picks.teams.some((x) => teamKey(x.path, x.id) === teamKey(g.path, g.home.id) || teamKey(x.path, x.id) === teamKey(g.path, g.away.id)) || picks.games.some((x) => x.id === g.id);
+function resultRows(results, t) {
+  const byDay = new Map();
+  for (const g of results) { const k = sg(g.date).key; byDay.set(k, [...(byDay.get(k) || []), g]); }
+  let html = '';
+  for (const [k, list] of byDay) {
+    const all = k >= addDays(t, -1) || openDays.has(k);
+    const shown = all ? list : list.filter(yourTeam), rest = list.length - shown.length;
+    html += shown.map((g) => gameRow(g)).join('');
+    if (rest) html += `<button class="btn ghost more" data-act="older" data-k="${k}">${keyLabel(k)} · ${rest} more result${rest > 1 ? 's' : ''}</button>`;
+  }
+  return html;
+}
+
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 const barH = () => (document.querySelector('.filterbar')?.offsetHeight || 0) + 4;
 
@@ -118,8 +138,9 @@ home.actions = {
     scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
   },
   // Tapping a sport shows that sport and goes straight to its next game (Coming up, soonest first).
-  sport(d) {
-    set('homeSport', d.s);
+  older(d, el, e, ctx) { openDays.add(d.k); ctx.redraw(); },
+  sport(d, el, e, ctx) {
+    cur = d.s; ctx.redraw();
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const el = document.getElementById('coming');
       scrollTo({ top: el ? Math.max(0, el.getBoundingClientRect().top + scrollY - barH()) : 0, behavior: smooth() });

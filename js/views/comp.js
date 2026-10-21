@@ -6,11 +6,12 @@ import { brand, inkOn, readable, logoSrc, crest, lum } from '../identity.js';
 import { followBtn, teamFollowBtn, calBtn, gameRow, href, skel, errorCard, backBtn } from '../ui.js';
 
 const tabs = {};
+const ord = (n) => (n ? `${n}${['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || 'th'}` : '');
 const followedTeam = (path, t) => following('team', teamKey(path, t.id));
 
 function table(ctx, path) {
   const e = ctx.use(`table:${path}`, () => standings(path), 30 * 60e3);
-  if (!e.v) return e.err ? `<div class="banner info">No table for this competition in the feed.</div>` : skel(6);
+  if (!e.v) return e.err ? errorCard('Couldn’t load the table.') : skel(6);
   const us = sportOf(path) !== 'soccer';
   const groups = e.v.groups.filter((g) => g.rows.length);
   if (!groups.length) return `<div class="banner info">No table for this competition yet. Cups show groups once they start.</div>`;
@@ -25,7 +26,7 @@ function table(ctx, path) {
       const style = mine ? ` style="background:${bg};color:${inkOn(bg, t.alt)}${lum(bg) > 0.7 ? ';box-shadow:inset 0 0 0 1px rgba(18,19,24,.15)' : ''}"` : '';
       const sw = `<span class="sw" aria-hidden="true"><i style="background:${t.color || '#888'}"></i><i style="background:${t.alt || t.color || '#888'}"></i></span>`;
       const cells = us ? `<span>${esc(r.w)}</span><span>${esc(r.l)}</span><span class="pts">${esc(r.pct)}</span>` : `<span>${esc(r.gp)}</span><span>${esc(r.gd)}</span><span class="pts">${esc(r.pts)}</span>`;
-      html += `<a class="tr" href="${href.team(path, t.id)}"${style} aria-label="${esc(`${r.rank}. ${t.name}`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
+      html += `<a class="tr" href="${href.team(path, t.id)}"${style} aria-label="${esc(us ? `${ord(r.rank)}, ${t.name}. Won ${r.w}, lost ${r.l}, win percentage ${r.pct}.` : `${ord(r.rank)}, ${t.name}. Played ${r.gp}, goal difference ${r.gd}, ${r.pts} points.`)}"><span class="pos">${r.rank || ''}</span>${sw}<span class="nm">${crest(t, 24, !!mine)}<span>${esc(t.short)}</span></span>${cells}</a>`;
     }
   }
   return html + '</div>';

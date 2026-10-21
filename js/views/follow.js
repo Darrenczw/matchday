@@ -21,11 +21,14 @@ function teamRow(path, t, sub) {
 <span class="grow"><span class="t">${esc(t.name)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${sw}</a>${teamFollowBtn(path, t, { lite: true })}</div>`;
 }
 
+// What you follow in the sport shown below, so the chips and the list agree.
 function chips() {
+  const sp = { soccer: 'soccer', nfl: 'football', nba: 'basketball' }[state.sport];
+  const mine = (x) => sportOf(x.path) === sp;
   const items = [
-    ...picks.teams.map((t) => `<a class="chip" href="${href.team(t.path, t.id)}">${crest(t, 26)}${esc(t.name)}</a>`),
-    ...picks.comps.map((c) => `<a class="chip" href="${href.comp(c.path)}">${crest({ logo: c.logo, name: c.name }, 26)}${esc(c.name)}</a>`),
-    ...picks.games.map((g) => `<a class="chip txt" href="#/m/${g.path}/${g.id}">${esc(g.name)}</a>`),
+    ...picks.teams.filter(mine).map((t) => `<a class="chip" href="${href.team(t.path, t.id)}">${crest(t, 26)}${esc(t.name)}</a>`),
+    ...picks.comps.filter(mine).map((c) => `<a class="chip" href="${href.comp(c.path)}">${crest({ logo: c.logo, name: c.name }, 26)}${esc(c.name)}</a>`),
+    ...picks.games.filter(mine).map((g) => `<a class="chip txt" href="#/m/${g.path}/${g.id}">${esc(g.name)}</a>`),
   ];
   return items.length ? `<div class="sect"><h2 class="cap">You follow</h2><span>${items.length}</span></div><div class="chips">${items.join('')}</div>` : '';
 }
@@ -80,7 +83,7 @@ function usSport(ctx, key) {
 export default function followView(params, ctx) {
   ctx.sport = { soccer: 'soccer', nfl: 'football', nba: 'basketball' }[state.sport];
   const comps = ctx.use('comps', compList, 24 * 3600e3);
-  let html = `<header class="top"><h1>Follow</h1><span class="sub">${comps.v ? `${comps.v.length} competitions` : ''}</span></header>
+  let html = `<header class="top"><h1>Follow</h1><span class="sub">${state.sport === 'soccer' && comps.v ? `${comps.v.length} competitions` : state.sport === 'nfl' ? '32 teams' : state.sport === 'nba' ? '30 teams' : ''}</span></header>
 <label class="search">${icon('search')}<span class="sr">Search</span><input type="search" placeholder="Search clubs, leagues, countries" value="${esc(state.q)}" data-input="q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">${state.q ? `<button type="button" data-act="clear" aria-label="Clear search">${icon('x')}</button>` : ''}</label>`;
   if (state.q.trim().length >= 2) return html + searchResults(ctx, comps.v);
   html += `<div class="seg" role="group" aria-label="Sport">${[['soccer', 'Football'], ['nfl', 'NFL'], ['nba', 'NBA']].map(([k, l]) => `<button data-act="sport" data-s="${k}" aria-pressed="${state.sport === k}">${l}</button>`).join('')}</div>`;

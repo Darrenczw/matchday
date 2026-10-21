@@ -82,6 +82,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .ini { display: inline-grid; place-items: center; flex: none; border-radius: 50%; background: #fff; color: #121318; font: 800 11px/1 var(--cond); letter-spacing: .02em; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
 .ini.flat { background: var(--soft); color: var(--mute); box-shadow: none; }
 .lightkit { box-shadow: inset 0 0 0 1px rgba(18, 19, 24, .12); }
+html[data-theme="dark"] .darkkit { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) .darkkit { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); } }
 
 .hero { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 0 var(--gutter) 10px; height: 200px; border-radius: var(--radius); overflow: hidden; }
 .hero .shirt { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: 14px; }
@@ -104,6 +106,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .row .mid span { display: inline-flex; align-items: center; gap: 4px; font: 600 11px/1 var(--text); color: var(--mute); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
 .row .mid .live { color: var(--live); }
 .row .mid .dot { width: 6px; height: 6px; background: var(--live); }
+.row .mid .sep { font-style: normal; text-transform: none; }
+.row .p .fav { width: 13px; height: 13px; fill: currentColor; stroke: none; margin: 0 -3px; }
 .row .meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 5px 10px; border-top: 1px solid var(--line); font: 500 12px/1.3 var(--text); color: var(--mute); }
 .row .meta img { width: 14px; height: 14px; object-fit: contain; }
 .row .meta > span:nth-child(2) { white-space: nowrap; }
@@ -113,6 +117,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .row .meta .pp { color: var(--amber); font-weight: 700; }
 .row.done .p { opacity: .92; }
 .win { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.row .mid .win { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 
 /* ---------- Cards and lists */
 .card { margin: 0 var(--gutter) 12px; border-radius: var(--radius); background: var(--row); overflow: hidden; box-shadow: var(--shadow); }
@@ -184,6 +189,7 @@ a.li:active, .row:active { filter: brightness(.97); }
 .mh .shirt { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; padding: 14px; }
 .mh .shirt.r { align-items: flex-end; text-align: right; }
 .mh .tn { font: 800 25px/1 var(--cond); text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
+.mh a.tn { display: inline-block; padding: 9px 0; margin: -9px 0; }
 .mh .sc { font: 800 92px/.82 var(--cond); letter-spacing: -.02em; }
 .mh .scorers { font: 600 12px/1.35 var(--text); opacity: .92; }
 .mh .ko { position: absolute; left: 50%; top: 12px; bottom: 12px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 128px; padding: 12px 6px; border-radius: 12px; background: #fff; color: #121318; text-align: center; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .45); }
@@ -198,7 +204,8 @@ a.li:active, .row:active { filter: brightness(.97); }
 .tvrow .m { width: 92px; flex: none; font-weight: 700; }
 .tvrow .c { flex: 1; min-width: 0; }
 .tvrow .c small { display: block; color: var(--mute); font-size: 12px; }
-.tvrow .src { display: inline-block; margin: -14px 0 -14px 2px; padding: 14px 6px; color: var(--mute); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
+.tag.src { position: relative; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.tag.src::after { content: ""; position: absolute; inset: -11px -6px; }
 .ev { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; gap: 8px; min-height: 56px; padding: 8px 14px; border-top: 1px solid var(--line); }
 .ev .min { font: 800 17px/1 var(--cond); color: var(--mute); }
 .ev .min.r { text-align: right; }
@@ -376,3 +383,11 @@ html[data-sport] .filterbar { background: color-mix(in srgb, var(--ground) 84%, 
 .tabs a[aria-current="page"] svg { stroke-width: 2.2; }
 
 @media (prefers-reduced-motion: reduce) { .dot, .skel { animation: none; } .switch, .switch::after { transition: none; } }
+
+/* ---------- This week: a game row inside a card, with its reasons and Follow underneath */
+.wk .row { margin: 0; border-radius: 0; box-shadow: none; }
+.wk .li { min-height: 52px; padding: 6px 14px; }
+.wk .why { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0; font: 700 13px/1.35 var(--text); color: var(--go); }
+.wk .why em { font-style: normal; }
+.wk .why span { color: var(--mute); font-weight: 500; white-space: pre; }
+

@@ -3,7 +3,7 @@ import { esc, sg, icon } from '../util.js';
 import { teamInfo, schedule } from '../espn.js';
 import { inkOn, readable, logoSrc, crest, NEUTRAL } from '../identity.js';
 import { teamFollowBtn, calBtn, teamPick, href, skel, errorCard, backBtn } from '../ui.js';
-import { sportOf, teamKey } from '../store.js';
+import { sportOf, teamKey, settings } from '../store.js';
 import { mainMarket, chans, KIND } from '../tv.js';
 
 function result(g, id) {
@@ -40,12 +40,12 @@ export default function team([sport, slug, id], ctx) {
 
   const subBits = [t.nickname && !t.name.includes(t.nickname) ? `The ${t.nickname}` : '', t.abbr, t.standing || t.record].filter(Boolean);
   html += `<div class="ident"><div class="badge">${t.logo ? `<img src="${esc(logoSrc(t.logo, 156))}" alt="" data-ini="${esc(t.abbr)}">` : `<span class="ini" style="width:52px;height:52px">${esc(t.abbr)}</span>`}</div><div><h1>${esc(t.name)}</h1><p>${esc(subBits.join(' · '))}</p></div></div>
-<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${calBtn('team', teamKey(path, t.id), teamPick(path, t))}${form.length ? `<span class="formrow"><span style="font:600 13px var(--text)">Form</span><span class="forms" aria-label="Last ${form.length} results, oldest first: ${form.join(' ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span></span>` : ''}</div></div>`;
+<div class="skin" style="background:none;margin:0;padding:6px 0 14px"><div class="acts">${teamFollowBtn(path, t)}${calBtn('team', teamKey(path, t.id), teamPick(path, t))}${form.length ? `<span class="formrow"><span style="font:600 13px var(--text)">Last 5</span><span class="forms" aria-label="Last ${form.length} results, oldest first: ${form.join(' ')}">${form.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span></span>` : ''}</div></div>`;
 
   if (!sched.v) return html + (sched.err ? errorCard() : skel(3)) + '</div>';
   if (next[0]) {
     const m = mainMarket(next[0]);
-    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(next[0])}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed yet' : esc(chans(m))}</span><small>${KIND[m.kind]} · tap for all 8 markets</small></span>${icon('chev', 'chev')}</a></div>`;
+    html += `<div class="card"><h2>Next game: where to watch</h2><a class="li" href="${href.match(next[0])}">${icon('tv')}<span class="grow"><span class="t">${esc(m.label)} · ${m.kind === 'none' ? 'Not listed' : m.channels[0] === 'Not shown live' ? '3pm blackout' : esc(chans(m))}</span><small>${KIND[m.kind]} · tap for all ${settings.markets.length} markets</small></span>${icon('chev', 'chev')}</a></div>`;
   }
   html += `<div class="card"><h2>Next games</h2>${next.length ? next.slice(0, 5).map((g) => line(g, id, false)).join('') : '<p class="note">No games scheduled in the feed yet.</p>'}</div>`;
   if (done.length) html += `<div class="card"><h2>Results</h2>${done.slice(0, 5).map((g) => line(g, id, true)).join('')}</div>`;

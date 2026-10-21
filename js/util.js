@@ -17,6 +17,8 @@ export function sg(d) {
   };
 }
 export const todayKey = () => sg(Date.now()).key;
+// "2026-10-21" → "21 Oct 2026", for dates written in sentences.
+export const dateText = (key) => { const [y, m, d] = String(key).split('-').map(Number); return d ? `${d} ${MO[m - 1]} ${y}` : String(key); };
 export function addDays(key, n) {
   const x = new Date(key + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10);
 }
@@ -34,7 +36,7 @@ export function keyLabel(key) {
 // more than a week out) rather than "Tonight", which clashes with a "Tomorrow" header for 03:00 games.
 export function shortDay(d) {
   const s = sg(d), t = todayKey();
-  return s.key > addDays(t, 6) ? `${s.d} ${s.mo}` : s.wd;
+  return s.key > addDays(t, 7) ? `${s.d} ${s.mo}` : s.wd; // My games runs to today + 7
 }
 
 export function ago(ts) {

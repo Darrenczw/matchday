@@ -83,10 +83,12 @@ export function kitsFor(g) {
     if (g.sport !== 'soccer') tries.push(['white', '#ffffff']);
     for (const [kind, c] of tries) if (c && !clash(hb, c)) { ab = c; worn = kind; break; }
   }
-  const pair = (t, kit) => { const bg = readable(kit); return { team: t, bg, ink: inkOn(bg, kit === t.color ? t.alt : t.color), light: lum(bg) > 0.7 }; };
+  const pair = (t, kit) => { const bg = readable(kit); return { team: t, bg, ink: inkOn(bg, kit === t.color ? t.alt : t.color), light: lum(bg) > 0.7, dark: lum(bg) < 0.02 }; };
   const home = pair(g.home, hb), away = { ...pair(g.away, ab), worn };
   return g.sport === 'soccer' ? { left: home, right: away, sep: 'v', home, away } : { left: away, right: home, sep: '@', home, away };
 }
+// Near-white kits get a hairline on white rows; near-black kits get one on dark rows (dark mode only).
+export const kitEdge = (k) => (k.light ? ' lightkit' : k.dark ? ' darkkit' : '');
 export function clashNote(g, k) {
   if (!k.away.worn) return '';
   const what = { away: 'away kit', third: 'third kit', second: 'second colour', white: 'white' }[k.away.worn];
