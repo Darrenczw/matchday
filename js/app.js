@@ -245,16 +245,23 @@ go();
 // Offline support on the live site; locally only with "?sw", so edits show straight away while building.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw\b/.test(location.search))) {
   // New versions: check whenever the app comes back to the screen (iOS resumes the Home Screen app
-  // rather than restarting it), and reload once the new version has taken over.
+  // rather than restarting it) and when it leaves. Reload into the new version only when it can't get
+  // in the way: in the first moments on screen before a touch, or while the app is in the background.
+  // Otherwise it waits until you leave, so a screen never reloads under your finger (Darren, 22 Oct 2026).
   const hadController = !!navigator.serviceWorker.controller;
-  let reloading = false;
+  let reloading = false, waiting = false, shownAt = Date.now(), touched = false;
+  const reload = () => { if (!reloading) { reloading = true; location.reload(); } };
+  document.addEventListener('pointerdown', () => { touched = true; }, { capture: true, passive: true });
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || reloading) return;
-    reloading = true;
-    location.reload();
+    if (!hadController) return;
+    if (document.hidden || (!touched && Date.now() - shownAt < 4000)) reload(); else waiting = true;
   });
   navigator.serviceWorker.register('sw.js').then((reg) => {
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && waiting) { reload(); return; }
+      if (!document.hidden) { shownAt = Date.now(); touched = false; }
+      reg.update().catch(() => {});
+    });
   }).catch(() => {});
 }
 export { picks };

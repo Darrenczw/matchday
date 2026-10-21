@@ -14,7 +14,7 @@ let cur = 'all';
 // Older league results, opened with "4 more results since Sun" (for this visit).
 let openOlder = false;
 const sig = () => JSON.stringify(picks);
-let lastSig = '';
+let lastSig = '', snapAt = 0;
 
 const QUICK = [
   { kind: 'comp', item: { path: 'soccer/eng.1', name: 'Premier League', logo: compLogo('soccer/eng.1', '23') }, sub: 'Every Premier League game' },
@@ -75,7 +75,8 @@ export default function home(params, ctx) {
   const e = ctx.use(`mine:${ver}`, () => gamesFor(picks, { live: ctx.wasLive }), ctx.wasLive ? 10e3 : 60e3);
   let base = e.v?.games;
   let stale = null;
-  if (e.v) save('snap', { t: Date.now(), sig: s, games: base });
+  // Saved once per fresh load (not on every 5 s redraw), so the next launch can show it at once.
+  if (e.v) { if (snapAt !== e.t) { snapAt = e.t; save('snap', { t: Date.now(), sig: s, games: base }); } }
   else {
     const snap = load('snap', null);
     if (snap?.sig === s) {
@@ -120,7 +121,7 @@ export default function home(params, ctx) {
   useTables(ctx, all.filter((g) => g.state === 'pre' && nightKey(g.date) <= addDays(t, 6)).map((g) => g.path)); // reasons that need a league table
   ctx.live = all.some(isLive) || all.some(soon);
   ctx.wasLive = ctx.live;
-  prefetchVisible(); // the games on screen, so tapping one opens it at once
+  if (e.v) prefetchVisible(); // the games on screen, so tapping one opens it at once (after My games itself has loaded)
 
   const label = SPORTS.find(([k]) => k === f)[1];
   if (f !== 'all' && !followed.has(f)) {

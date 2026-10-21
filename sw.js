@@ -1,5 +1,5 @@
 // Matchday service worker. Bump VERSION on every deploy.
-const VERSION = 'md-v22';
+const VERSION = 'md-v23';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'data/rights.json',
   'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/rules.js', 'js/names.js', 'js/cal.js', 'js/ics.js', 'js/ui.js', 'js/ground.js', 'js/swipe.js', 'js/prefetch.js',
@@ -36,9 +36,10 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(caches.open(IMG).then(async (c) => (await c.match(e.request)) || fetch(e.request).then((r) => { if (r.ok || r.type === 'opaque') c.put(e.request, r.clone()); return r; })));
     return;
   }
-  // App files: cache first, refreshed by VERSION.
+  // App files: cache first, refreshed by VERSION. Look only in this version's cache: searching every cache
+  // (hundreds of saved logos and feeds) for each app file slowed the launch.
   if (u.origin === location.origin) {
-    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request)));
+    e.respondWith(caches.open(VERSION).then((c) => c.match(e.request, { ignoreSearch: true })).then((hit) => hit || fetch(e.request)));
   }
 });
 

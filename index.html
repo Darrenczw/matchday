@@ -19,6 +19,30 @@
 <link rel="preload" href="fonts/SairaCondensed-800.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Saira-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
+<!-- Every app file at once: without these the browser finds them one import level at a time (4 waves). -->
+<link rel="modulepreload" href="js/app.js">
+<link rel="modulepreload" href="js/util.js">
+<link rel="modulepreload" href="js/store.js">
+<link rel="modulepreload" href="js/rules.js">
+<link rel="modulepreload" href="js/names.js">
+<link rel="modulepreload" href="js/identity.js">
+<link rel="modulepreload" href="js/kits.js">
+<link rel="modulepreload" href="js/espn.js">
+<link rel="modulepreload" href="js/cal.js">
+<link rel="modulepreload" href="js/tv.js">
+<link rel="modulepreload" href="js/suggest.js">
+<link rel="modulepreload" href="js/ui.js">
+<link rel="modulepreload" href="js/ground.js">
+<link rel="modulepreload" href="js/swipe.js">
+<link rel="modulepreload" href="js/prefetch.js">
+<link rel="modulepreload" href="js/views/home.js">
+<link rel="modulepreload" href="js/views/follow.js">
+<link rel="modulepreload" href="js/views/comp.js">
+<link rel="modulepreload" href="js/views/team.js">
+<link rel="modulepreload" href="js/views/match.js">
+<link rel="modulepreload" href="js/views/week.js">
+<link rel="modulepreload" href="js/views/settings.js">
+<link rel="preload" href="data/rights.json" as="fetch" crossorigin>
 <script>
   // Apply the saved look before first paint, so there is no flash of the wrong theme.
   try {

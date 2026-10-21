@@ -148,15 +148,24 @@ export async function day(path, usKey, live = false) {
   return (d.events || []).map((e) => norm(e, path)).filter(Boolean);
 }
 // Days a football competition has games (skips empty days, e.g. Champions League midweeks only).
+// Kept on the phone for 3 hours, so a launch doesn't wait for this before asking for the games themselves.
+// Yesterday to tomorrow are always asked for, in case a game was moved onto a new day since.
+const mdays = load('mdays', {}); // path -> { t, days }
 async function matchDays(path) {
   if (!path.startsWith('soccer/')) return null;
+  const t = todayKey(), near = [addDays(t, -1), t, addDays(t, 1)];
+  const hit = mdays[path];
+  if (hit && Date.now() - hit.t < 3 * HOUR) return new Set([...hit.days, ...near]);
   try {
-    const d = await get(`${SITE}/${path}/scoreboard`, 6 * HOUR);
+    const d = await get(`${SITE}/${path}/scoreboard`, 3 * HOUR);
     noteLeague(path, d.leagues?.[0]);
     const cal = d.leagues?.[0]?.calendar;
     if (!Array.isArray(cal) || typeof cal[0] !== 'string') return null;
-    return new Set(cal.map((x) => x.slice(0, 10)));
-  } catch { return null; }
+    const days = cal.map((x) => x.slice(0, 10));
+    mdays[path] = { t: Date.now(), days };
+    save('mdays', mdays);
+    return new Set([...days, ...near]);
+  } catch { return hit ? new Set([...hit.days, ...near]) : null; }
 }
 export async function range(path, k0, k1, live = false) {
   const days = await matchDays(path);
