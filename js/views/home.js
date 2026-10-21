@@ -35,15 +35,15 @@ export default function home(params, ctx) {
   if (e.v) save('snap', { t: Date.now(), sig: s, games: all });
   else { const snap = load('snap', null); if (snap?.sig === s) { all = snap.games; stale = snap.t; } }
 
-  // Sport filter: only worth showing when picks span more than one sport.
+  // Sport filter: always there, so it's never a surprise; a sport you don't follow yet says so.
   const followed = new Set([...picks.comps, ...picks.teams, ...picks.games].map((x) => sportOf(x.path)));
-  const f = followed.size > 1 && followed.has(settings.homeSport) ? settings.homeSport : 'all';
+  const f = SPORTS.some(([k]) => k === settings.homeSport) ? settings.homeSport : 'all';
   const keep = (g) => f === 'all' || g.sport === f;
 
   const t = todayKey();
   const sub = DEMO ? 'Sample picks · SGT' : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
   let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>`;
-  if (followed.size > 1) html += `<div class="filterbar"><div class="chips" role="group" aria-label="Sport">${SPORTS.filter(([k]) => k === 'all' || followed.has(k)).map(([k, l]) => `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>`;
+  html += `<div class="filterbar"><div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div></div>`;
 
   const games = all?.filter(keep);
   const days = keyRange(t, addDays(t, 6));
@@ -71,7 +71,9 @@ export default function home(params, ctx) {
     html += `<section id="d-${k}"><div class="sect"><h2 class="cap">${keyLabel(k)}</h2>${k === t && done && done < list.length ? `<span>${done} finished</span>` : ''}</div>${rows}</section>`;
   }
   const later = (e.v?.later || []).filter(keep);
-  if (!games.some((g) => g.state !== 'post') && !later.length) html += `<div class="empty"><h2>Quiet week</h2><p>None of your ${f === 'all' ? 'picks' : SPORTS.find(([k]) => k === f)[1] + ' picks'} play in the next 7 days.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
+  const label = SPORTS.find(([k]) => k === f)[1];
+  if (f !== 'all' && !followed.has(f)) html += `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
+  else if (!games.some((g) => g.state !== 'post') && !later.length) html += `<div class="empty"><h2>Quiet week</h2><p>None of your ${f === 'all' ? 'picks' : `${label} picks`} play in the next 7 days.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
   if (later.length) html += `<div class="sect"><h2 class="cap">Later</h2><span>Next game for teams with none this week</span></div>${later.map((g) => gameRow(g)).join('')}`;
   html += `<p class="foot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p><i data-ready hidden></i>`;
   return html;
