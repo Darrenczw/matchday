@@ -118,7 +118,7 @@ export function checkEvery(r, now) {
 const jobKey = (kind, p) => (kind === 'team' ? `team|${p.path}|${p.id}` : kind === 'comp' ? `comp|${p.path}` : `game|${p.path}|${p.id}`);
 export const jobKeys = (cal = {}, follow = {}) => [...new Set([
   ...(cal.teams || []).map((t) => jobKey('team', t)), ...(cal.comps || []).map((c) => jobKey('comp', c)), ...(cal.games || []).map((g) => jobKey('game', g)),
-  // Followed: a team's or game's discovery is the same as the calendar's; a followed league needs only the next 7 days.
+  // Followed: a team's or game's discovery is the same as the calendar's; a followed league needs only 3 days back to 7 ahead.
   ...(follow.teams || []).map((t) => jobKey('team', t)), ...(follow.games || []).map((g) => jobKey('game', g)),
   ...(follow.comps || []).filter((c) => !(cal.comps || []).some((x) => x.path === c.path)).map((c) => `week|${c.path}`),
 ])];
@@ -148,8 +148,8 @@ async function discover(key, cursor, now, budget, picks) {
     return { rows, calls: 2, done: true };
   }
   // A whole league: walk day by day, a few days per run. Calendar: 7 days ago to the end of the season.
-  // Followed only ("week"): yesterday to 7 days ahead.
-  const [from, to] = kind === 'week' ? [now - DAY, now + 7 * DAY] : [since, now + 300 * DAY];
+  // Followed only ("week"): 3 days ago (My games shows 3 days of results) to 7 days ahead.
+  const [from, to] = kind === 'week' ? [now - 3 * DAY, now + 7 * DAY] : [since, now + 300 * DAY];
   let ymd = cursor || usDate(from), calls = 0;
   const rows = [];
   while (calls < budget) {
