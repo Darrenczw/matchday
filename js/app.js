@@ -161,6 +161,8 @@ addEventListener('hashchange', () => {
   go();
 });
 stack.push(location.hash || '#/');
+// A screen changed its own link without a new step (Follow's sport tabs): adopt it, so Back and scroll memory match.
+addEventListener('md:replaced', () => { const h = location.hash || '#/'; stack[stack.length - 1] = h; prevHash = h; if (route) route.hash = h; });
 
 // ---------- Tab bar, as on iOS: a tab opens its main screen at the top; tapping the tab you're on
 // scrolls it to the top.

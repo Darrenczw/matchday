@@ -80,7 +80,11 @@ function usSport(ctx, key) {
   return html;
 }
 
+// A link can name the tab (#/follow/nfl). It applies when you arrive (each visit gets new params), so it
+// never overrides a tab you tap afterwards.
+let arrived = null;
 export default function followView(params, ctx) {
+  if (params !== arrived) { arrived = params; if (params[0]) state.sport = params[0]; }
   ctx.sport = { soccer: 'soccer', nfl: 'football', nba: 'basketball' }[state.sport];
   const comps = ctx.use('comps', compList, 24 * 3600e3);
   let html = `<header class="top"><h1>Follow</h1><span class="sub">${state.sport === 'soccer' && comps.v ? `${comps.v.length} competitions` : state.sport === 'nfl' ? '32 teams' : state.sport === 'nba' ? '30 teams' : ''}</span></header>
@@ -95,7 +99,8 @@ export default function followView(params, ctx) {
 
 let qTimer = 0;
 followView.actions = {
-  sport(d, el, e, ctx) { state.sport = d.s; ctx.redraw(); },
+  // The link follows the tab, so Back and a reload come back to it. replaceState: no new history step, no reload.
+  sport(d, el, e, ctx) { state.sport = d.s; history.replaceState(null, '', `#/follow/${d.s}`); dispatchEvent(new Event('md:replaced')); ctx.redraw(); },
   region(d, el, e, ctx) { state.open.has(d.r) ? state.open.delete(d.r) : state.open.add(d.r); ctx.redraw(); },
   nations(d, el, e, ctx) { state.allNations = !state.allNations; ctx.redraw(); },
   clear(d, el, e, ctx) { state.q = ''; document.querySelector('[data-input="q"]').value = ''; ctx.redraw(); },
