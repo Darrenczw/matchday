@@ -1,6 +1,6 @@
 // The Calendar layer: what goes on the iPhone, separate from what the app follows (Darren, 21 Oct 2026).
 // Kept on the phone and copied to the calendar helper (Cloudflare Worker) on every change.
-import { load, save, emit, on, settings, sportOf, teamKey, DEMO } from './store.js';
+import { load, save, emit, on, settings, sportOf, teamKey, DEMO, picks } from './store.js';
 
 // Where the helper lives. Local tests use `wrangler dev`; the practice copy (?demo) uses the practice helper.
 const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -40,7 +40,8 @@ async function api(path, opts = {}) {
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Calendar helper ${r.status}`);
   return r.json();
 }
-// Send the calendar picks, TV market order and "Good for you" rules (debounced: several taps, one upload).
+// Send the calendar picks, the Follow picks (the helper tracks them as the app's backup, TECH-DESIGN 14), TV market
+// order and "Good for you" rules (debounced: several taps, one upload).
 let pushTimer = 0;
 export const syncState = { pushing: false, lastPush: load('calpush', 0), error: null };
 export function push() {
@@ -49,13 +50,13 @@ export function push() {
   pushTimer = setTimeout(async () => {
     syncState.pushing = true; emit('calsync');
     try {
-      await api('/api/picks', { method: 'PUT', body: JSON.stringify({ cal, markets: settings.markets, prefs: { free: settings.free, rules: settings.rules } }) });
+      await api('/api/picks', { method: 'PUT', body: JSON.stringify({ cal, follow: { comps: picks.comps, teams: picks.teams, games: picks.games }, markets: settings.markets, prefs: { free: settings.free, rules: settings.rules } }) });
       syncState.lastPush = Date.now(); save('calpush', syncState.lastPush); syncState.error = null;
     } catch (e) { syncState.error = e.message; }
     syncState.pushing = false; emit('calsync');
   }, 600);
 }
-on((why) => { if (why === 'settings') push(); });
+on((why) => { if (why === 'settings' || why === 'picks') push(); }); // 'picks' = a follow, unfollow or undo
 
 // One-time set-up: the helper hands out the edit key (kept here) and the feed link.
 export async function setUp() {
@@ -64,6 +65,8 @@ export async function setUp() {
   save('calcfg', calCfg); emit('cal'); push();
 }
 export const status = () => (ready() ? api('/api/status') : Promise.resolve(null));
+// The app's backup when ESPN isn't answering: followed and calendar games from the helper, in norm() shape.
+export const backupGames = (from, to) => (ready() ? api(`/api/games?from=${from}&to=${to}`) : Promise.resolve(null));
 export async function newLink() {
   const r = await api('/api/rotate', { method: 'POST' });
   calCfg.feedUrl = r.feedUrl; save('calcfg', calCfg); emit('cal');

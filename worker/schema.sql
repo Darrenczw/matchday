@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS owner (
   feed_token TEXT NOT NULL,
   created_at INTEGER NOT NULL
 );
--- Calendar picks only (the Follow layer never leaves the phone), plus TV market order and "Good for you" prefs.
+-- Calendar picks (what goes in the feed), Follow picks (tracked for the app's backup, never in the feed),
+-- TV market order and "Good for you" prefs.
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   json TEXT NOT NULL,
@@ -28,9 +29,12 @@ CREATE TABLE IF NOT EXISTS games (
   home_full TEXT, away_full TEXT,  -- full team names, for matching the second source
   tsdb_id TEXT, second_start INTEGER,
   second_note TEXT,                -- agree | differ | postponed | notime | nomatch
+  home_abbr TEXT, away_abbr TEXT,  -- for the app's backup (/api/games)
+  home_score TEXT, away_score TEXT, -- null before kick-off
+  clock TEXT, period INTEGER, status_name TEXT, detail TEXT,
   checked_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,     -- last change iOS should see
-  source TEXT DEFAULT 'espn'
+  source TEXT DEFAULT 'espn'      -- where the row last came from: espn | nflverse | footballdata | tsdb
 );
 CREATE INDEX IF NOT EXISTS games_start ON games (start_utc);
 -- When each calendar pick next needs its schedule refreshed, and where a league walk has got to.
@@ -43,3 +47,5 @@ CREATE TABLE IF NOT EXISTS fetches (at INTEGER NOT NULL, ua TEXT);
 CREATE INDEX IF NOT EXISTS fetches_at ON fetches (at);
 CREATE TABLE IF NOT EXISTS runs (at INTEGER NOT NULL, ok INTEGER NOT NULL, checked INTEGER, note TEXT);
 CREATE INDEX IF NOT EXISTS runs_at ON runs (at);
+-- Small values: espn_ok_at = last time ESPN answered the helper.
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);

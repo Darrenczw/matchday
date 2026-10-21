@@ -1,7 +1,7 @@
 // Matchday calendar helper: the subscribed calendar feed, a small API for the app, and the 2-minute check.
 import { calendar } from '../../js/ics.js';
 import { reasonsWith } from '../../js/rules.js';
-import { syncRun, inCal } from './sync.js';
+import { syncRun, inCal, tracked } from './sync.js';
 import { tvLines } from './tv.js';
 
 const DAY = 864e5;
@@ -66,6 +66,29 @@ async function status(req, env, o) {
   };
 }
 
+// The app's backup (TECH-DESIGN section 14): followed and calendar games in a window, in the app's own game shape
+// (js/espn.js norm()), without colours or logos. GET /api/games?from=<ms>&to=<ms>, at most 15 days.
+const STATE = { live: 'in', final: 'post' };
+export function gameOut(r) {
+  const side = (h) => ({ id: r[`${h}_id`], abbr: r[`${h}_abbr`] || '', name: r[`${h}_full`] || r[h], short: r[h], score: r[`${h}_score`] ?? null, home: h === 'home' });
+  return {
+    id: r.id, path: r.path, sport: r.sport, date: new Date(r.start_utc).toISOString(), timeValid: !!r.time_valid,
+    state: STATE[r.status] || 'pre', completed: r.status === 'final', postponed: r.status === 'postponed' || r.status === 'canceled',
+    statusName: r.status_name || '', detail: r.detail || '', clock: r.clock || '', period: r.period || 0, src: r.source || 'espn',
+    venue: (r.venue || '').split(', ')[0], country: r.country || '', postseason: !!r.postseason, note: r.note || '',
+    usTV: JSON.parse(r.us_tv || '[]'), home: side('home'), away: side('away'),
+  };
+}
+async function games(url, env) {
+  const now = Date.now();
+  const from = Number(url.searchParams.get('from')) || now - DAY, to = Math.min(Number(url.searchParams.get('to')) || now + 7 * DAY, from + 15 * DAY);
+  const picks = await readPicks(env);
+  const rows = ((await env.DB.prepare('SELECT * FROM games WHERE start_utc BETWEEN ?1 AND ?2 ORDER BY start_utc').bind(from, to).all()).results || [])
+    .filter((r) => tracked(r, picks));
+  const ok = await env.DB.prepare("SELECT value FROM meta WHERE key = 'espn_ok_at'").first();
+  return { at: now, espnOkAt: ok ? Number(ok.value) : null, games: rows.map(gameOut) };
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url), h = cors(req, env);
@@ -86,12 +109,16 @@ export default {
     if (!o) return json({ error: 'Not allowed' }, 401, h);
     if (url.pathname === '/api/picks' && req.method === 'PUT') {
       const body = await req.json();
-      const keep = { cal: body.cal || { comps: [], teams: [], games: [] }, markets: body.markets || ['uk', 'us', 'sg'], prefs: body.prefs || null };
+      const empty = { comps: [], teams: [], games: [] };
+      // follow: what the app follows, tracked only for the app's backup (TECH-DESIGN 14). An older app sends none: keep the last.
+      const old = body.follow ? null : await readPicks(env);
+      const keep = { cal: body.cal || empty, follow: body.follow || old?.follow || empty, markets: body.markets || ['uk', 'us', 'sg'], prefs: body.prefs || null };
       await env.DB.prepare('INSERT INTO picks (id, json, updated_at) VALUES (1, ?1, ?2) ON CONFLICT(id) DO UPDATE SET json = ?1, updated_at = ?2').bind(JSON.stringify(keep), Date.now()).run();
       ctx.waitUntil(syncRun(env, { onlyDiscover: true }).catch(() => {})); // new picks reach the feed within a minute
       return json({ ok: true }, 200, h);
     }
     if (url.pathname === '/api/status' && req.method === 'GET') return json(await status(req, env, o), 200, h);
+    if (url.pathname === '/api/games' && req.method === 'GET') return json(await games(url, env), 200, h);
     if (url.pathname === '/api/rotate' && req.method === 'POST') {
       const token = randomToken();
       await env.DB.prepare('UPDATE owner SET feed_token = ? WHERE id = 1').bind(token).run();

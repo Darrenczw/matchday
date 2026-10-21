@@ -1,6 +1,6 @@
 // "Where to watch" lines for the calendar notes. Same rules as the app's tv.js: Exact = listed for this
 // game (ESPN, US), Likely = holds the rights this season (sourced rights table), never guessed.
-import rights from '../../data/rights.json';
+import rights from '../../data/rights.json' with { type: 'json' };
 import { MARKETS } from '../../js/names.js';
 
 const london = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
