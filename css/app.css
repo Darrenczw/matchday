@@ -103,7 +103,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .row .meta .tvt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .row .meta em { font-style: normal; font-weight: 700; color: var(--go); white-space: nowrap; }
 .row .meta .moved { color: var(--amber); font-weight: 700; white-space: nowrap; }
-.row .meta .pp { color: var(--warn); font-weight: 700; }
+.row .meta .pp { color: var(--amber); font-weight: 700; }
 .row.done .p { opacity: .92; }
 .win { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
 
