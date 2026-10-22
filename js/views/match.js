@@ -477,11 +477,13 @@ export default function match([sport, slug, id], ctx) {
   if (g.state === 'pre') {
     html += statusLines(g, ctx) + tvAll(g) + theGame(g, d, k) + formCard(g, d, k, ctx) + lineups(g, d, k);
   } else if (g.state === 'in') {
-    html += clipBox(g, d, k) + tvAll(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
+    html += tvAll(g) + (g.sport === 'soccer' ? moments(g, d, k, true) + stats(g, d, k) + lineups(g, d, k) : us(true));
   } else {
-    html += clipBox(g, d, k) + (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
+    html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
+  // Clips go last and fill the screen: read the stats, then scroll down into watching (Darren, 22 Oct 2026).
+  if (g.state !== 'pre') html += clipBox(g, d, `${k.left.team.abbr || k.left.team.short} ${k.left.team.score ?? ''}–${k.right.team.score ?? ''} ${k.right.team.abbr || k.right.team.short}`);
   // The games either side of this one in the list, so a swipe opens them at once.
   const p = position(location.hash);
   if (p && !navigator.connection?.saveData) setTimeout(() => { prefetch(p.next); prefetch(p.prev); }, 800);

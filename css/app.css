@@ -514,22 +514,35 @@ button.tvrow.tvmore { width: 100%; color: var(--go); font-weight: 700; text-alig
 .box td:first-child .face i { font-size: 11px; }
 .box td:first-child { min-width: 160px; }
 
-/* ---------- Clips, Stories-style (R7, NBA first, 22 Oct 2026). The clip stands between the two kits. */
-.clips { margin: 0 var(--gutter) 10px; padding: 10px 0 0; border-radius: var(--radius); overflow: hidden; background: linear-gradient(90deg, var(--l) 0 50%, var(--r) 50% 100%); }
-.clips .cv { position: relative; width: min(100% - 40px, calc(min(62vh, 560px) * 9 / 16)); aspect-ratio: 9 / 16; margin: 0 auto; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 8px 24px -8px rgba(0, 0, 0, .6); }
-.clips video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* ---------- Clips, like Instagram Stories (R7, NBA first, 22 Oct 2026). Last on the match page, one screen tall;
+   once it fills the screen the tab bar and pager slide away ("reels" mode on <html>). */
+html:has(.clips) { scroll-snap-type: y proximity; }
+main:has(.clips) { padding-bottom: 0; }
+.clips { position: relative; height: 100vh; height: 100dvh; margin-top: 18px; background: #000; scroll-snap-align: start; }
+.clips .cv { position: absolute; inset: 0; overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.clips video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
 .clips video.wide { object-fit: contain; }
-.clips .cbar { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; gap: 3px; z-index: 2; pointer-events: none; }
+.clips video.off { visibility: hidden; }
+.clips .ctop { position: absolute; left: 0; right: 0; top: 0; z-index: 2; padding: calc(var(--safe-top) + 8px) 10px 28px; background: linear-gradient(rgba(0, 0, 0, .5), transparent); pointer-events: none; }
+.clips .cbar { display: flex; gap: 3px; }
 .clips .cbar i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .35); overflow: hidden; }
 .clips .cbar i b { display: block; height: 100%; width: 0; background: #fff; }
 .clips .cbar i.done b { width: 100% !important; }
-.clips .cprev, .clips .cnext { position: absolute; top: 0; bottom: 0; z-index: 1; background: transparent; }
-.clips .cprev { left: 0; width: 35%; }
-.clips .cnext { right: 0; width: 65%; }
-.clips .cplay { position: absolute; left: 50%; top: 50%; z-index: 3; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; display: grid; place-items: center; }
-.clips .cplay svg { width: 30px; height: 30px; margin-left: 4px; }
+.clips .cgame { display: flex; align-items: baseline; gap: 8px; margin: 10px 2px 0; color: #fff; }
+.clips .cgame b { font: 800 19px/1 var(--cond); letter-spacing: .02em; }
+.clips .cgame span { font: 600 12px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.clips .ccap { position: absolute; left: 0; right: 64px; bottom: 0; z-index: 2; margin: 0; padding: 48px 14px calc(var(--safe-bottom) + 18px); background: linear-gradient(transparent, rgba(0, 0, 0, .6)); color: #fff; font: 600 15px/1.3 var(--text); pointer-events: none; }
+.clips .ccap span { display: block; margin-top: 3px; font: 500 12px/1.3 var(--text); opacity: .8; }
+.clips .ccap { right: 0; padding-right: 70px; }
+.clips .cplay { position: absolute; left: 50%; top: 50%; z-index: 3; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%; background: rgba(0, 0, 0, .5); color: #fff; display: grid; place-items: center; }
+.clips .cplay svg { width: 32px; height: 32px; fill: currentColor; }
 .clips .cplay[hidden] { display: none; }
-.clips .csnd { position: absolute; right: 6px; bottom: 6px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(0, 0, 0, .45); }
-.clips .csnd svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-.clips .ccap { margin: 0; padding: 10px 14px 12px; background: var(--row); font: 600 14px/1.3 var(--text); color: var(--ink); margin-top: 10px; }
-.clips .ccap span { display: block; margin-top: 2px; font: 500 12px/1.3 var(--text); color: var(--mute); }
+.clips .csnd { position: absolute; right: 10px; bottom: calc(var(--safe-bottom) + 14px); z-index: 3; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(0, 0, 0, .4); }
+.clips .csnd svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.clips.none .cv { display: grid; place-items: center; background: #111; }
+.clips .cnone { display: grid; gap: 8px; justify-items: center; color: #fff; font: 500 15px/1.3 var(--text); text-align: center; }
+.clips .cnone b { font: 800 26px/1 var(--cond); }
+.clips .cnone span { font-size: 13px; opacity: .7; }
+.tabs, .pagerbar { transition: transform .25s ease, opacity .25s ease; }
+html.reels .tabs { transform: translateY(110%); }
+html.reels .pagerbar { opacity: 0; pointer-events: none; }
