@@ -3,7 +3,7 @@
 // Banter (top posts from r/soccer, r/nfl and r/nba). All read-only, every post credits its subreddit and author and
 // links back to Reddit. Prototype: a snapshot of real Reddit content (feed.js).
 import { esc, icon, sg, ago } from '../util.js';
-import { kitsFor, crest, inkOn, readable, hex } from '../identity.js';
+import { kitsFor, crest, inkOn, readable, hex, kitEdge } from '../identity.js';
 import { skel, errorCard, scoreText } from '../ui.js';
 import { feedGames, mineFirst, threadsOf, teamSubs, banter, redditId, snapAt, snapshot } from '../feed.js';
 import { liveBar } from '../livebar.js';
@@ -17,7 +17,7 @@ export const kindName = (t, g) => (g && g.sport !== 'soccer' ? KIND[t.kind].repl
 // One game's thread: its shirt panels, the thread's title, then the first top comments.
 export function threadCard(g, t, others, n = 2, kit = true) {
   const k = kitsFor(g), done = g.state === 'post';
-  const p = (x) => `<div class="p${x === k.right ? ' r' : ''}" style="background:${x.bg};color:${x.ink}">${x === k.right ? `<b>${esc(x.team.abbr)}</b>${crest(x.team, 22, true)}` : `${crest(x.team, 22, true)}<b>${esc(x.team.abbr)}</b>`}</div>`;
+  const p = (x) => `<div class="p${x === k.right ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${x === k.right ? `<b>${esc(x.team.abbr)}</b>${crest(x.team, 22, true)}` : `${crest(x.team, 22, true)}<b>${esc(x.team.abbr)}</b>`}</div>`;
   const mid = g.state === 'pre' ? `<b>${sg(g.date).hm}</b><span>${sg(g.date).wd}</span>` : `<b>${scoreText(k, done)}</b><span>${g.state === 'in' ? '<i class="dot"></i>Live' : g.sport === 'soccer' ? 'FT' : 'Final'}</span>`;
   const cm = (t.comments || []).slice(0, n).map((c) => `<p class="cm"><span>${esc(c.by)}</span><span class="ct">${esc(c.text)}</span></p>`).join('');
   const more = others.map((o) => `<a class="also" href="#/fans/t/${esc(redditId(o.url))}">${esc(kindName(o, g))}${icon('chev')}</a>`).join('');

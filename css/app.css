@@ -605,7 +605,7 @@ html[data-turn="tab"]::view-transition-new(root) { animation: turn-fade-in .2s e
 .rings { display: flex; gap: 12px; padding: 2px var(--gutter) 16px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-inline: var(--gutter); }
 .rings::-webkit-scrollbar { display: none; }
 .ring { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 76px; flex: none; scroll-snap-align: start; }
-.ring .rg { display: grid; width: 74px; height: 74px; padding: 6px; border-radius: 50%; background: conic-gradient(var(--b) 0 50%, var(--a) 50% 100%); transition: transform .15s ease; }
+.ring .rg { display: grid; width: 74px; height: 74px; padding: 6px; box-shadow: inset 0 0 0 1px rgba(18, 19, 24, .12); border-radius: 50%; background: conic-gradient(var(--b) 0 50%, var(--a) 50% 100%); transition: transform .15s ease; }
 .ring:active .rg { transform: scale(.95); }
 .ring .ri { position: relative; display: grid; place-items: center; border-radius: 50%; background: var(--row); box-shadow: 0 0 0 2.5px var(--ground); }
 .ring .ri b { display: grid; justify-items: center; gap: 1px; font: 800 17px/1 var(--cond); letter-spacing: .02em; }
@@ -627,7 +627,7 @@ button.stk:active { transform: scale(.96); }
 .stk .sm { margin-top: 7px; font: 800 27px/1 var(--cond); letter-spacing: -.01em; }
 .stk small { font: 700 11px/1.2 var(--text); opacity: .85; }
 .stk .sw { margin-top: 3px; max-width: 100%; font: 600 11.5px/1.2 var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.stk.seen .sf, .stk.seen .face { opacity: .75; }
+.stk.seen .face img, .stk.seen .sf img { opacity: .75; }
 .stk .st { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #121318; }
 .stk .st svg { width: 13px; height: 13px; stroke-width: 3; }
 .stk.wait { background: var(--soft); color: var(--mute); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 30%, var(--line)); border: 0; outline: 2px dashed color-mix(in srgb, var(--c) 55%, var(--mute)); outline-offset: -2px; }
