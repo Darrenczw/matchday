@@ -3,7 +3,7 @@ import { nightKey, nightToday, addDays, keyLabel, icon } from '../util.js';
 import { settings, picks } from '../store.js';
 import { range, isMine } from '../espn.js';
 import { reasons, freeHour, useTables } from '../suggest.js';
-import { followBtn, gameRow, skel, errorCard } from '../ui.js';
+import { followBtn, gameRow, skel, errorCard, backBtn } from '../ui.js';
 import { prefetchVisible } from '../prefetch.js';
 
 const state = { f: 'all', open: new Set() };
@@ -34,7 +34,7 @@ export default function week(params, ctx) {
     if (res.length && res.every((r) => r.status === 'rejected')) throw res[0].reason;
     return res.flatMap((r) => r.value || []);
   }, 10 * 60e3);
-  let html = `<header class="top"><h1>This week</h1><span class="sub">Good for you</span></header>
+  let html = `<nav class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}</nav><header class="top"><h1>This week</h1><span class="sub">Good for you</span></header>
 <p class="lede">Games in your free hours, big games, games that matter to your teams, and games played overseas, on a streamer or in the playoffs. Nothing is added until you tap Follow.</p>
 <div class="chips" role="group" aria-label="Sport">${[['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']].map(([k, l]) => `<button class="chip txt" data-act="f" data-f="${k}" aria-pressed="${state.f === k}">${l}</button>`).join('')}</div>`;
   if (!list.length) return html + `<div class="banner info">Suggestions are off for every sport. Turn them on in <a href="#/settings" style="text-decoration:underline">Settings</a>.</div>`;

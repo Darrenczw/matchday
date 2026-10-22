@@ -4,6 +4,7 @@ import { picks, sportOf } from '../store.js';
 import { compList, leagueTeams, search, compInfo } from '../espn.js';
 import { crest, compImg, compLogo, REGION_ORDER } from '../identity.js';
 import { followBtn, teamFollowBtn, href, skel, errorCard } from '../ui.js';
+import { liveBar } from '../livebar.js';
 
 const state = { sport: 'soccer', q: '', open: new Set(), allNations: false };
 const POPULAR = ['eng.1', 'uefa.champions', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.europa', 'sgp.1'];
@@ -87,7 +88,7 @@ export default function followView(params, ctx) {
   if (params !== arrived) { arrived = params; if (params[0]) state.sport = params[0]; }
   ctx.sport = { soccer: 'soccer', nfl: 'football', nba: 'basketball' }[state.sport];
   const comps = ctx.use('comps', compList, 24 * 3600e3);
-  let html = `<header class="top"><h1>Follow</h1><span class="sub">${state.sport === 'soccer' && comps.v ? `${comps.v.length} competitions` : state.sport === 'nfl' ? '32 teams' : state.sport === 'nba' ? '30 teams' : ''}</span></header>
+  let html = liveBar(ctx) + `<header class="top"><h1>Follow</h1><span class="sub">${state.sport === 'soccer' && comps.v ? `${comps.v.length} competitions` : state.sport === 'nfl' ? '32 teams' : state.sport === 'nba' ? '30 teams' : ''}</span></header>
 <label class="search">${icon('search')}<span class="sr">Search</span><input type="search" placeholder="Search clubs, leagues, countries" value="${esc(state.q)}" data-input="q" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">${state.q ? `<button type="button" data-act="clear" aria-label="Clear search">${icon('x')}</button>` : ''}</label>`;
   if (state.q.trim().length >= 2) return html + searchResults(ctx, comps.v);
   html += `<div class="seg" role="group" aria-label="Sport">${[['soccer', 'Football'], ['nfl', 'NFL'], ['nba', 'NBA']].map(([k, l]) => `<button data-act="sport" data-s="${k}" aria-pressed="${state.sport === k}">${l}</button>`).join('')}</div>`;

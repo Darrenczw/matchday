@@ -36,6 +36,9 @@
 <link rel="modulepreload" href="js/swipe.js">
 <link rel="modulepreload" href="js/clips.js">
 <link rel="modulepreload" href="js/prefetch.js">
+<link rel="modulepreload" href="js/feed.js">
+<link rel="modulepreload" href="js/reel.js">
+<link rel="modulepreload" href="js/livebar.js">
 <link rel="modulepreload" href="js/views/home.js">
 <link rel="modulepreload" href="js/views/follow.js">
 <link rel="modulepreload" href="js/views/comp.js">
@@ -44,6 +47,9 @@
 <link rel="modulepreload" href="js/views/week.js">
 <link rel="modulepreload" href="js/views/settings.js">
 <link rel="modulepreload" href="js/views/player.js">
+<link rel="modulepreload" href="js/views/clipstab.js">
+<link rel="modulepreload" href="js/views/fans.js">
+<link rel="modulepreload" href="js/views/thread.js">
 <link rel="preload" href="data/rights.json" as="fetch" crossorigin>
 <script>
   // Apply the saved look before first paint, so there is no flash of the wrong theme.
@@ -60,10 +66,10 @@
 <div id="bar"></div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <nav class="tabs" aria-label="Main">
-  <a href="#/" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>My games</span></a>
+  <a href="#/" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Games</span></a>
+  <a href="#/clips" data-tab="clips"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M10.5 9.2v5.6l4.4-2.8z"/></svg><span>Clips</span></a>
+  <a href="#/fans" data-tab="fans"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h11a1.5 1.5 0 011.5 1.5v6a1.5 1.5 0 01-1.5 1.5H9l-3.5 3v-3H4A1.5 1.5 0 012.5 13V7A1.5 1.5 0 014 5.5z"/><path d="M19.5 9.5h.5A1.5 1.5 0 0121.5 11v5a1.5 1.5 0 01-1.5 1.5h-1v2.5l-3-2.5h-4"/></svg><span>Fans</span></a>
   <a href="#/follow" data-tab="follow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z"/></svg><span>Follow</span></a>
-  <a href="#/week" data-tab="week"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>This week</span></a>
-  <a href="#/settings" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.2h3.4l.5 2.4c.6.2 1.2.5 1.7.9l2.3-.8 1.7 2.9-1.8 1.6a6.6 6.6 0 010 2l1.8 1.6-1.7 2.9-2.3-.8c-.5.4-1.1.7-1.7.9l-.5 2.4h-3.4l-.5-2.4c-.6-.2-1.2-.5-1.7-.9l-2.3.8-1.7-2.9 1.8-1.6a6.6 6.6 0 010-2L4.1 8.6l1.7-2.9 2.3.8c.5-.4 1.1-.7 1.7-.9z"/><circle cx="12" cy="12" r="3"/></svg><span>Settings</span></a>
 </nav>
 <script type="module" src="js/app.js"></script>
 </body>

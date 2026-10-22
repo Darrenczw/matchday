@@ -1,0 +1,2090 @@
+{
+ "at": "2026-10-22T07:40:26Z",
+ "note": "Real data snapshot for the prototype",
+ "games": [
+  {
+   "id": "401879258",
+   "path": "soccer/eng.1",
+   "date": "2026-10-17T16:30Z",
+   "home": "Newcastle United",
+   "away": "Aston Villa",
+   "score": "0-1"
+  },
+  {
+   "id": "401879263",
+   "path": "soccer/eng.1",
+   "date": "2026-10-18T13:00Z",
+   "home": "AFC Bournemouth",
+   "away": "Sunderland",
+   "score": "2-0"
+  },
+  {
+   "id": "401879261",
+   "path": "soccer/eng.1",
+   "date": "2026-10-18T13:00Z",
+   "home": "Brighton & Hove Albion",
+   "away": "Crystal Palace",
+   "score": "5-0"
+  },
+  {
+   "id": "401879260",
+   "path": "soccer/eng.1",
+   "date": "2026-10-18T13:00Z",
+   "home": "Leeds United",
+   "away": "Manchester United",
+   "score": "1-1"
+  },
+  {
+   "id": "401878769",
+   "path": "soccer/eng.1",
+   "date": "2026-10-18T15:30Z",
+   "home": "Nottingham Forest",
+   "away": "Arsenal",
+   "score": "0-1"
+  },
+  {
+   "id": "401872999",
+   "path": "football/nfl",
+   "date": "2026-10-18T17:00Z",
+   "home": "Atlanta Falcons",
+   "away": "Chicago Bears",
+   "score": "23-31"
+  },
+  {
+   "id": "401879257",
+   "path": "soccer/eng.1",
+   "date": "2026-10-19T19:00Z",
+   "home": "Tottenham Hotspur",
+   "away": "Coventry City",
+   "score": "3-1"
+  },
+  {
+   "id": "401909090",
+   "path": "basketball/nba",
+   "date": "2026-10-21T01:50Z",
+   "home": "San Antonio Spurs",
+   "away": "Oklahoma City Thunder",
+   "score": "104-116"
+  },
+  {
+   "id": "401915312",
+   "path": "soccer/uefa.champions",
+   "date": "2026-10-21T19:00Z",
+   "home": "Bayern Munich",
+   "away": "Arsenal",
+   "score": "2-2"
+  }
+ ],
+ "clips": [
+  {
+   "game": "401872999",
+   "kind": "play",
+   "min": "Q1 11:24",
+   "team": "3",
+   "who": "",
+   "title": "[Highlight] The Bears use the hook-and-ladder to convert a 3rd & 11!",
+   "src": "https://v.redd.it/1c2t8cxhd9wh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/Zloggt",
+   "url": "https://www.reddit.com/r/nfl/comments/1x98k0g/highlight_the_bears_use_the_hookandladder_to/",
+   "at": "2026-10-18T17:12:03Z"
+  },
+  {
+   "game": "401872999",
+   "kind": "goal",
+   "min": "Q1 1:07",
+   "team": "3",
+   "who": "D'Andre Swift",
+   "title": "[Highlight] D'Andre Swift takes the handoff and runs through for a second Bears TD",
+   "src": "https://v.redd.it/a5fze50sg9wh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/MisterBadIdea9",
+   "url": "https://www.reddit.com/r/nfl/comments/1x99120/highlight_dandre_swift_takes_the_handoff_and_runs/",
+   "at": "2026-10-18T17:30:54Z"
+  },
+  {
+   "game": "401872999",
+   "kind": "play",
+   "min": "Q2 1:52",
+   "team": "3",
+   "who": "Josh Blackwell",
+   "title": "[Highlight] Zachariah Branch muffs the punt, Josh Blackwell recovers for the Bears",
+   "src": "https://v.redd.it/ymps9t3vp9wh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/ZappaOMatic",
+   "url": "https://www.reddit.com/r/nfl/comments/1x9ab9j/highlight_zachariah_branch_muffs_the_punt_josh/",
+   "at": "2026-10-18T18:21:19Z"
+  },
+  {
+   "game": "401872999",
+   "kind": "goal",
+   "min": "Q3 1:48",
+   "team": "3",
+   "who": "Roschon Johnson",
+   "title": "[Highlight] Roschon Johnson powers his way for the 4th Bears TD",
+   "src": "https://v.redd.it/k2n0bwcf1awh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/MisterBadIdea9",
+   "url": "https://www.reddit.com/r/nfl/comments/1x9byda/highlight_roschon_johnson_powers_his_way_for_the/",
+   "at": "2026-10-18T19:26:26Z"
+  },
+  {
+   "game": "401872999",
+   "kind": "play",
+   "min": "Q3 1:48",
+   "team": "3",
+   "who": "",
+   "title": "[Highlight] Bears special teams gets their second fumble recovery of the day",
+   "src": "https://v.redd.it/1pmpldes1awh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/MisterBadIdea9",
+   "url": "https://www.reddit.com/r/nfl/comments/1x9c07o/highlight_bears_special_teams_gets_their_second/",
+   "at": "2026-10-18T19:28:21Z"
+  },
+  {
+   "game": "401872999",
+   "kind": "play",
+   "min": "Q4 3:01",
+   "team": "3",
+   "who": "",
+   "title": "[Highlight] The Bears swarm Penix for a strip sack and recover the ball",
+   "src": "https://v.redd.it/wecwprhy8awh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/nfl",
+   "by": "u/Large_banana_hammock",
+   "url": "https://www.reddit.com/r/nfl/comments/1x9d0nm/highlight_the_bears_swarm_penix_for_a_strip_sack/",
+   "at": "2026-10-18T20:08:40Z"
+  },
+  {
+   "game": "401878769",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Nottingham Forest v Arsenal",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_84BCC84A686B359660EEB19926E671F174E796BF/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/18/00309d0a-515f-458c-bf96-8c28614beac8/NFOARS-3m-highlights-pl-thumbnail.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4742460/short-highlights-nottingham-forest-v-arsenal",
+   "at": "2026-10-18T17:39:00Z"
+  },
+  {
+   "game": "401878769",
+   "kind": "play",
+   "min": "90'+2'",
+   "team": "393",
+   "who": "Murillo",
+   "title": "Murillo dribble and near miss vs Arsenal 90+1'min",
+   "src": "https://v.redd.it/s5ged7e22awh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/soccer",
+   "by": "u/HeatKnight",
+   "url": "https://www.reddit.com/r/soccer/comments/1x9c1f6/murillo_dribble_and_near_miss_vs_arsenal_901min/",
+   "at": "2026-10-18T19:29:43Z"
+  },
+  {
+   "game": "401879257",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Tottenham Hotspur v Coventry City",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_4804F61E3BF09420C81D3AF194D98B600A534689/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/19/6bdcba43-392c-447d-a985-dfc88d68220b/TOT-COV-PL-3min-thumb.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4743623/short-highlights-tottenham-hotspur-v-coventry-city",
+   "at": "2026-10-19T21:13:00Z"
+  },
+  {
+   "game": "401879258",
+   "kind": "play",
+   "min": "28'",
+   "team": "362",
+   "who": "Alysson",
+   "title": "Alysson (Aston Villa) yellow card for diving vs Newcastle",
+   "src": "https://v.redd.it/3q1ywqdr62wh1/HLSPlaylist.m3u8",
+   "poster": "",
+   "via": "r/soccer",
+   "by": "u/Woodstovia",
+   "url": "https://www.reddit.com/r/soccer/comments/1x8fcor/alysson_aston_villa_yellow_card_for_diving_vs/",
+   "at": "2026-10-17T17:01:50Z"
+  },
+  {
+   "game": "401879258",
+   "kind": "goal",
+   "min": "36'",
+   "team": "362",
+   "who": "J. Manzambi",
+   "title": "Newcastle 0 - [1] Aston Villa - J. Manzambi 36'",
+   "src": "https://c-cdn.streamin.top/uploads/ad9fca1d.mp4",
+   "poster": "https://b-cdn.streamin.top/images/ad9fca1d.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x8fhkk/newcastle_0_1_aston_villa_j_manzambi_36/",
+   "at": "2026-10-17T17:07:16Z"
+  },
+  {
+   "game": "401879258",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Newcastle United v Aston Villa",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_2C6977E7EE6163C7F804336B5C49747657893377/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/17/bd077822-64b2-4ccd-9a70-041f05d447f8/NEWAVL-3m-PL-thumbnail.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4739993/short-highlights-newcastle-united-v-aston-villa",
+   "at": "2026-10-17T18:43:00Z"
+  },
+  {
+   "game": "401879260",
+   "kind": "goal",
+   "min": "35'",
+   "team": "360",
+   "who": "B. Mbeumo",
+   "title": "Leeds 0 - [1] Manchester Utd - B. Mbeumo 35'",
+   "src": "https://c-cdn.streamin.top/uploads/3f4934b7.mp4",
+   "poster": "https://b-cdn.streamin.top/images/3f4934b7.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x93eg6/leeds_0_1_manchester_utd_b_mbeumo_35/",
+   "at": "2026-10-18T13:35:51Z"
+  },
+  {
+   "game": "401879260",
+   "kind": "goal",
+   "min": "51'",
+   "team": "357",
+   "who": "D. Calvert-Lewin",
+   "title": "Leeds [1] - 1 Manchester Utd - D. Calvert-Lewin 51'",
+   "src": "https://c-cdn.streamin.top/uploads/69fc39db.mp4",
+   "poster": "https://b-cdn.streamin.top/images/69fc39db.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x9465c/leeds_1_1_manchester_utd_d_calvertlewin_51/",
+   "at": "2026-10-18T14:10:25Z"
+  },
+  {
+   "game": "401879260",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Leeds v Manchester Utd",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_457C6A5BF24926E13786714266E6603F48E793BE/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/18/40e6d3e7-c9fd-439f-907a-42a59962ed46/LEEMNU-3m-highlights-pl-thumbnail.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4742197/short-highlights-leeds-v-manchester-utd",
+   "at": "2026-10-18T16:25:00Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "goal",
+   "min": "4'",
+   "team": "331",
+   "who": "Jaydee Canvot",
+   "title": "Brighton [1] - 0 Crystal Palace - Jaydee Canvot 4'",
+   "src": "https://c-cdn.streamin.top/uploads/decf3fca.mp4",
+   "poster": "https://b-cdn.streamin.top/images/decf3fca.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92sx0/brighton_1_0_crystal_palace_jaydee_canvot_4/",
+   "at": "2026-10-18T13:07:26Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "goal",
+   "min": "7'",
+   "team": "331",
+   "who": "Diego Gomez",
+   "title": "Brighton [2] - 0 Crystal Palace - Diego Gomez 7'",
+   "src": "https://c-cdn.streamin.top/uploads/4fcadd69.mp4",
+   "poster": "https://b-cdn.streamin.top/images/4fcadd69.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92tl0/brighton_2_0_crystal_palace_diego_gomez_7/",
+   "at": "2026-10-18T13:08:18Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "goal",
+   "min": "10'",
+   "team": "331",
+   "who": "Yasin Ayari",
+   "title": "Brighton [3] - 0 Crystal Palace - Yasin Ayari 10'",
+   "src": "https://c-cdn.streamin.top/uploads/9590d771.mp4",
+   "poster": "https://b-cdn.streamin.top/images/9590d771.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92w9n/brighton_3_0_crystal_palace_yasin_ayari_10/",
+   "at": "2026-10-18T13:11:56Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "goal",
+   "min": "49'",
+   "team": "331",
+   "who": "Charalampos Kostoulas",
+   "title": "Brighton [4] - 0 Crystal Palace - Charalampos Kostoulas 49'",
+   "src": "https://c-cdn.streamin.top/uploads/74d41603.mp4",
+   "poster": "https://b-cdn.streamin.top/images/74d41603.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x945h2/brighton_4_0_crystal_palace_charalampos_kostoulas/",
+   "at": "2026-10-18T14:09:36Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "goal",
+   "min": "84'",
+   "team": "331",
+   "who": "Jack Hinshelwood",
+   "title": "Brighton [5] - 0 Crystal Palace - Jack Hinshelwood 84'",
+   "src": "https://c-cdn.streamin.top/uploads/aca1944b.mp4",
+   "poster": "https://b-cdn.streamin.top/images/aca1944b.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x94x0r/brighton_5_0_crystal_palace_jack_hinshelwood_84/",
+   "at": "2026-10-18T14:43:22Z"
+  },
+  {
+   "game": "401879261",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Brighton v Crystal Palace",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_BE7A2E8654087C91C1CE8EB3E4758DDE5F42126B/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/18/4a11d83f-0f9e-475b-b337-defe6143c715/BRICRY-3m-highlights-pl-thumbnail.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4741902/short-highlights-brighton-v-crystal-palace",
+   "at": "2026-10-18T15:18:00Z"
+  },
+  {
+   "game": "401879263",
+   "kind": "goal",
+   "min": "6'",
+   "team": "349",
+   "who": "Marcus Tavernier",
+   "title": "Bournemouth [1] - 0 Sunderland - Marcus Tavernier 6'",
+   "src": "https://c-cdn.streamin.top/uploads/d2acbbcf.mp4",
+   "poster": "https://b-cdn.streamin.top/images/d2acbbcf.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92sgk/bournemouth_1_0_sunderland_marcus_tavernier_6/",
+   "at": "2026-10-18T13:06:50Z"
+  },
+  {
+   "game": "401879263",
+   "kind": "goal",
+   "min": "48'",
+   "team": "349",
+   "who": "Evanilson",
+   "title": "Bournemouth [2] - 0 Sunderland - Evanilson 50'",
+   "src": "https://c-cdn.streamin.top/uploads/bb11019e.mp4",
+   "poster": "https://b-cdn.streamin.top/images/bb11019e.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1x949xc/bournemouth_2_0_sunderland_evanilson_50/",
+   "at": "2026-10-18T14:15:02Z"
+  },
+  {
+   "game": "401879263",
+   "kind": "full",
+   "min": "",
+   "team": "",
+   "who": "",
+   "title": "Short Highlights: Bournemouth v Sunderland",
+   "src": "https://uksouth-2.av.mk.io/epl-vod-a/hls-itc/premierleague.com_35AE7F8DA4F6B0E2E6427249C0EBE46761E47AA0/index.m3u8",
+   "poster": "https://resources.premierleague.pulselive.com/photo-resources/2026/10/18/00bdcf6e-0087-477e-bf65-ec712849c97d/BOUSUN-3m-highlights-pl-thumbnail.png?width=1280",
+   "via": "Premier League",
+   "by": "",
+   "url": "https://www.premierleague.com/en/video/4741892/short-highlights-bournemouth-v-sunderland",
+   "at": "2026-10-18T15:16:00Z"
+  },
+  {
+   "game": "401915312",
+   "kind": "goal",
+   "min": "25'",
+   "team": "359",
+   "who": "Eberechi Eze",
+   "title": "FC Bayern München 0 - [1] Arsenal - Eberechi Eze goal 25'",
+   "src": "https://media.clipse.cloud/videos/83ff8648-1792610723.mp4",
+   "poster": "https://media.clipse.cloud/videos/83ff8648-1792610723.jpg",
+   "via": "r/soccer",
+   "by": "u/iShowElliex12",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbws5x/fc_bayern_münchen_0_1_arsenal_eberechi_eze_goal_25/",
+   "at": "2026-10-21T19:25:04Z"
+  },
+  {
+   "game": "401915312",
+   "kind": "goal",
+   "min": "35'",
+   "team": "132",
+   "who": "A. Davies",
+   "title": "Bayern Munich [1] - 1 Arsenal - A. Davies 35'",
+   "src": "https://c-cdn.streamin.top/uploads/bf2515cf.mp4",
+   "poster": "https://b-cdn.streamin.top/images/bf2515cf.jpg",
+   "via": "r/soccer",
+   "by": "u/eliseihado",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbx1yx/bayern_munich_1_1_arsenal_a_davies_35/",
+   "at": "2026-10-21T19:35:04Z"
+  },
+  {
+   "game": "401915312",
+   "kind": "goal",
+   "min": "61'",
+   "team": "132",
+   "who": "Harry Kane",
+   "title": "Bayern Munich [2] - 1 Arsenal - Harry Kane penalty 61'",
+   "src": "https://cdn.hostedhost.top/8dc443dd.mp4",
+   "poster": "https://cdn.hostedhost.top/8dc443dd.jpg",
+   "via": "r/soccer",
+   "by": "u/Lazy_Banana_1636",
+   "url": "https://www.reddit.com/r/soccer/comments/1xby8cj/bayern_munich_2_1_arsenal_harry_kane_penalty_61/",
+   "at": "2026-10-21T20:19:18Z"
+  },
+  {
+   "game": "401915312",
+   "kind": "goal",
+   "min": "82'",
+   "team": "359",
+   "who": "Declan Rice",
+   "title": "FC Bayern München 2 - [2] Arsenal - Declan Rice goal 82'",
+   "src": "https://media.clipse.cloud/videos/2fdf9d97-1792615925.mp4",
+   "poster": "https://media.clipse.cloud/videos/2fdf9d97-1792615264.jpg",
+   "via": "r/soccer",
+   "by": "u/iShowElliex12",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbz5lh/fc_bayern_münchen_2_2_arsenal_declan_rice_goal_82/",
+   "at": "2026-10-21T20:55:17Z"
+  }
+ ],
+ "threads": [
+  {
+   "game": "401879258",
+   "kind": "match",
+   "title": "Match Thread: Newcastle United vs Aston Villa | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x8ekoa/match_thread_newcastle_united_vs_aston_villa/",
+   "at": "2026-10-17T16:30:43Z",
+   "comments": [
+    {
+     "by": "u/NaiveRub4113",
+     "text": "I’ll never forgive that Parma fan telling us Suzuki wasn’t quality. How dare he.",
+     "at": "2026-10-17T17:42:22Z"
+    },
+    {
+     "by": "u/Infernode5",
+     "text": "Most disgusting team we’ve ever played\n Bunch of cunts",
+     "at": "2026-10-17T18:14:37Z"
+    },
+    {
+     "by": "u/throwawayWM3",
+     "text": "Jarred Gillett is terrible by PL standards this should say everything",
+     "at": "2026-10-17T16:57:03Z"
+    },
+    {
+     "by": "u/i_have_groot",
+     "text": "taking someone out like that at full speed is kinda filthy, bro did a flip",
+     "at": "2026-10-17T18:15:23Z"
+    },
+    {
+     "by": "u/EaNasirbestdeals",
+     "text": "As bad as our season has been so far I can take solace that Newcastle is massively fucking shit.",
+     "at": "2026-10-17T18:25:55Z"
+    },
+    {
+     "by": "u/Helpful_Government",
+     "text": "Hate it when refs feel the need to try balance the card numbers.",
+     "at": "2026-10-17T16:56:55Z"
+    },
+    {
+     "by": "u/symptic",
+     "text": "I appreciate the pundits at halftime digging into the refs for not giving Botman the red.",
+     "at": "2026-10-17T17:22:57Z"
+    },
+    {
+     "by": "u/ClaytonWest74",
+     "text": "dirty dirty cunts",
+     "at": "2026-10-17T18:14:36Z"
+    },
+    {
+     "by": "u/Dazred",
+     "text": "Pathetic refereeing",
+     "at": "2026-10-17T16:55:52Z"
+    },
+    {
+     "by": "u/Wunsen",
+     "text": "Everyone please remember what gomes just got booked for because newcastle will do it 20 times with no card",
+     "at": "2026-10-17T16:57:34Z"
+    },
+    {
+     "by": "u/jukv",
+     "text": "Botman should get a red for that",
+     "at": "2026-10-17T16:49:29Z"
+    },
+    {
+     "by": "u/SubparCurmudgeon",
+     "text": "just saw that tackle during HT highlights \n wtf how’s he not sent off",
+     "at": "2026-10-17T17:28:29Z"
+    }
+   ]
+  },
+  {
+   "game": "401879258",
+   "kind": "post",
+   "title": "Post Match Thread: Newcastle United 0-1 Aston Villa | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x8het6/post_match_thread_newcastle_united_01_aston_villa/",
+   "at": "2026-10-17T18:26:06Z",
+   "comments": [
+    {
+     "by": "u/indigolights34",
+     "text": "Unbelievable that Newcastle finished with 11 men on the pitch",
+     "at": "2026-10-17T18:26:26Z"
+    },
+    {
+     "by": "u/BritBeetree",
+     "text": "Knowing how we are against 10 men it was probably for the best.",
+     "at": "2026-10-17T18:31:41Z"
+    },
+    {
+     "by": "u/IsItHairyEnough",
+     "text": "No more FFP brothers in arms stuff, Newcastle are dirty filth and I hope they go down.",
+     "at": "2026-10-17T18:28:44Z"
+    },
+    {
+     "by": "u/ArizonanVillan",
+     "text": "Entire game plan to injure players and look like a steaming pile of Sunday league garbage",
+     "at": "2026-10-17T18:29:40Z"
+    },
+    {
+     "by": "u/YadMot",
+     "text": "Suzuki is class",
+     "at": "2026-10-17T18:26:35Z"
+    },
+    {
+     "by": "u/gibbsy34",
+     "text": "Every so often he just fizzes the ball along the ground down the centre of the pitch and I’m like wtf are you doing?! Then it perfectly finds a Villa player every time and I just say oh… fair play great pass",
+     "at": "2026-10-17T18:31:38Z"
+    },
+    {
+     "by": "u/bambinoquinn",
+     "text": "Lindeloff has been such a good signing for £0. \n Newcastles press, jesus man. So easy to bypass. It can't be the plan to just leave 3 villa players in 1v1 with a simple clipped ball.",
+     "at": "2026-10-17T18:31:45Z"
+    },
+    {
+     "by": "u/AndyVillan",
+     "text": "Zion Suzuki might just be the best signing we've made this summer, especially after losing Martinez",
+     "at": "2026-10-17T18:35:21Z"
+    },
+    {
+     "by": "u/qwertyell",
+     "text": "Everything you'd want in a keeper. He's got presence, dominates his area, comes for crosses, brave, agile shot stopper, composed with the ball at his feet. \n Given that he's about 10-12 years away from when keepers are usually at their peak, he doesn't half look a prospect.",
+     "at": "2026-10-17T19:13:17Z"
+    },
+    {
+     "by": "u/AaronStudAVFC",
+     "text": "Two consecutive wins at probably our least favourite stadium. Outstanding!\n Newcastle were completely toothless but I’d be super worried that the tactic at the end was Dan Burn up top with no midfield whatsoever.",
+     "at": "2026-10-17T18:27:37Z"
+    },
+    {
+     "by": "u/GameplayerStu",
+     "text": "Deserved win. Can't really say Newcastle played much football at all. They were lucky to end with 11.",
+     "at": "2026-10-17T18:27:47Z"
+    },
+    {
+     "by": "u/OvarianCoincidence",
+     "text": "Cannot wait for Man Utd v Newcastle.\n Will be like watching two people on opposite sides of a door, with one pulling when it says push, and the other pushing when it says pull.",
+     "at": "2026-10-17T18:26:38Z"
+    }
+   ]
+  },
+  {
+   "game": "401879263",
+   "kind": "match",
+   "title": "Match Thread: AFC Bournemouth vs Sunderland | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92q0b/match_thread_afc_bournemouth_vs_sunderland/",
+   "at": "2026-10-18T13:03:43Z",
+   "comments": [
+    {
+     "by": "u/Volo_Fulgrim",
+     "text": "0/10 Danso performance in 16 mins",
+     "at": "2026-10-18T13:17:35Z"
+    },
+    {
+     "by": "u/SAFCBland",
+     "text": "Danso's so shite that we've actually looked better as 10 men without him on the pitch, incredibly.",
+     "at": "2026-10-18T13:28:21Z"
+    },
+    {
+     "by": "u/Volo_Fulgrim",
+     "text": "Its really funny having an overloaded left wing, not signing a right winger and then opting not to play a left winger",
+     "at": "2026-10-18T13:12:47Z"
+    },
+    {
+     "by": "u/Similar-Note-9433",
+     "text": "And putting a RB there, and being unable to defend",
+     "at": "2026-10-18T13:13:24Z"
+    },
+    {
+     "by": "u/Similar-Note-9433",
+     "text": "\"Bournemouth have dropped a lot of point from winning positions\"\n I'll let you know when we get close to that position at all mate.",
+     "at": "2026-10-18T13:14:55Z"
+    },
+    {
+     "by": "u/Helpful_Government",
+     "text": "We're in trouble this year",
+     "at": "2026-10-18T13:06:57Z"
+    },
+    {
+     "by": "u/HawayTheMaj",
+     "text": "We are horrific today man what is this fucking line up",
+     "at": "2026-10-18T13:08:25Z"
+    },
+    {
+     "by": "u/VictorAnichebend",
+     "text": "Trai Hume about fifty yards offside there and can’t put it in regardless. This is hilarious stuff so far.",
+     "at": "2026-10-18T13:08:43Z"
+    },
+    {
+     "by": "u/Gambit1977",
+     "text": "Hume couldn’t control a telly at the minute",
+     "at": "2026-10-18T13:15:38Z"
+    },
+    {
+     "by": "u/VictorAnichebend",
+     "text": "Aye, let that be the last time that gormless fucker sees the pitch for us. The worst performance from any Sunderland player ever.",
+     "at": "2026-10-18T13:17:43Z"
+    },
+    {
+     "by": "u/fatinternetcat",
+     "text": "might be a Hall of Shame performance from Danso",
+     "at": "2026-10-18T13:17:58Z"
+    },
+    {
+     "by": "u/Smeg84",
+     "text": "It still baffles me that we didn't keep Bertrand Traore, he was great on the right wing last season.",
+     "at": "2026-10-18T14:44:41Z"
+    }
+   ]
+  },
+  {
+   "game": "401879263",
+   "kind": "post",
+   "title": "Post Match Thread: AFC Bournemouth 2-0 Sunderland | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x95gpi/post_match_thread_afc_bournemouth_20_sunderland/",
+   "at": "2026-10-18T15:06:12Z",
+   "comments": [
+    {
+     "by": "u/PigeonDetective",
+     "text": "Xhaka said he wanted to suffer, well...\n This stinks of a relegation season. The only benefit to that would be not signing Danso. We need to fire that thick cunt into the sun",
+     "at": "2026-10-18T15:14:09Z"
+    },
+    {
+     "by": "u/ucd_pete",
+     "text": "Our best CB at the moment is Luke O'Nien like. How has that happened?",
+     "at": "2026-10-18T15:58:59Z"
+    },
+    {
+     "by": "u/HawayTheMaj",
+     "text": "Pay spurs 20m to not take him",
+     "at": "2026-10-18T15:18:45Z"
+    },
+    {
+     "by": "u/ucd_pete",
+     "text": "Can't believe we've got Danso instead of Geertruda.",
+     "at": "2026-10-18T15:23:59Z"
+    },
+    {
+     "by": "u/ucd_pete",
+     "text": "We're just not at the races when Brobbey isn't playing, literally no identity at all. All that fuss over Fofana but we play Hume on the wing. Could have had Geertruda but we've got Danso instead. \n I think there's 3 teams worse than us but not by much atm",
+     "at": "2026-10-18T15:27:09Z"
+    },
+    {
+     "by": "u/AnyAthlete532",
+     "text": "Why on earth did you not keep Geertruida on? He was a greta utility player for yous lot last year.",
+     "at": "2026-10-18T16:30:09Z"
+    },
+    {
+     "by": "u/ucd_pete",
+     "text": "That's a great question.",
+     "at": "2026-10-18T16:31:44Z"
+    },
+    {
+     "by": "u/Volo_Fulgrim",
+     "text": "2-0 flattered us",
+     "at": "2026-10-18T15:07:17Z"
+    },
+    {
+     "by": "u/Trlcks",
+     "text": "4.32 xg for Bournemouth apparently",
+     "at": "2026-10-18T15:09:17Z"
+    },
+    {
+     "by": "u/ucd_pete",
+     "text": "Same as Brighton",
+     "at": "2026-10-18T15:59:54Z"
+    },
+    {
+     "by": "u/HawayTheMaj",
+     "text": "That was horrific. Reggie getting the line up wrong again, been awful all season playing a RB on the wing, we’ve got 4 wingers on the bench today and none on the pitch. Seems to just be throwing stuff and hoping it sticks at this point. \n Fair play to Bournemouth that was an absolute tonking, even if we made it incredibly easy for them",
+     "at": "2026-10-18T15:07:28Z"
+    },
+    {
+     "by": "u/Superrandy",
+     "text": "You guys just look way less organized at the back to me. Roefs isn’t playing as well on top of that. Could just be me, but that’s how it’s looked.",
+     "at": "2026-10-18T16:32:02Z"
+    }
+   ]
+  },
+  {
+   "game": "401879261",
+   "kind": "match",
+   "title": "Match Thread: Brighton & Hove Albion vs Crystal Palace | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92xm7/match_thread_brighton_hove_albion_vs_crystal/",
+   "at": "2026-10-18T13:13:43Z",
+   "comments": [
+    {
+     "by": "u/higherbrow",
+     "text": "This thread is now a book club. The match was over after ten minutes.\n I suggest The Midnight Library for our first discussion, but I'm open to suggestions.",
+     "at": "2026-10-18T13:16:18Z"
+    },
+    {
+     "by": "u/jbloss",
+     "text": "“Are you arsenal in disguise?” is just brutal lol",
+     "at": "2026-10-18T13:14:44Z"
+    },
+    {
+     "by": "u/RedBullRyan",
+     "text": "3 goals went in before the match thread went up lmao",
+     "at": "2026-10-18T13:15:31Z"
+    },
+    {
+     "by": "u/resident_hater",
+     "text": "Don't you mean post-match thread?",
+     "at": "2026-10-18T13:18:55Z"
+    },
+    {
+     "by": "u/fskari",
+     "text": "No goals scored in the last 13 minutes, HURZELER OUT",
+     "at": "2026-10-18T13:23:09Z"
+    },
+    {
+     "by": "u/hpwriterkyle",
+     "text": "Brighton fans, remember to see your doctor if your erection lasts longer than 4 hours.",
+     "at": "2026-10-18T13:20:30Z"
+    },
+    {
+     "by": "u/PepsiMaxCino",
+     "text": "We might lose this if we don't switch on soon.",
+     "at": "2026-10-18T14:53:33Z"
+    },
+    {
+     "by": "u/alfsimei",
+     "text": "No goals in nearly 8 minutes. This team are washed",
+     "at": "2026-10-18T13:17:56Z"
+    },
+    {
+     "by": "u/PepsiMaxCino",
+     "text": "I literally just sat down what the fuck.",
+     "at": "2026-10-18T13:18:53Z"
+    },
+    {
+     "by": "u/Long_Shopping1995",
+     "text": "I don’t want to play against Brighton in Conference. Mom pick me up, I’m scared.",
+     "at": "2026-10-18T13:40:49Z"
+    },
+    {
+     "by": "u/Asadwords",
+     "text": "Must feel so emasculating to be a club who’s emblem is a eagle and you get beat by one of your rivals who’s a fucking seagull",
+     "at": "2026-10-18T13:18:03Z"
+    },
+    {
+     "by": "u/MrClaretandBlue",
+     "text": "Brighton out to win the league and serve justice against the banana shaggers.",
+     "at": "2026-10-18T13:19:21Z"
+    }
+   ]
+  },
+  {
+   "game": "401879261",
+   "kind": "post",
+   "title": "Post Match Thread: Brighton and Hove Albion 5-0 Crystal Palace",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x958vu/post_match_thread_brighton_and_hove_albion_50/",
+   "at": "2026-10-18T14:57:30Z",
+   "comments": [
+    {
+     "by": "u/Kingslayer1526",
+     "text": "5-0 vs Palace, 5-0 vs Coventry, 4-0 vs Villa, 3-0 vs Arsenal, second in the league \n I have no words for this team. Not seen such an entertaining team in the league in a long time, they're absolutely hammering teams",
+     "at": "2026-10-18T14:58:43Z"
+    },
+    {
+     "by": "u/Character-Bag5648",
+     "text": "Realistically, they're first. No way city are allowed win the league.",
+     "at": "2026-10-18T15:06:05Z"
+    },
+    {
+     "by": "u/SarcasticBaka",
+     "text": "Brighton got Vuskovic + some cash for Van hecke with a year left on his contract. Absolutely hilarious.",
+     "at": "2026-10-18T14:58:38Z"
+    },
+    {
+     "by": "u/BaoJinyang",
+     "text": "Genuinely baffling that Spurs in their annual relegation battle thought he wasn’t ready for game time with them.",
+     "at": "2026-10-18T15:00:39Z"
+    },
+    {
+     "by": "u/Melancholic84",
+     "text": "They saw him with Hamburg last season and still thought he isn’t ready yet, i still can’t believe it",
+     "at": "2026-10-18T15:03:15Z"
+    },
+    {
+     "by": "u/Ussooo",
+     "text": "Vuskovic's mentality will make him be one of the best CB in the world. \n He lost a single duel today you could see in his reaction how much that pissed him off.",
+     "at": "2026-10-18T15:00:40Z"
+    },
+    {
+     "by": "u/Sun_Sloth",
+     "text": "He lost a duel ON THE LEFT WING AT 5-0 AND WAS PISSED OFF.\n Insane mentality.",
+     "at": "2026-10-18T15:07:25Z"
+    },
+    {
+     "by": "u/RedBullRyan",
+     "text": "We absolutely pulled their pants down. JPvH should have been a huge loss when he left but we've somehow upgraded",
+     "at": "2026-10-18T15:08:17Z"
+    },
+    {
+     "by": "u/Lazykabang",
+     "text": "We only lost 4-0 against this super team",
+     "at": "2026-10-18T15:00:31Z"
+    },
+    {
+     "by": "u/higherbrow",
+     "text": "And we had two legs to run up the score against you lot. Let's get you in the Prem, we can kick Palace out to make room.",
+     "at": "2026-10-18T15:03:08Z"
+    },
+    {
+     "by": "u/goodtitties",
+     "text": "brighton are superb, but strand larsen for £50m remains one of the most bemusing deals i've ever seen",
+     "at": "2026-10-18T15:01:01Z"
+    },
+    {
+     "by": "u/charlietrick2512",
+     "text": "Hey he was only 43m, you want a real laugh? Forest bought Delap for 50m on the dot",
+     "at": "2026-10-18T15:03:34Z"
+    }
+   ]
+  },
+  {
+   "game": "401879260",
+   "kind": "match",
+   "title": "Match Thread: Leeds United vs Manchester United | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x92kib/match_thread_leeds_united_vs_manchester_united/",
+   "at": "2026-10-18T12:56:43Z",
+   "comments": [
+    {
+     "by": "u/Lone_Wolf_23",
+     "text": "Sessegnon got a red for that yesterday btw. Just in case you wanted the millionth example of inconsistency from English referees",
+     "at": "2026-10-18T13:21:49Z"
+    },
+    {
+     "by": "u/JiveTurkey688",
+     "text": "Woah thats actually a really bad challenge",
+     "at": "2026-10-18T13:20:56Z"
+    },
+    {
+     "by": "u/Hatakashi",
+     "text": "Yellow for that tackle, nothing for Ampadu.\n Alright then.",
+     "at": "2026-10-18T13:19:55Z"
+    },
+    {
+     "by": "u/ryanmurphy2611",
+     "text": "How’s he not booked?",
+     "at": "2026-10-18T13:13:01Z"
+    },
+    {
+     "by": "u/gunningIVglory",
+     "text": "His lucky that hasnt gone to VAR....",
+     "at": "2026-10-18T13:20:56Z"
+    },
+    {
+     "by": "u/OldieGoosey",
+     "text": "That could've been a red. Didn't the guy get sent off at the end yday for the same?",
+     "at": "2026-10-18T13:21:01Z"
+    },
+    {
+     "by": "u/Hatakashi",
+     "text": "Yellow for ANOTHER studs to ankle challenge.\n Someone's going to end up seriously injured from these.",
+     "at": "2026-10-18T13:21:41Z"
+    },
+    {
+     "by": "u/Mediocre_Nova",
+     "text": "Ref is literally fucking ignoring half the things happening in this game. I'm so sick of these useless cunts. How can the best league itw tolerate refs like these?",
+     "at": "2026-10-18T14:27:03Z"
+    },
+    {
+     "by": "u/Gubrach",
+     "text": "I've seen reds being given for that Ampadu tackle. Like straightforward reds.",
+     "at": "2026-10-18T13:13:35Z"
+    },
+    {
+     "by": "u/ryanmurphy2611",
+     "text": "We don’t want a Leeds red tbf. We’re shit against 10 men.",
+     "at": "2026-10-18T13:22:09Z"
+    },
+    {
+     "by": "u/cs-shitposter",
+     "text": "That's 3 textbook yellows from Ampadu",
+     "at": "2026-10-18T13:12:16Z"
+    },
+    {
+     "by": "u/cs-shitposter",
+     "text": "Darren England never has control of his matches\n He always shrivels up when he needs to mark his authority",
+     "at": "2026-10-18T13:17:21Z"
+    }
+   ]
+  },
+  {
+   "game": "401879260",
+   "kind": "post",
+   "title": "Post Match Thread: Leeds United 1 - 1 Manchester United",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x955op/post_match_thread_leeds_united_1_1_manchester/",
+   "at": "2026-10-18T14:53:41Z",
+   "comments": [
+    {
+     "by": "u/Just_Isopod_1926",
+     "text": "The difference in OPs text description for the two goals is objectively hilarious",
+     "at": "2026-10-18T14:57:44Z"
+    },
+    {
+     "by": "u/ExactLetterhead9165",
+     "text": "Kind of reminds me of a clubs twitter account when they're getting smashed where the descriptions get shorter and shorter until its just something like \"5-0\"",
+     "at": "2026-10-18T14:59:52Z"
+    },
+    {
+     "by": "u/ThatsAllDay77",
+     "text": "My favorite is when they lose and the caption just says “final”",
+     "at": "2026-10-18T15:06:27Z"
+    },
+    {
+     "by": "u/re_irze",
+     "text": "lol where were the match events pulled from? The difference in the description of the United goal and the Leeds goal is funny",
+     "at": "2026-10-18T15:11:01Z"
+    },
+    {
+     "by": "u/HatTrickPony",
+     "text": "51’ We can confirm that the score is now 1-1.",
+     "at": "2026-10-18T15:20:52Z"
+    },
+    {
+     "by": "u/DigbyDoesDallas",
+     "text": "FotMob at 72 mins (prior to correction) said “Fernandes has the chance to shoot from the left of the area, but it's shit straight at Trafford.” Which I think sums up the game well.\n As a Leeds fan, I’ll take not a loss there. Still only 1 loss so far and by the current champs and having played Brentford, Brighton, Arsenal, Man U and Newcastle. We look a lot more solid than last year.",
+     "at": "2026-10-18T14:54:15Z"
+    },
+    {
+     "by": "u/FaceMaskYT",
+     "text": "No wins in the last 6 matches now",
+     "at": "2026-10-18T14:55:24Z"
+    },
+    {
+     "by": "u/chandlerbing_stats",
+     "text": "Reverse haircut",
+     "at": "2026-10-18T14:55:42Z"
+    },
+    {
+     "by": "u/xd366",
+     "text": "7 points in 7 games with 10 goals for and 10 against\n perfectly balanced",
+     "at": "2026-10-18T14:57:45Z"
+    },
+    {
+     "by": "u/aviral_632",
+     "text": "Leeds had 61% possession against United and generated 1.44 xG compared to United’s 0.91. \n They are dusted bro.",
+     "at": "2026-10-18T14:59:16Z"
+    },
+    {
+     "by": "u/LosTerminators",
+     "text": "Carrick will be let go in December\n New interim manager is appointed\n United wins the 'scored most points from January 2027-May 2027' trophy since they can focus only on PL after being knocked out of all cup competitions\n Interim manager becomes permanent hire\n Rinse and repeat",
+     "at": "2026-10-18T15:35:45Z"
+    },
+    {
+     "by": "u/mattgoody99",
+     "text": "Can tell that the guy doing the match thread is a united fan😭look at the difference between the goal reactions and the way the commentary just cuts off lmao",
+     "at": "2026-10-18T15:00:21Z"
+    }
+   ]
+  },
+  {
+   "game": "401878769",
+   "kind": "match",
+   "title": "Match Thread: Nottingham Forest vs Arsenal | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x961v9/match_thread_nottingham_forest_vs_arsenal_premier/",
+   "at": "2026-10-18T15:30:43Z",
+   "comments": [
+    {
+     "by": "u/TheSinRes",
+     "text": "I mean a Forest player is bleeding, Gabriel and Eze both pull a Forest players shirt and Oliver gives the foul to Arsenal. Good stuff.",
+     "at": "2026-10-18T15:51:12Z"
+    },
+    {
+     "by": "u/herkalurk",
+     "text": "What exactly is the foul that Forest committed here? Konsa leads with the elbow into Murillo, but Forest 'fouled' someone first.....",
+     "at": "2026-10-18T15:50:41Z"
+    },
+    {
+     "by": "u/ConcussedCat",
+     "text": "What happened to letting close calls playout???",
+     "at": "2026-10-18T17:03:48Z"
+    },
+    {
+     "by": "u/Flappyballz",
+     "text": "Aaah yes, Gabriel hugging and Konsa elbow, freekick Arsenal",
+     "at": "2026-10-18T15:52:12Z"
+    },
+    {
+     "by": "u/tkshow",
+     "text": "Embarrassing half of reffing by Oliver.",
+     "at": "2026-10-18T16:06:52Z"
+    },
+    {
+     "by": "u/Lfcwalrus",
+     "text": "Murillos bleeding out buts it's a Arsenal fk",
+     "at": "2026-10-18T15:51:31Z"
+    },
+    {
+     "by": "u/IronTarkusHS",
+     "text": "Three different clear holds and they call it on Forest lol",
+     "at": "2026-10-18T15:51:37Z"
+    },
+    {
+     "by": "u/hpwriterkyle",
+     "text": "Delap picking up his own teammate who just had a head injury. Lol his thug instincts are just uncontrollable",
+     "at": "2026-10-18T16:08:51Z"
+    },
+    {
+     "by": "u/celticeejit",
+     "text": "VAR just going to ignore that ?",
+     "at": "2026-10-18T15:51:17Z"
+    },
+    {
+     "by": "u/Crossie_94",
+     "text": "Obviously biased, but where was the Forest foul there? All less egregious than going elbow first into another player.",
+     "at": "2026-10-18T15:52:10Z"
+    },
+    {
+     "by": "u/Crossie_94",
+     "text": "How is that not a card but the Neco Williams one earlier was?",
+     "at": "2026-10-18T16:15:08Z"
+    },
+    {
+     "by": "u/Ilikesporks_",
+     "text": "where's the foul? gabriel is literally hugging him",
+     "at": "2026-10-18T15:50:33Z"
+    }
+   ]
+  },
+  {
+   "game": "401878769",
+   "kind": "post",
+   "title": "Post Match Thread: Nottingham Forest 0-1 Arsenal | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1x98wo1/post_match_thread_nottingham_forest_01_arsenal/",
+   "at": "2026-10-18T17:26:12Z",
+   "comments": [
+    {
+     "by": "u/Gerards_died_of_flu",
+     "text": "We cannot keep playing like this lol",
+     "at": "2026-10-18T17:26:29Z"
+    },
+    {
+     "by": "u/awashofindigo",
+     "text": "We can if we can remember how to score set pieces again",
+     "at": "2026-10-18T17:27:14Z"
+    },
+    {
+     "by": "u/scottiescott23",
+     "text": "You played like that for the last four months of the season and still won the league. You’ll be fine unless Chelsea or Brighton really kick on .",
+     "at": "2026-10-18T17:28:26Z"
+    },
+    {
+     "by": "u/Gerards_died_of_flu",
+     "text": "I think there's difference between limping over the line like this to win our first league in over 20 years, and just adopting this as our entire play style. We carry on like this and eventually the variance will turn against us a little bit, I think",
+     "at": "2026-10-18T17:47:33Z"
+    },
+    {
+     "by": "u/SpareAstronomer",
+     "text": "You can, you literally won the league like this.",
+     "at": "2026-10-18T17:29:07Z"
+    },
+    {
+     "by": "u/SorrowfulSkald",
+     "text": "Forest's 5-4-1 murderball was formidable",
+     "at": "2026-10-18T17:26:55Z"
+    },
+    {
+     "by": "u/Professional_Bite783",
+     "text": "0-0 twice in a row at this ground, they know exactly what they’re doing.",
+     "at": "2026-10-18T17:32:52Z"
+    },
+    {
+     "by": "u/Mors_Acerba",
+     "text": "The kind of game that makes you fear you've got dementia 'cause somebody mentions it a few months later and you completely forgot you evger watched it",
+     "at": "2026-10-18T17:27:02Z"
+    },
+    {
+     "by": "u/aeeeroo",
+     "text": "What game?",
+     "at": "2026-10-18T17:32:04Z"
+    },
+    {
+     "by": "u/PepsiMaxCino",
+     "text": "Konsa was great today",
+     "at": "2026-10-18T17:27:04Z"
+    },
+    {
+     "by": "u/awashofindigo",
+     "text": "Absolutely worth the money we paid, he’s about as close as you can reasonably expect to get to Saliba without being Saliba",
+     "at": "2026-10-18T17:28:07Z"
+    },
+    {
+     "by": "u/silam39",
+     "text": "Apart from the Brighton game he's been fantastic for us since coming in. It's crazy to think of how little we've missed Saliba so far. \n I personally love how he always has a good slide tackle in him. He had a huge one there at the end.",
+     "at": "2026-10-18T17:28:12Z"
+    }
+   ]
+  },
+  {
+   "game": "401879257",
+   "kind": "match",
+   "title": "Match Thread: Tottenham Hotspur vs Coventry City | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1xa5b93/match_thread_tottenham_hotspur_vs_coventry_city/",
+   "at": "2026-10-19T18:45:45Z",
+   "comments": [
+    {
+     "by": "u/PositiveDuck",
+     "text": "As a lifelong coventry fan since 2 minutes ago, I hope we can get a result here",
+     "at": "2026-10-19T19:03:46Z"
+    },
+    {
+     "by": "u/Swisha-",
+     "text": "THEY THOUGHT I WAS DEAD",
+     "at": "2026-10-19T20:59:46Z"
+    },
+    {
+     "by": "u/rizz0therat",
+     "text": "Kulusevski started a game more recently than Maddison, and that was 526 days ago. Amazing to see them both on the team sheet.",
+     "at": "2026-10-19T18:51:07Z"
+    },
+    {
+     "by": "u/Jazim94",
+     "text": "Probably our worst performance in the last 5 but the only win. Footballs wierd eh. \n Coventry are not a bad outfit, very organised. Will give quite a lot to teams a very good game",
+     "at": "2026-10-19T21:10:34Z"
+    },
+    {
+     "by": "u/getyourchebsout",
+     "text": "De Zerbi being 47 years old and still spiking his hair up like he’s at a year 6 disco always makes me laugh",
+     "at": "2026-10-19T20:12:53Z"
+    },
+    {
+     "by": "u/PepsiMaxCino",
+     "text": "I like to laugh at Spurs like everyone but I hope the people asking for that to be disallowed are joking haha",
+     "at": "2026-10-19T20:21:21Z"
+    },
+    {
+     "by": "u/3mischievouscats",
+     "text": "I want you to put the word out there that we back up.",
+     "at": "2026-10-19T20:58:32Z"
+    },
+    {
+     "by": "u/royals796",
+     "text": "16th? We used to dream about days like this",
+     "at": "2026-10-19T20:59:16Z"
+    },
+    {
+     "by": "u/royals796",
+     "text": "Careful lads, the celebration police are about to come out",
+     "at": "2026-10-19T20:57:00Z"
+    },
+    {
+     "by": "u/multiple4",
+     "text": "A Coventry comeback 3-2 win would be the greatest hate watch of all time",
+     "at": "2026-10-19T19:20:45Z"
+    },
+    {
+     "by": "u/Reddits-Reckoning",
+     "text": "Finally win a game. Half the teams gets injured.",
+     "at": "2026-10-19T20:46:59Z"
+    },
+    {
+     "by": "u/bshaman1993",
+     "text": "Sorry haters. Unsuccessful hate watch tonight innit",
+     "at": "2026-10-19T20:56:49Z"
+    }
+   ]
+  },
+  {
+   "game": "401879257",
+   "kind": "post",
+   "title": "Post Match Thread: Tottenham Hotspur 3-1 Coventry City | Premier League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1xa8xce/post_match_thread_tottenham_hotspur_31_coventry/",
+   "at": "2026-10-19T20:59:52Z",
+   "comments": [
+    {
+     "by": "u/HighSociety4",
+     "text": "Just doubled our goal count for the season + got a win. Can’t complain.",
+     "at": "2026-10-19T21:05:44Z"
+    },
+    {
+     "by": "u/brrrraaaa",
+     "text": "And got Deki back. And Maddison has played for like 70m.",
+     "at": "2026-10-19T21:09:33Z"
+    },
+    {
+     "by": "u/FatalFlyinGuillotine",
+     "text": "Whoever it was that posted Tottenham was the only club left to win a game in the English leagues (or whatever it was), congrats. Your jinx worked. We had a good thing going and you just had to ruin it.",
+     "at": "2026-10-19T21:07:25Z"
+    },
+    {
+     "by": "u/MauricioCappuccino",
+     "text": "That crowd roar when Kulusevski knocked the ball into the Cov open half >>>>",
+     "at": "2026-10-19T21:01:13Z"
+    },
+    {
+     "by": "u/FrankZito1980",
+     "text": "I found myself making unintelligible noises",
+     "at": "2026-10-19T21:17:07Z"
+    },
+    {
+     "by": "u/royals796",
+     "text": "More Arsenal flairs in this thread than spurs flairs. Lmao",
+     "at": "2026-10-19T21:03:42Z"
+    },
+    {
+     "by": "u/Shiiboi",
+     "text": "Subreddits ran by Red Mafia",
+     "at": "2026-10-19T21:13:57Z"
+    },
+    {
+     "by": "u/oysterpirate",
+     "text": "their title defense is in jeopardy now that Deki's back",
+     "at": "2026-10-19T21:05:48Z"
+    },
+    {
+     "by": "u/royals796",
+     "text": "Leagues done mate. Matches are just a formality at this point",
+     "at": "2026-10-19T21:06:54Z"
+    },
+    {
+     "by": "u/MooseWayne",
+     "text": "Its been over 526 days since spurs have lost a game with Kulusevski on the pitch",
+     "at": "2026-10-19T21:07:41Z"
+    },
+    {
+     "by": "u/calel8242",
+     "text": "Maddison completely changes this team, lovely player",
+     "at": "2026-10-19T21:00:31Z"
+    },
+    {
+     "by": "u/NYR_dingus",
+     "text": "Spurs still have a ways to go, but this win is a huge start for their season. Midfield still looks poor and the defense is still shaky, but they should be happy tonight. This win was overdue. Biggest critique is too many players blow hot and cold. Decent one week and hopeless the next. \n Cov just lack any shape or the ability to stay in games. They always look like their chasing a man making a…",
+     "at": "2026-10-19T21:02:26Z"
+    }
+   ]
+  },
+  {
+   "game": "401915312",
+   "kind": "match",
+   "title": "Match Thread: Bayern Munich vs Arsenal | UEFA Champions League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbvpcb/match_thread_bayern_munich_vs_arsenal_uefa/",
+   "at": "2026-10-21T18:45:43Z",
+   "comments": [
+    {
+     "by": "u/CptToast_",
+     "text": "Both teams probably had more goals in them, so I think a draw was the right result here. GG Arsenal, that was a great watch",
+     "at": "2026-10-21T21:03:04Z"
+    },
+    {
+     "by": "u/Qiluk",
+     "text": "So many fucking injuries. World cup and a compressed 4-game national team break is catching up",
+     "at": "2026-10-21T19:10:28Z"
+    },
+    {
+     "by": "u/yapplecider",
+     "text": "Saka, so unlucky. \n He would have a whole together different career if he could play 4 games in a month. Has become so nerfed because of continuous injuries.",
+     "at": "2026-10-21T19:10:25Z"
+    },
+    {
+     "by": "u/shakzz9703",
+     "text": "Kane is taking goalkicks. This guy will absolutely be an NFL kicker lmfao",
+     "at": "2026-10-21T19:22:48Z"
+    },
+    {
+     "by": "u/PaulPogbeast",
+     "text": "Kane should win Balon D’Or. such a complete footballer",
+     "at": "2026-10-21T19:36:58Z"
+    },
+    {
+     "by": "u/connorqueer",
+     "text": "Harry Kane \"when I grow up I want to be a combination of Pirlo and Ronaldo Nazario\"\n Teacher \"put down that glue Harry\"",
+     "at": "2026-10-21T19:48:46Z"
+    },
+    {
+     "by": "u/SwitchHitter17",
+     "text": "laser pointer is some weak shit. people like that actually ruin the game. not blaming bayern fans in general. there's always one idiot.",
+     "at": "2026-10-21T19:48:32Z"
+    },
+    {
+     "by": "u/Silentdisco8",
+     "text": "Great match, well played Bayern. Injuries for all teams f’in suck.",
+     "at": "2026-10-21T20:53:44Z"
+    },
+    {
+     "by": "u/komugis",
+     "text": "Great game as a neutral. This and PSG/Barca really made it clear who the best teams are IMO.",
+     "at": "2026-10-21T20:55:34Z"
+    },
+    {
+     "by": "u/__sami__01",
+     "text": "TF ARE THESE BALLS FROM KANE",
+     "at": "2026-10-21T19:22:54Z"
+    },
+    {
+     "by": "u/ClaytonWest74",
+     "text": "that Saka injury is heartbreaking to watch",
+     "at": "2026-10-21T19:51:10Z"
+    },
+    {
+     "by": "u/GeologistGlad8000",
+     "text": "Ffs how many injuries have happened recently man. Too much workload",
+     "at": "2026-10-21T20:51:18Z"
+    }
+   ]
+  },
+  {
+   "game": "401915312",
+   "kind": "post",
+   "title": "Post Match Thread: Bayern Munich 2-2 Arsenal | UEFA Champions League",
+   "sub": "r/soccer",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbz51m/post_match_thread_bayern_munich_22_arsenal_uefa/",
+   "at": "2026-10-21T20:54:41Z",
+   "comments": [
+    {
+     "by": "u/heroscape912",
+     "text": "Amazing how much more watchable football is when it's not against a bottom-half Prem team with 8 men inside their own penalty box playing for a 0-0 from the first whistle",
+     "at": "2026-10-21T20:56:05Z"
+    },
+    {
+     "by": "u/razies",
+     "text": "Same for us",
+     "at": "2026-10-21T20:57:35Z"
+    },
+    {
+     "by": "u/renseministeren",
+     "text": "🤝🏻",
+     "at": "2026-10-21T20:58:55Z"
+    },
+    {
+     "by": "u/TheGoldenPineapples",
+     "text": "Find it so weird that we're the ones who get criticised for playing an uninteresting game, when the opposition sticks 11 men behind the ball and does everything possible to make sure neither side scores.",
+     "at": "2026-10-21T21:07:46Z"
+    },
+    {
+     "by": "u/foreveredredred",
+     "text": "Both teams missing their 1st choice LWs and RWs (for the most part) definitely took some of their attacking quality, but it's still been a fine game. Both have a such a high floor; not just in players, but they are extremely well coached in all phases.",
+     "at": "2026-10-21T20:55:02Z"
+    },
+    {
+     "by": "u/armchairgoon",
+     "text": "so annoying as well because saka started well and noni has been heating up on the left. thought we adapted well when eze came on though so hopefully they can both find a bit more confidence",
+     "at": "2026-10-21T20:57:27Z"
+    },
+    {
+     "by": "u/snowkarl",
+     "text": "What a performance from Madueke. Looks so confident, great composure while dribbling and making really intelligent decisions all over the pitch.",
+     "at": "2026-10-21T20:55:20Z"
+    },
+    {
+     "by": "u/t-m",
+     "text": "His best game for us. Never stopped running and made some great decisions on the ball. Eze had a solid game too.",
+     "at": "2026-10-21T20:57:12Z"
+    },
+    {
+     "by": "u/CptToast_",
+     "text": "Really good match with imo the correct result. Considering the players both teams were missing it’s been a lot more entertaining than expected. Arsenal’s definitely returned to the top echelon of European football, so I’ll take the point happily. GG Arsenal, hope that Saka returns as soon as possible",
+     "at": "2026-10-21T21:27:39Z"
+    },
+    {
+     "by": "u/TaftYouOldDog",
+     "text": "Classy comment and fair play, excellent match and it sort of pains me but Kane should win Balon d'or, travesty if he doesn't.",
+     "at": "2026-10-21T22:08:10Z"
+    },
+    {
+     "by": "u/PsychoWarper",
+     "text": "Might be the first time ive seen a game thread between 2 big clubs where fans of both sides are largely fine with a tie, makes sense with context but still funny.",
+     "at": "2026-10-21T21:36:37Z"
+    },
+    {
+     "by": "u/MachineGunBanned",
+     "text": "Just nice to see that we can go toe to toe in an attacking game with some of the best. \n In the league even City and Liverpool play stupidly defensively against us so we rarely get to see it.",
+     "at": "2026-10-21T23:28:59Z"
+    }
+   ]
+  },
+  {
+   "game": "401909090",
+   "kind": "match",
+   "title": "Game Thread: Oklahoma City Thunder (0-0) vs San Antonio Spurs (0-0) Live Score | NBA | Oct 20, 2026",
+   "sub": "r/nba",
+   "url": "https://www.reddit.com/r/nba/comments/1xb8uim/game_thread_oklahoma_city_thunder_00_vs_san/",
+   "at": "2026-10-21T00:30:15Z",
+   "comments": [
+    {
+     "by": "u/IAmScaredOfCotton",
+     "text": "Noticeably less Shai hate after the Russian data center blew up.",
+     "at": "2026-10-21T02:44:50Z"
+    },
+    {
+     "by": "u/santiago505",
+     "text": "McCain being an absolute sniper while having his nails painted plaid is such huge bde",
+     "at": "2026-10-21T04:30:08Z"
+    },
+    {
+     "by": "u/ecpella",
+     "text": "Spurs are the dirtiest fucking team in the NBA",
+     "at": "2026-10-21T02:33:57Z"
+    },
+    {
+     "by": "u/arania_exumai",
+     "text": "I'm uncomfortable with the amount of love Shai is getting in this thread. What's happening",
+     "at": "2026-10-21T02:19:57Z"
+    },
+    {
+     "by": "u/Anal-In-Gus",
+     "text": "Spurs fans insult Chet like there's no tomorrow. But you say one negative thing about that dirty scoundrel Wemby and they downvote you to hell.",
+     "at": "2026-10-21T02:33:36Z"
+    },
+    {
+     "by": "u/Busy-Technology-1637",
+     "text": "Holy Thunder flairs!\n GG Thunder bros. See you in February (we really don’t play again until then wtf???)",
+     "at": "2026-10-21T04:29:48Z"
+    },
+    {
+     "by": "u/CatataFishSticks",
+     "text": "What about the Canadians?!",
+     "at": "2026-10-21T02:02:54Z"
+    },
+    {
+     "by": "u/XxEpicMonkee",
+     "text": "0-7 with 8 points is insane work mr wembenyama",
+     "at": "2026-10-21T02:55:41Z"
+    },
+    {
+     "by": "u/Westley25dorton",
+     "text": "Wemby being a sore loser....I'm shocked",
+     "at": "2026-10-21T04:25:46Z"
+    },
+    {
+     "by": "u/nick170100",
+     "text": "Bruh all 3 Williams getting t’d is funny",
+     "at": "2026-10-21T02:31:29Z"
+    },
+    {
+     "by": "u/big_shot_wheel_dick",
+     "text": "On the bright side, it’s better than blowing a 29 point lead in the finals",
+     "at": "2026-10-21T04:24:43Z"
+    },
+    {
+     "by": "u/Competitive-Rain3945",
+     "text": "Wembenyama got outplayed by a guy who’s never played an nba game before in his life.",
+     "at": "2026-10-21T04:25:14Z"
+    }
+   ]
+  },
+  {
+   "game": "401909090",
+   "kind": "post",
+   "title": "[Post Game Thread] The Oklahoma City Thunder(1-0) defeat the San Antonio Spurs(0-1) behind 32/5/4 from SGA.",
+   "sub": "r/nba",
+   "url": "https://www.reddit.com/r/nba/comments/1xbdksi/post_game_thread_the_oklahoma_city_thunder10/",
+   "at": "2026-10-21T04:27:07Z",
+   "comments": [
+    {
+     "by": "u/dirtyshits",
+     "text": "The gift wrapping of McCain by the sixers cannot be understated.\n What a great pick up.",
+     "at": "2026-10-21T04:27:32Z"
+    },
+    {
+     "by": "u/dkleckner88",
+     "text": "I’ll never understand it",
+     "at": "2026-10-21T04:30:13Z"
+    },
+    {
+     "by": "u/skr_skr",
+     "text": "Morey paying us back for harden",
+     "at": "2026-10-21T04:31:02Z"
+    },
+    {
+     "by": "u/TPFRecoil",
+     "text": "The dude was dropping long distance artillery shells down the net the whole night. Every time he took one, I thought \"that's going in\". \n He's like a 1st stage Pokémon evolution of Curry. Shoot, if he keeps this up, might be 2nd stage.",
+     "at": "2026-10-21T05:07:33Z"
+    },
+    {
+     "by": "u/ExtraLeading3376",
+     "text": "What i gathered:\n - 0 reasons as to why shai isn’t the favourite for MVP\n - How tf did they let Presti get Mara\n - Morey still deserves hell for trading Mccain",
+     "at": "2026-10-21T04:27:20Z"
+    },
+    {
+     "by": "u/homefree122",
+     "text": "It was so fucking funny when they showed the side-by-side comparison of Chet and Wemby’s abysmal stat lines",
+     "at": "2026-10-21T04:29:04Z"
+    },
+    {
+     "by": "u/wombatpup55",
+     "text": "They were having an ass off",
+     "at": "2026-10-21T04:29:53Z"
+    },
+    {
+     "by": "u/A_Lax_Nerd",
+     "text": "Ass off and neither got any cake smfh",
+     "at": "2026-10-21T04:32:57Z"
+    },
+    {
+     "by": "u/JumboHotdogz",
+     "text": "both unreal defenders today though they were block farming each other a bit",
+     "at": "2026-10-21T04:34:01Z"
+    },
+    {
+     "by": "u/Character_Bug_1862",
+     "text": "Shai continues to dazzle in ways we’ve yet to see\n McCain is gonna end up getting the big bucks.\n Facing three 7 footers really threw off Wemby and had him chucking threes\n Also Chet is back",
+     "at": "2026-10-21T04:30:17Z"
+    },
+    {
+     "by": "u/YKG1998",
+     "text": "Opening night in the books. Tatum is cooked, Knicks are the weakest champs in history, and Wemby lost MVP. Pistons one seed again and Thunder vs Sixers finals confirmed. I can skip the rest of the season now.",
+     "at": "2026-10-21T04:31:15Z"
+    },
+    {
+     "by": "u/BlockedbyJake420",
+     "text": "So used to overreactions on this sub\n Thank you for the level headed analysis",
+     "at": "2026-10-21T04:51:00Z"
+    }
+   ]
+  },
+  {
+   "game": "401872999",
+   "kind": "match",
+   "title": "Game Thread: Chicago Bears (3-2) @ Atlanta Falcons (2-3)",
+   "sub": "r/nfl",
+   "url": "https://www.reddit.com/r/nfl/comments/1x96r1f/game_thread_chicago_bears_32_atlanta_falcons_23/",
+   "at": "2026-10-18T15:59:36Z",
+   "comments": [
+    {
+     "by": "u/lkn240",
+     "text": "I think Ben and Caleb are fucking pissed lol",
+     "at": "2026-10-18T17:28:18Z"
+    },
+    {
+     "by": "u/CommanderLuthen",
+     "text": "Dude now is not the fucking time to be chanting green bay sucks",
+     "at": "2026-10-18T19:06:10Z"
+    },
+    {
+     "by": "u/AcneBalls",
+     "text": "Fuck those bears fans right there. Read the damn room",
+     "at": "2026-10-18T19:06:00Z"
+    },
+    {
+     "by": "u/RunnerTenor",
+     "text": "\"Green Bay sucks\" while a guy is wondering if he'll walk again? Our fanbase are idiots.",
+     "at": "2026-10-18T19:06:44Z"
+    },
+    {
+     "by": "u/DoggedStooge",
+     "text": "While I usually appreciate a good \"Green Bay Sucks\" chant, now is very much not the time. C'mon guys.",
+     "at": "2026-10-18T19:06:33Z"
+    },
+    {
+     "by": "u/mjgentile",
+     "text": "Assholes chanting GB sucks during that. Come on fucking meatheads.",
+     "at": "2026-10-18T19:08:42Z"
+    },
+    {
+     "by": "u/Televisions_Frank",
+     "text": "Okay guys, now's not the time for a Green Bay Sucks.",
+     "at": "2026-10-18T19:05:47Z"
+    },
+    {
+     "by": "u/ZagreusMyDude",
+     "text": "Bears tax is so fucking stupid and I’m so tired of it.",
+     "at": "2026-10-18T18:14:00Z"
+    },
+    {
+     "by": "u/valarpizzaeris",
+     "text": "Fucking TERRIBLE call",
+     "at": "2026-10-18T19:12:21Z"
+    },
+    {
+     "by": "u/V1cVinegar44",
+     "text": "If we win this we should get our comp picks back (I will never not be mad at that)\n London about to drop 200 on Jaylen tho",
+     "at": "2026-10-18T16:20:34Z"
+    },
+    {
+     "by": "u/EfficiencyDue7770",
+     "text": "green bay sucks chants are disgusting during that actually",
+     "at": "2026-10-18T19:06:01Z"
+    },
+    {
+     "by": "u/Dinkinflikuh",
+     "text": "GB sucks chants? Yikes bears fans…",
+     "at": "2026-10-18T19:06:51Z"
+    }
+   ]
+  },
+  {
+   "game": "401872999",
+   "kind": "post",
+   "title": "Post Game Thread: Chicago Bears @ Atlanta Falcons",
+   "sub": "r/nfl",
+   "url": "https://www.reddit.com/r/nfl/comments/1x9dap8/post_game_thread_chicago_bears_atlanta_falcons/",
+   "at": "2026-10-18T20:19:56Z",
+   "comments": [
+    {
+     "by": "u/Odd-Cardiologist5290",
+     "text": "Kyler Gordon",
+     "at": "2026-10-18T20:20:10Z"
+    },
+    {
+     "by": "u/Zloggt",
+     "text": "Between Caleb and Kyler coming back…\n …it’s a whole different team when healthy!\n (If only Bryant was here with us 😔)",
+     "at": "2026-10-18T20:21:57Z"
+    },
+    {
+     "by": "u/__AJK__",
+     "text": "What a clutch game from him",
+     "at": "2026-10-18T20:20:28Z"
+    },
+    {
+     "by": "u/iguanoman_",
+     "text": "Glad the Falcons were able to came back just enough to make this game more painful than just getting outright demolished",
+     "at": "2026-10-18T20:20:13Z"
+    },
+    {
+     "by": "u/ninjasurfer",
+     "text": "Bizarre Bijan usage.",
+     "at": "2026-10-18T20:21:11Z"
+    },
+    {
+     "by": "u/BroAbernathy",
+     "text": "I think DA gameplan was dont let that demon beat us",
+     "at": "2026-10-18T20:36:59Z"
+    },
+    {
+     "by": "u/Moedergods",
+     "text": "This never should have been this close. \n This was an absolutely disgusting officiated game. Until like the 11 minute mark in the 4th the Bears had more yards on penalties (118) than the Falcons had total yards (103), on the most stupid holding calls imaginable.",
+     "at": "2026-10-18T20:21:28Z"
+    },
+    {
+     "by": "u/ScruffMixHaha",
+     "text": "This officiating crew is rotten. Same crew that called the Sunday night game last week. Easily the worst group of officials.",
+     "at": "2026-10-18T20:26:18Z"
+    },
+    {
+     "by": "u/Televisions_Frank",
+     "text": "Getting called for a ticky tack push off and then watching a Falcons receiver shove our DB and get nothing called really pissed me off.",
+     "at": "2026-10-18T20:29:12Z"
+    },
+    {
+     "by": "u/StrangelyOnPoint",
+     "text": "Yardage by team:\n - Bears: 368 yards\n - Bears Penalties: 133 yards\n - Falcons: 257 yards",
+     "at": "2026-10-18T20:23:53Z"
+    },
+    {
+     "by": "u/EatYourTrees",
+     "text": "Ben Johnson furious despite the win.",
+     "at": "2026-10-18T20:20:26Z"
+    },
+    {
+     "by": "u/Nangz",
+     "text": "As he should be, those penalties were brutal.",
+     "at": "2026-10-18T20:21:12Z"
+    }
+   ]
+  }
+ ],
+ "teams": [
+  {
+   "sport": "soccer",
+   "id": "359",
+   "name": "Arsenal",
+   "sub": "r/Gunners",
+   "posts": [
+    {
+     "title": "Bayern Munich 2-[2] Arsenal - Declan Rice 82'",
+     "by": "u/xggq",
+     "at": "2026-10-21T20:40:53Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbysbz/bayern_munich_22_arsenal_declan_rice_82/",
+     "img": "https://external-preview.redd.it/YzViZTFvYmh0dndoMfXZgAzM1b1QM3PNewrtFPs2OsZrxjhacxwH-KAum3cZ.png?width=640&crop=smart&auto=webp&s=c524c57abd0e1078c9ce53bc8126cdb5d896a0dc",
+     "text": ""
+    },
+    {
+     "title": "BATTLING UNTIL THE END ✊",
+     "by": "u/arsenal",
+     "at": "2026-10-21T20:52:38Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbz30u/battling_until_the_end/",
+     "img": "https://i.redd.it/ih3o0s2gvvwh1.png",
+     "text": ""
+    },
+    {
+     "title": "Bayern Munich 0-[1] Arsenal - Eberechi Eze 25'",
+     "by": "u/xggq",
+     "at": "2026-10-21T19:26:06Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbwt7b/bayern_munich_01_arsenal_eberechi_eze_25/",
+     "img": "https://external-preview.redd.it/aXRkMjg2NnpmdndoMSrY5uU3rXm6crZuZ14GF-Oc91RheN0sHI8I2sti8uzJ.png?width=640&crop=smart&auto=webp&s=8195143415814a11b9c4c9a5fb13b1290fa37d1f",
+     "text": ""
+    },
+    {
+     "title": "First away goal in the UCL",
+     "by": "u/AnyBad7112",
+     "at": "2026-10-21T20:55:59Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbz68m/first_away_goal_in_the_ucl/",
+     "img": "https://preview.redd.it/otnojrz6wvwh1.jpeg?width=140&height=140&crop=1:1,smart&auto=webp&s=6483a7d166214f663dae693e5733fb0fdc31263e",
+     "text": ""
+    },
+    {
+     "title": "Thierry Henry : “There is nothing wrong with Bukayo Saka.. He’s doing the job he’s been asked to do.. (And) we won the league.”",
+     "by": "u/studioghost14",
+     "at": "2026-10-21T19:05:08Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbw8ha/thierry_henry_there_is_nothing_wrong_with_bukayo/",
+     "img": "https://i.redd.it/4w1kgn2fcvwh1.jpeg",
+     "text": "Thierry Henry: “When you ask, what is wrong with Bukayo? There is nothing wrong. That people want more from him? I can understand that. But always the narrative of ‘What’s wrong with Bukayo? What’s happening with Bukayo?’ Whether he wins, he doesn’t win, he starts, he doesn’t start. \n “One thing…"
+    },
+    {
+     "title": "Our Starting XI to face Bayern Munich in the UEFA Champions League: Raya, Timber, Konsa, Gabriel, Calafiori, Guimaraes, Rice, Odegaard, Madueke, Saka, Havertz.",
+     "by": "u/arsenal",
+     "at": "2026-10-21T17:45:05Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbu0us/our_starting_xi_to_face_bayern_munich_in_the_uefa/",
+     "img": "https://i.redd.it/707syg4rxuwh1.png",
+     "text": "Substitutes: Arrizabalaga, Meslier, Mosquera, Lewis-Skelly, White, Zubimendi, Merino, Dowman, Eze, Gyokeres. COYG 🔵 🟡"
+    },
+    {
+     "title": "Declan Rice post match interview [TNT Sports]",
+     "by": "u/AnyBad7112",
+     "at": "2026-10-21T21:19:48Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xbzst3/declan_rice_post_match_interview_tnt_sports/",
+     "img": "https://external-preview.redd.it/c2xkbHJjNmYwd3doMXAK970_8z_NYkBKOlMoMg1cIiZe6gAZSBTyAr5mz-80.jpeg?width=640&crop=smart&auto=webp&s=67c26ad2923d17ca6775af19f175d4c831f7eb4e",
+     "text": ""
+    },
+    {
+     "title": "With us from start to finish 👏",
+     "by": "u/arsenal",
+     "at": "2026-10-21T21:32:07Z",
+     "url": "https://www.reddit.com/r/Gunners/comments/1xc045t/with_us_from_start_to_finish/",
+     "img": "https://external-preview.redd.it/ajUydmZicTEyd3doMev2lTKGQ2g3td4pdvDQ7HdC_rqLfmY7c2qF2juJwvop.png?width=640&crop=smart&auto=webp&s=cdc217e273ee431070040990d8e6dfd24874248a",
+     "text": ""
+    }
+   ]
+  },
+  {
+   "sport": "basketball",
+   "id": "25",
+   "name": "Oklahoma City Thunder",
+   "sub": "r/Thunder",
+   "posts": [
+    {
+     "title": "Perfection by Aday Mara",
+     "by": "u/i_am_groot_84",
+     "at": "2026-10-21T14:09:56Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbo7ak/perfection_by_aday_mara/",
+     "img": "https://external-preview.redd.it/dmJtaDFkMnJ2dHdoMRPj8r5EACfZPmob7wl2WmZEfDZbbPoUn3az8IFCUMG6.png?width=320&crop=smart&auto=webp&s=fc123da2cad89058059d94f9508b660712a90674",
+     "text": "Seeing Wemby getting shut out is absolute perfection."
+    },
+    {
+     "title": "Williams Technical Consulting",
+     "by": "u/PreachitPerk",
+     "at": "2026-10-21T13:32:18Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbn9qk/williams_technical_consulting/",
+     "img": "https://i.redd.it/9w58hrl0ptwh1.jpeg",
+     "text": ""
+    },
+    {
+     "title": "Some of the worst plays from the game last night.",
+     "by": "u/rb1242",
+     "at": "2026-10-21T17:49:48Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbu5ke/some_of_the_worst_plays_from_the_game_last_night/",
+     "img": "https://external-preview.redd.it/OGN5a3NmNHp5dXdoMbP-MK52v-yEDlg9kME9OSbC2lhiye0KKXjb657OD-6Q.png?width=320&crop=smart&auto=webp&s=58a8e6ae2054a828f07de1570c1555b9256d6cae",
+     "text": ""
+    },
+    {
+     "title": "The Spurs found out the hard way we're not the same team when we aren't injured 😂",
+     "by": "u/VividEmployee6754",
+     "at": "2026-10-21T11:22:11Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbkh90/the_spurs_found_out_the_hard_way_were_not_the/",
+     "img": "",
+     "text": "I'm sick of people saying \"excuses\" when I bring up injuries after our game 7 loss. I think people finally realize that an uninjured OKC team is actually way harder to beat..."
+    },
+    {
+     "title": "As of today, we officially hold the No. 1 seed in the West!",
+     "by": "u/iCarpet",
+     "at": "2026-10-21T18:22:30Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbv2a7/as_of_today_we_officially_hold_the_no_1_seed_in/",
+     "img": "https://i.redd.it/g9q8e2ct4vwh1.jpeg",
+     "text": ""
+    },
+    {
+     "title": "Conspiracy Theory about Mara",
+     "by": "u/Individual-Beach2414",
+     "at": "2026-10-21T11:16:38Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbkdlu/conspiracy_theory_about_mara/",
+     "img": "https://i.redd.it/9hoj9h3u0twh1.jpeg",
+     "text": "What if the Spurs were the ones that called Mara’s Spanish pro team? They said, “Hey! You can sue OKC about Mara’s contract and they’ll have to send him back.” Just a theory."
+    },
+    {
+     "title": "Our boy Wiggs scored an efficient 16 tonight against the Magic.",
+     "by": "u/lloopiN",
+     "at": "2026-10-22T01:58:43Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xc5zvn/our_boy_wiggs_scored_an_efficient_16_tonight/",
+     "img": "https://i.redd.it/xrv7n7i3exwh1.png",
+     "text": ""
+    },
+    {
+     "title": "The still shots of Mara's block are so impressive.",
+     "by": "u/ProlapsedBulbasaur",
+     "at": "2026-10-21T20:01:00Z",
+     "url": "https://www.reddit.com/r/Thunder/comments/1xbxqwn/the_still_shots_of_maras_block_are_so_impressive/",
+     "img": "https://preview.redd.it/tads37hdmvwh1.jpeg?width=140&height=140&crop=1:1,smart&auto=webp&s=65f67d8c8f20e075b1fd1dd92f2c3ee6cda730da",
+     "text": "It doesn't look possible for him to get to this block. He's quick!"
+    }
+   ]
+  },
+  {
+   "sport": "football",
+   "id": "3",
+   "name": "Chicago Bears",
+   "sub": "r/CHIBears",
+   "posts": [
+    {
+     "title": "NFC Offensive Player of the Week",
+     "by": "u/Zeosh",
+     "at": "2026-10-21T16:05:02Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbr8zm/nfc_offensive_player_of_the_week/",
+     "img": "https://i.redd.it/9l546teaguwh1.jpeg",
+     "text": ""
+    },
+    {
+     "title": "[Adam Hoge on X] \"Jonah Jackson good to go for tomorrow. No injury designation.\"",
+     "by": "u/phillipacarroll",
+     "at": "2026-10-21T19:10:30Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbwdt3/adam_hoge_on_x_jonah_jackson_good_to_go_for/",
+     "img": "",
+     "text": ""
+    },
+    {
+     "title": "Caleb running up to Ben after not getting the hail mary attempt 😭",
+     "by": "u/clou9nine",
+     "at": "2026-10-21T11:27:47Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbkkvx/caleb_running_up_to_ben_after_not_getting_the/",
+     "img": "https://external-preview.redd.it/ZWtnNzJsbnMydHdoMe3nEH1PvxFP_7jv3QzadlX1GQfB860Y8bQDzTEhx8xb.png?width=320&crop=smart&auto=webp&s=bae0026861ecf7e89b9d122233ed01e3f8e9db17",
+     "text": ""
+    },
+    {
+     "title": "\"Don't THINK you are... KNOW you are.\"",
+     "by": "u/NextGen-Panic",
+     "at": "2026-10-21T22:32:24Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xc1krh/dont_think_you_are_know_you_are/",
+     "img": "https://i.redd.it/2ayuv7pmcwwh1.png",
+     "text": ""
+    },
+    {
+     "title": "[JP Acosta] What is the ‘Peanut Punch’ showing up across the NFL?",
+     "by": "u/Foxhound_6",
+     "at": "2026-10-21T13:19:02Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbmyd3/jp_acosta_what_is_the_peanut_punch_showing_up/",
+     "img": "https://external-preview.redd.it/kkWh7VkI0SjLlA-J5QZCGV9_OyOlnKdKvGX0hs5-dbg.jpeg?width=640&crop=smart&auto=webp&s=c2f0ebcbe5c70a5a8110c26e650e7d93b5cdab35",
+     "text": "Peanut Tillman has been out of the NFL ten years and his mark and influence only continues to grow.\n Edit: don’t know how me posting an article written today indicates to some that I did not know what the Peanut Punch is. I’m in a Bears reddit page. I posted it since I thought it was cool that yet…"
+    },
+    {
+     "title": "[Bearsszn] The NFL’s game picks for Bears vs Patriots are IN and it’s majority Chicago. 👀 Bears are the heavy favorites in this highly anticipated matchup on primetime. 🍿",
+     "by": "u/clou9nine",
+     "at": "2026-10-21T18:50:32Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbvtyz/bearsszn_the_nfls_game_picks_for_bears_vs/",
+     "img": "https://i.redd.it/yonutp4t9vwh1.jpeg",
+     "text": ""
+    },
+    {
+     "title": "Holy hell",
+     "by": "u/Maximum-Coach-9409",
+     "at": "2026-10-21T16:23:43Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xbrruj/holy_hell/",
+     "img": "https://i.redd.it/gvq06zdmjuwh1.jpeg",
+     "text": "Look, we all know it’s expensive to go to a Bears game, but this is on a different level, it’s week 7."
+    },
+    {
+     "title": "Can we take a moment to appreciate King Poles for not hiring Jim Harbaugh in 2024?",
+     "by": "u/OldDirtyInsulin",
+     "at": "2026-10-22T03:52:50Z",
+     "url": "https://www.reddit.com/r/CHIBears/comments/1xc8a0k/can_we_take_a_moment_to_appreciate_king_poles_for/",
+     "img": "https://i.redd.it/p7ztz49kyxwh1.png",
+     "text": "To be fair, I'm not sure he had any desire to come here, but at the time I thought it would be great."
+    }
+   ]
+  }
+ ],
+ "banter": [
+  {
+   "sub": "r/soccer",
+   "title": "Alternate angles of Yan Diomande's great goal against RB Leipzig",
+   "by": "u/xggq",
+   "at": "2026-10-21T20:57:04Z",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbz77t/alternate_angles_of_yan_diomandes_great_goal/",
+   "img": ""
+  },
+  {
+   "sub": "r/soccer",
+   "title": "Walsall's goalkeeper Jed Ward sublime long-range assist for Tai Sodje’s opening goal against Oldham Athletic",
+   "by": "u/FM_highlights",
+   "at": "2026-10-21T12:25:12Z",
+   "url": "https://www.reddit.com/r/soccer/comments/1xblqfk/walsalls_goalkeeper_jed_ward_sublime_longrange/",
+   "img": ""
+  },
+  {
+   "sub": "r/soccer",
+   "title": "Como [1] - 0 Man United - Nico Paz 2'",
+   "by": "u/OptimusCloyster",
+   "at": "2026-10-21T17:00:49Z",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbssg7/como_1_0_man_united_nico_paz_2/",
+   "img": ""
+  },
+  {
+   "sub": "r/soccer",
+   "title": "Ten Hag \"Cristiano Ronaldo acts as if he is bigger than his country. It's over.\"",
+   "by": "u/cocacolapepsifanta",
+   "at": "2026-10-21T18:50:25Z",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbvtub/ten_hag_cristiano_ronaldo_acts_as_if_he_is_bigger/",
+   "img": ""
+  },
+  {
+   "sub": "r/soccer",
+   "title": "Como [4] - 0 Manchester Utd - Jacobo Ramón 76'",
+   "by": "u/eliseihado",
+   "at": "2026-10-21T18:19:27Z",
+   "url": "https://www.reddit.com/r/soccer/comments/1xbuza4/como_4_0_manchester_utd_jacobo_ramón_76/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "Sam LaPorta on not receiving an extension from the Lions: “I break my fucking back for this team. And then I’m going out there this year and I'm ballin, and maybe they're just not showing the love. In three months if I don’t get to play for the Lions anymore. I'll get paid elsewhere.\"",
+   "by": "u/oklolzzzzs",
+   "at": "2026-10-21T17:37:56Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xbttin/sam_laporta_on_not_receiving_an_extension_from/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "Source: Giants turning to J.J. McCarthy as QB1 this week against Texans",
+   "by": "u/JumperCables18",
+   "at": "2026-10-21T16:04:19Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xbr89z/source_giants_turning_to_jj_mccarthy_as_qb1_this/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "[Highlight/Interview] WR Chris Olave has a message for those who may mock him for his usage of a Gaurdian Cap: “I put it on for my kids, to protect my brain and my future”.",
+   "by": "u/Intelligent-Carob930",
+   "at": "2026-10-21T20:13:36Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xby31g/highlightinterview_wr_chris_olave_has_a_message/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "[Highlight] WR Tank Dell on playing this Sunday for the first time since December 2024: “I don’t care if the first catch is 2 yards, 5 yards, I’m spiking the ball and doing what I gotta do. It’s gonna feel good…I’m ready to get tackled. I’m gonna be joyful”.",
+   "by": "u/Intelligent-Carob930",
+   "at": "2026-10-21T21:41:17Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xc0ccq/highlight_wr_tank_dell_on_playing_this_sunday_for/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "[Highlight] Bengals players snub JD Vance.",
+   "by": "u/-random-name-",
+   "at": "2026-10-22T03:10:12Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xc7h4p/highlight_bengals_players_snub_jd_vance/",
+   "img": ""
+  },
+  {
+   "sub": "r/nfl",
+   "title": "[Highlight] RB Alvin Kamara comments on being one of the six people in NFL history to have 5,000 rushing and 5,000 receiving yards: “It's meaning I'm almost as old as Cam.\"",
+   "by": "u/Intelligent-Carob930",
+   "at": "2026-10-22T01:19:44Z",
+   "url": "https://www.reddit.com/r/nfl/comments/1xc56ut/highlight_rb_alvin_kamara_comments_on_being_one/",
+   "img": ""
+  },
+  {
+   "sub": "r/nba",
+   "title": "Lamello Ball travels a few steps",
+   "by": "u/El-Loco-Abreuuu",
+   "at": "2026-10-22T00:32:35Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xc4883/lamello_ball_travels_a_few_steps/",
+   "img": "https://external-preview.redd.it/bqnp2woM70FfJ_qrlI5bXAI1Do429Uk6vJ51abc2ScM.jpeg?width=640&crop=smart&auto=webp&s=c24220a6977d329b79e78e4d2ce8ae695fa8b4ba"
+  },
+  {
+   "sub": "r/nba",
+   "title": "[The Onion] Fans Worry Achilles Tear May Not Be End Of Ben Simmons’ Career",
+   "by": "u/New-Process-6463",
+   "at": "2026-10-21T19:51:57Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xbxhyf/the_onion_fans_worry_achilles_tear_may_not_be_end/",
+   "img": ""
+  },
+  {
+   "sub": "r/nba",
+   "title": "[Highlight] Tyrese Haliburton gets incredibly emotional after his first game back",
+   "by": "u/Fun_Reflection1157",
+   "at": "2026-10-22T02:43:35Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xc6xxd/highlight_tyrese_haliburton_gets_incredibly/",
+   "img": "https://external-preview.redd.it/rOeLiMzRroQVJLweePFrUAw5yrQ-8ubda5i69gJHKv0.jpeg?width=640&crop=smart&auto=webp&s=a4177717eec86f2926e089db554ab4cad34cefb2"
+  },
+  {
+   "sub": "r/nba",
+   "title": "[Highlight] Damian Lillard hits from \"Dame Distance\" to put the Blazers up 30 in the first quarter",
+   "by": "u/Large_banana_hammock",
+   "at": "2026-10-22T02:42:31Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xc6x68/highlight_damian_lillard_hits_from_dame_distance/",
+   "img": "https://external-preview.redd.it/YqcFV5MzOST2widNAgPqs_hBDl9XPnScSHP8UQvXIYU.jpeg?width=640&crop=smart&auto=webp&s=a7bd2116e1b77f6d8445ec481e6c49e876e07478"
+  },
+  {
+   "sub": "r/nba",
+   "title": "LeBron James During National Anthem",
+   "by": "u/New-Process-6463",
+   "at": "2026-10-21T23:03:08Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xc29q6/lebron_james_during_national_anthem/",
+   "img": "https://external-preview.redd.it/hCnfIIHncsfCcZYHNj6dcnuoVaTCuyqPPdCeSfs_0LY.jpeg?width=640&crop=smart&auto=webp&s=a64df9353603fa5776ed6c3fb67e67c8f6005a63"
+  },
+  {
+   "sub": "r/nba",
+   "title": "Dr'Aaron Fox on his flagrant foul against Chet: \"I wasn't even tryna throw him down like that... I don't think i'm that strong. Somebody grab you like that and you're flying on the floor like that you got other problems to worry about.\"",
+   "by": "u/New-Process-6463",
+   "at": "2026-10-21T20:41:51Z",
+   "url": "https://www.reddit.com/r/nba/comments/1xbyt5n/draaron_fox_on_his_flagrant_foul_against_chet_i/",
+   "img": "https://external-preview.redd.it/eCGw2IxsSOdytx-No0ykwxzh_51OKCOYUDOZODNcj7Q.jpeg?width=640&crop=smart&auto=webp&s=b2c19968c085974304f3b7086bc7c1dc3c1c6e3c"
+  }
+ ]
+}

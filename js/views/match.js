@@ -10,6 +10,9 @@ import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
 import { clipBox } from '../clips.js';
+import { matchClips, playClip } from './clipstab.js';
+import { threadCard } from './fans.js';
+import { threadsOf } from '../feed.js';
 
 // ---------- Pieces
 const openSubs = new Set();
@@ -468,6 +471,8 @@ export default function match([sport, slug, id], ctx) {
   const k = kitsFor(g);
   ctx.title = g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}`;
   html += header(g, k, d || {});
+  // FTLTG: the game's clips (stickers) and what fans are saying, right under the score.
+  if (d && g.state !== 'pre') html += (g.sport === 'basketball' ? '' : matchClips(g, d)) + fansCard(g);
   if (!d && !e.err) return html + skel(3);
   if (!d) return html + `<div class="banner amber">${icon('wifi')}<span>${g.viaBackup ? 'ESPN isn’t answering. This is the backup copy of the game' : 'Couldn’t load this game’s details. This is what My games already had'}: stats, line-ups and key moments come back when ESPN answers. It tries again on its own.</span></div><p class="foot">Times are Singapore time.</p>`;
   // Football: key moments, stats, line-ups. NBA: quarters, leaders, box score, team stats.
@@ -490,7 +495,15 @@ export default function match([sport, slug, id], ctx) {
   if (p && !navigator.connection?.saveData) setTimeout(() => { prefetch(p.next); prefetch(p.prev); }, 800);
   return html + pager();
 }
+function fansCard(g) {
+  const ts = threadsOf(g.id);
+  if (!ts.length) return '';
+  const order = g.state === 'post' ? ['post', 'match', 'pre'] : ['match', 'pre', 'post'];
+  ts.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
+  return `<div class="sect"><h2 class="cap">Fans</h2><span>${esc(ts[0].sub)}</span></div>${threadCard(g, ts[0], ts.slice(1), 2, false)}`;
+}
 match.actions = {
+  reel: playClip,
   subs(d, el, e, ctx) { openSubs.has(d.id) ? openSubs.delete(d.id) : openSubs.add(d.id); ctx.redraw(); },
   boxteam(d, el, e, ctx) { boxTeam.set(d.g, d.t); ctx.redraw(); },
   swipe(d) { swipeTo(+d.d); },

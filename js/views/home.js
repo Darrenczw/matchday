@@ -24,8 +24,15 @@ const QUICK = [
   { kind: 'comp', item: { path: 'basketball/nba', name: 'NBA', logo: compLogo('basketball/nba') }, sub: 'The whole league, all 30 teams' },
 ];
 
+// The Games header: title and freshness on the left; This week and the Settings gear on the right, now that
+// both left the tab bar (Darren picked the button on Games over a card in Follow, 22 Oct 2026).
+const GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.2h3.4l.5 2.4c.6.2 1.2.5 1.7.9l2.3-.8 1.7 2.9-1.8 1.6a6.6 6.6 0 010 2l1.8 1.6-1.7 2.9-2.3-.8c-.5.4-1.1.7-1.7.9l-.5 2.4h-3.4l-.5-2.4c-.6-.2-1.2-.5-1.7-.9l-2.3.8-1.7-2.9 1.8-1.6a6.6 6.6 0 010-2L4.1 8.6l1.7-2.9 2.3.8c.5-.4 1.1-.7 1.7-.9z"/><circle cx="12" cy="12" r="3"/></svg>';
+function topBar(sub) {
+  const wk = `<a class="btn sm ghost" href="#/week">${icon('cal')}This week</a>`;
+  return `<header class="top gm"><div><h1>My games</h1><span class="sub">${esc(sub)}</span></div><span class="navr">${wk}<a class="btn sm icon ghost" href="#/settings" aria-label="Settings">${GEAR}</a></span></header>`;
+}
 function empty() {
-  return `<header class="top"><h1>My games</h1><span class="sub">SGT</span></header>
+  return `${topBar('SGT')}
 <section class="empty"><h2>Pick what you follow</h2><p>Matchday shows only your games: clubs, national teams, whole leagues or single games. Nothing is picked for you.</p>
 <a class="btn go big" href="#/follow">${icon('search')}Find clubs and leagues</a></section>
 <div class="sect"><h2 class="cap">Or start with a whole league</h2></div>
@@ -101,7 +108,7 @@ export default function home(params, ctx) {
 
   const t = nightToday();
   const sub = DEMO ? 'Sample picks · SGT' : e.v?.backup ? `Backup · updated ${sg(e.v.backup.at).hm}` : net.offline && net.staleSince ? `Offline · from ${ago(net.staleSince)}` : e.t ? `SGT · updated ${sg(e.t).hm}` : 'SGT';
-  let html = `<header class="top"><h1>My games</h1><span class="sub">${esc(sub)}</span></header>` + calBanners(ctx);
+  let html = topBar(sub) + calBanners(ctx);
 
   const games = all?.filter(keep);
   const liveIn = new Set((all || []).filter(isLive).map((g) => g.sport));

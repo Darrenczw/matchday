@@ -3,7 +3,7 @@ import { esc, icon, ago, sg as sgt, dateText } from '../util.js';
 import { settings, set, MARKETS, clearPicks, followingAny, picks, DEMO } from '../store.js';
 import { windowName } from '../rules.js';
 import { rightsChecked } from '../tv.js';
-import { toast, calBtn } from '../ui.js';
+import { toast, calBtn, backBtn } from '../ui.js';
 import { cal, calCfg, CAL_API, calReady, calAny, setUp, status, newLink, webcal, syncState, calError } from '../cal.js';
 import { compImg, crest } from '../identity.js';
 
@@ -66,7 +66,7 @@ const sw = (path, on, label) => `<button class="switch" role="switch" aria-check
 
 export default function settingsView(params, ctx) {
   const ms = settings.markets;
-  let html = `<header class="top"><h1>Settings</h1>${DEMO ? '<span class="sub">Sample picks</span>' : ''}</header>`;
+  let html = `<nav class="nav">${backBtn(ctx.back?.href || '#/', ctx.back?.label || 'My games')}</nav><header class="top"><h1>Settings</h1>${DEMO ? '<span class="sub">Sample picks</span>' : ''}</header>`;
 
   html += calendarCard(ctx);
 

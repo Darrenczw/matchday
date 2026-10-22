@@ -16,6 +16,9 @@ import match from './views/match.js';
 import player from './views/player.js';
 import week from './views/week.js';
 import settingsView from './views/settings.js';
+import clipsTab from './views/clipstab.js';
+import fans from './views/fans.js';
+import thread from './views/thread.js';
 
 const ROUTES = [
   [/^#?\/?$/, home, 'home'],
@@ -25,8 +28,12 @@ const ROUTES = [
   [/^#\/t\/(\w+)\/([\w.]+)\/(\d+)$/, team, null],
   [/^#\/m\/(\w+)\/([\w.]+)\/(\d+)$/, match, null],
   [/^#\/p\/(\w+)\/([\w.]+)\/(\d+)$/, player, null],
-  [/^#\/week$/, week, 'week'],
-  [/^#\/settings$/, settingsView, 'settings'],
+  [/^#\/clips$/, clipsTab, 'clips'],
+  [/^#\/fans$/, fans, 'fans'],
+  [/^#\/fans\/t\/(\w+)$/, thread, null],
+  // This week and Settings left the tab bar (FTLTG tabs: Games, Clips, Fans, Follow); they keep the tab you came from lit.
+  [/^#\/week$/, week, null],
+  [/^#\/settings$/, settingsView, null],
 ];
 const main = document.getElementById('view');
 let route = null, lastTab = 'home', lastHtml = '';
@@ -146,6 +153,8 @@ function labelFor(h) {
   if (!h || h === '#/' || h === '#') return 'My games';
   if (h.startsWith('#/follow')) return 'Follow';
   if (h === '#/week') return 'This week';
+  if (h === '#/clips') return 'Clips';
+  if (h.startsWith('#/fans')) return 'Fans';
   if (h === '#/settings') return 'Settings';
   let m = h.match(/^#\/c\/(\w+)\/([\w.]+)$/);
   if (m) return compInfo(`${m[1]}/${m[2]}`).name;

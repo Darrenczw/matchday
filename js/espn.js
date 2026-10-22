@@ -124,7 +124,7 @@ export function norm(e, path, src = 'sb') {
     // NFL, live only: down and distance, and who has the ball.
     sit: sport === 'football' && ty.state === 'in' && c.situation?.possession ? { dd: c.situation.shortDownDistanceText || c.situation.downDistanceText || '', poss: String(c.situation.possession), at: c.situation.possessionText || '' } : null,
     // Football: goals with their minute, for the goal timeline.
-    goals: sport === 'soccer' ? (c.details || []).filter((x) => x.scoringPlay && !x.shootout).map((x) => ({ m: parseInt(x.clock?.displayValue, 10) || Math.ceil((x.clock?.value || 0) / 60), t: String(x.team?.id || ''), who: x.athletesInvolved?.[0]?.shortName || '', og: !!x.ownGoal })) : [],
+    goals: sport === 'soccer' ? (c.details || []).filter((x) => x.scoringPlay && !x.shootout).map((x) => ({ m: parseInt(x.clock?.displayValue, 10) || Math.ceil((x.clock?.value || 0) / 60), t: String(x.team?.id || ''), who: x.athletesInvolved?.[0]?.shortName || x.participants?.[0]?.athlete?.shortName || '', og: !!x.ownGoal })) : [],
   };
   known.set(g.id, g);
   return g;

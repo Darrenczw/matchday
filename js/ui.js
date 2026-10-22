@@ -6,6 +6,7 @@ import { mainMarket, tvShort, rightsChecked } from './tv.js';
 import { reasons, freeHour, tablesVersion } from './suggest.js';
 import { load, save, on, following, teamKey } from './store.js';
 import { inCal } from './cal.js';
+import { badge as feedBadge, snapAt } from './feed.js';
 
 export const href = {
   match: (g) => `#/m/${g.path}/${g.id}`,
@@ -83,14 +84,14 @@ const rowCache = new Map();
 on((why) => { if (why !== 'calsync') rowCache.clear(); });
 export function cachedRow(kind, g, opts, build) {
   const key = [kind, g.id, g.state, g.date, g.timeValid, g.postponed, g.home.score, g.away.score, g.home.color, g.away.color, g.home.logo, g.away.logo,
-    g.clock, g.period, g.statusName, g.detail, g.viaBackup, isDark(), rightsChecked() || '', tablesVersion(), todayKey(), JSON.stringify(opts)].join('|');
+    g.clock, g.period, g.statusName, g.detail, g.viaBackup, isDark(), rightsChecked() || '', tablesVersion(), todayKey(), snapAt(), JSON.stringify(opts)].join('|');
   let h = rowCache.get(key);
   if (h === undefined) { if (rowCache.size > 3000) rowCache.clear(); h = build(); rowCache.set(key, h); }
   return h;
 }
 export const gameRow = (g, opts = {}) => cachedRow('row', g, opts, () => buildRow(g, opts));
 
-function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1, fh: showFh = true } = {}) {
+function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1, fh: showFh = true, badge = true } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
@@ -121,6 +122,9 @@ function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true
     tvSaid = tvSpoken(m);
   }
   if (g.viaBackup) bits.push('<span class="tag likely">Backup</span>');
+  // FTLTG: a finished game says what's waiting for you: "3 clips · thread".
+  const fb = badge && g.state === 'post' ? feedBadge(g.id) : '';
+  if (fb) bits.push(`<span class="fb">${esc(fb)}</span>`);
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
   else if (moved) bits.push(`<span class="moved">${movedText(moved)}</span>`);
   else for (const w of whys) bits.push(w === fh ? `<span class="fh">${esc(w)}</span>` : `<em>${esc(w)}</em>`);

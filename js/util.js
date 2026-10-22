@@ -49,7 +49,8 @@ export function ago(ts) {
   if (m < 1) return 'just now';
   if (m < 60) return `${m} min ago`;
   const h = Math.round(m / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} days ago`;
+  const d = Math.round(h / 24);
+  return h < 24 ? `${h} h ago` : `${d} day${d > 1 ? 's' : ''} ago`;
 }
 export function countdown(d) {
   const mins = Math.round((new Date(d) - Date.now()) / 60e3);
