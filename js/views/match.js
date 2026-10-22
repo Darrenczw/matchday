@@ -265,7 +265,8 @@ function playersNFL(g, d, k) {
   const parts = NFL_UNITS.map(([key, title, cols, max]) => {
     const s = groups.find((x) => x.name === key);
     if (!s?.athletes?.length) return '';
-    const rows = s.athletes.slice(0, max || 99).map((a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, cells: pick(s.labels, cols, a.stats) }));
+    const x = id === k.left.team.id ? k.left : k.right;
+    const rows = s.athletes.slice(0, max || 99).map((a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '' }));
     return `<h3 class="unit">${title}</h3>${table(cols, rows)}`;
   }).join('');
   return `<div class="card"><h2>Player stats</h2>${teamSwitch(g, k)}${parts}</div>`;

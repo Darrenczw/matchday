@@ -222,10 +222,10 @@ export function toast(msg, undo) {
 }
 export { isDark };
 
-// ---------- Player faces (NBA first, Darren 22 Oct 2026). ESPN's cut-out headshot standing on the team's
+// ---------- Player faces (NBA, then NFL; Darren 22 Oct 2026). ESPN's cut-out headshot standing on the team's
 // shirt colour, like a player in his kit. No photo, or a broken one: his shirt number in the number colour.
-// Sports turn on one at a time; NFL photos are in the same feed, football needs a second source.
-export const FACES = new Set(['basketball']);
+// Sports turn on one at a time; football (soccer) needs a second source.
+export const FACES = new Set(['basketball', 'football']);
 export function face(a, x, size = 40) {
   if (!a) return '';
   const src = a.headshot?.href?.match(/^https:\/\/a\.espncdn\.com(\/i\/headshots\/.+\.png)$/);
