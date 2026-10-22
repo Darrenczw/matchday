@@ -17,7 +17,9 @@ const PER_RUN = 1, GAP = 6000, REST = 30 * MIN, SLOW = 5 * MIN, SPACING = 3.5 * 
 // Built-in feeds and how often each refreshes: [while a followed game is live, otherwise].
 const FEEDS = {
   threads: { url: `${R}/r/soccer+nfl+nba/search.rss?q=${encodeURIComponent('title:"match thread" OR title:"game thread"')}&restrict_sr=on&sort=new&t=day&limit=60`, every: [6 * MIN, 15 * MIN] },
-  goals: { url: `${R}/r/soccer/search.rss?q=flair%3Amedia&restrict_sr=on&sort=new&t=day&limit=100`, every: [4 * MIN, 20 * MIN] },
+  // Goal clips show up first in r/soccer's newest posts ("Arsenal [1] - 0 Everton - Saka 23'"); the media search
+  // misses most of them (22 Oct 2026).
+  goals: { url: `${R}/r/soccer/new/.rss?limit=100`, every: [4 * MIN, 20 * MIN] },
   plays: { url: `${R}/r/nba+nfl/search.rss?q=title%3Ahighlight&restrict_sr=on&sort=new&t=day&limit=100`, every: [6 * MIN, 30 * MIN] },
   banter: { url: `${R}/r/soccer+nfl+nba/top/.rss?t=day&limit=30`, every: [45 * MIN, 30 * MIN] },
 };

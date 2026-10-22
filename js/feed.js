@@ -128,6 +128,17 @@ async function liveFeed() {
   const people = new Map(list.filter((x) => x.g.sport === 'football').map((x) => [x.g.id, peopleOf(x.d)]));
   const clips = [...(j.goals || []).map((x) => goalClip(x, gs)), ...(j.plays || []).map((x) => playClip(x, gs, people))].filter(Boolean);
   await streamable(clips);
+  // Games from before the helper started reading Reddit: the saved snapshot's checked clips and comments fill in.
+  const snap = await snapshot().catch(() => null);
+  if (snap) {
+    const ids = new Set(gs.map((g) => g.id)), have = new Set(clips.map((c) => c.url));
+    for (const c of snap.clips || []) if (ids.has(c.game) && !have.has(c.url)) clips.push(c);
+    for (const t of snap.threads || []) {
+      const mine = threads.find((x) => x.url === t.url || (x.game === t.game && x.kind === t.kind));
+      if (mine && !mine.comments.length) mine.comments = t.comments;
+      else if (!mine && ids.has(t.game)) threads.push({ ...t });
+    }
+  }
   // Your teams: the helper's multi-feed, split back by subreddit.
   const teams = picks.teams.map((p) => ({ sport: sportOf(p.path), id: p.id, name: p.name, sub: subOf(sportOf(p.path), p.name) })).filter((x) => x.sub)
     .map((x) => ({ ...x, sub: `r/${x.sub}`, posts: (j.teams || []).filter((y) => y.sub.toLowerCase() === x.sub.toLowerCase()).map(postOut) }));
