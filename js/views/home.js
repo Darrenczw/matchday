@@ -1,11 +1,13 @@
-// Home: "My games". Live first while a game is on, then results (newest first), then coming up (soonest first). All in SGT.
-import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
-import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
+// Home: "My games" (option A, Darren, 22 Oct 2026). It opens at now and time only goes down: Live (or Next up),
+// then results since you last looked, then what's coming, under your own free-hour slots. All in SGT.
+import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, icon, ago, countdown } from '../util.js';
+import { picks, followingAny, DEMO, load, save, sportOf, teamKey, settings } from '../store.js';
 import { gamesFor, isLive, soon, net, sortGames, known } from '../espn.js';
 import { compLogo, compImg, kitsFor, crest, kitEdge } from '../identity.js';
-import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow } from '../ui.js';
-import { calReady, status as calStatus } from '../cal.js';
-import { useTables } from '../suggest.js';
+import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow, movedFrom, movedText } from '../ui.js';
+import { calReady, status as calStatus, gameInCal } from '../cal.js';
+import { useTables, reasons, freeHour } from '../suggest.js';
+import { windowsOf, inWindow } from '../rules.js';
 import { prefetchVisible } from '../prefetch.js';
 
 let ver = 0;
@@ -108,7 +110,8 @@ export default function home(params, ctx) {
   const days = keyRange(addDays(t, -7 * (earlier + 1)), addDays(t, 7 * (MAX_WEEKS + 1)));
   const has = new Set([...ahead.map((g) => nightKey(g.date)), ...(e.v?.season || []).filter(() => f === 'all')]);
   const on = curDay || t;
-  html += `<div class="filterbar">${strip(days, t, on, has)}`
+  // The date strip scrolls away with the title; only the sport chips and the date button stay on top (option A).
+  html += strip(days, t, on, has) + `<div class="filterbar">`
     + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<button class="stripm" data-act="pick" aria-haspopup="dialog" aria-label="Pick a date. Showing ${monthOf(on)}"><b>${monthOf(on)}</b>${icon('cal')}</button></div></div>`;
   if (pick) html += picker(days, t, on, has);
   setTimeout(() => { placeStrip(); track(); }, 0);
@@ -127,25 +130,60 @@ export default function home(params, ctx) {
   if (f !== 'all' && !followed.has(f)) {
     return html + `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
   }
-  // Live now first while a game is on, so a quick score check never needs a scroll. Then results, newest
-  // at the top. Then what's coming, soonest at the top, one section per viewing night.
+  // 1. Live now while a game is on, so a quick score check never needs a scroll. Otherwise one big Next up card.
   const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
   const live = games.filter(isLive);
+  let next = null;
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  const since = earlier ? `Since ${keyLabel(addDays(todayKey(), -3 - 7 * earlier))}` : `Since ${sg(addDays(t, -3) + 'T04:00:00Z').wd}`;
-  if (results.length || earlier) html += `<div class="sect"><h2 class="cap">Results</h2><span>${since}</span></div>${resultRows(results, t)}`;
+  else {
+    const soon7 = ahead.filter((g) => !g.postponed && nightKey(g.date) <= addDays(t, 6));
+    next = soon7.find(mine) || soon7.find(special) || soon7[0] || null;
+    if (next) html += `<div class="sect"><h2 class="cap">Next up</h2><span>${esc(next.comp.name)}</span></div>${nextUp(next)}`;
+  }
+  // 2. Results since you last looked: your teams first, a followed league's other results fold into one line.
+  html += sinceRows(results);
+  // 3. What's coming, one section per viewing night, under your free-hour slots. Your teams, single games and
+  // stand-out games get full rows; the rest of a followed league folds per slot. After this week, month headings
+  // with one-line rows.
   // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
   const soonWk = ahead.filter((g) => nightKey(g.date) <= addDays(t, 6));
   const wk = f === 'football' ? [...new Set(soonWk.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
-  const wkTxt = wk.length ? `<span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span>` : '';
-  if (ahead.length) html += `<div class="sect" id="coming"><h2 class="cap">Coming up</h2>${wkTxt}</div>`;
-  // This week in full rows, one section per night; after that, month headings with compact rows.
-  let day = '', month = '';
-  for (const g of ahead) {
-    const k = nightKey(g.date), far = k > addDays(t, 6);
-    if (far && k.slice(0, 7) !== month) { if (day) { html += '</section>'; day = ''; } month = k.slice(0, 7); html += `<div class="sect month"><h2 class="cap">${monthOf(k)}${k.slice(0, 4) !== t.slice(0, 4) ? ` ${k.slice(0, 4)}` : ''}</h2></div>`; }
-    if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}"><h3 class="dayh${far ? ' sm' : ''}">${keyLabel(k)}</h3>`; day = k; }
-    html += far ? compactRow(g) : gameRow(g);
+  if (wk.length) html += `<div class="sect"><h2 class="cap">Coming up</h2><span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span></div>`;
+  const fold = picks.teams.length + picks.games.length > 0; // only leagues followed: nothing to fold behind
+  let day = '', month = '', first = true;
+  const list = ahead.filter((g) => g !== next);
+  for (let i = 0; i < list.length;) {
+    const g = list[i], k = nightKey(g.date), far = k > addDays(t, 6);
+    if (far) {
+      if (k.slice(0, 7) !== month) { if (day) { html += '</section>'; day = ''; } month = k.slice(0, 7); html += `<div class="sect month"${first ? ' id="coming"' : ''}><h2 class="cap">${monthOf(k)}${k.slice(0, 4) !== t.slice(0, 4) ? ` ${k.slice(0, 4)}` : ''}</h2></div>`; first = false; }
+      if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}"><h3 class="dayh sm">${keyLabel(k)}</h3>`; day = k; }
+      // Later weeks: one-line rows; a followed league's other games fold per night, as in this week.
+      const night = [];
+      while (i < list.length && nightKey(list[i].date) === k) night.push(list[i++]);
+      const top = fold ? night.filter((x) => mine(x) || special(x)) : night, rest = night.filter((x) => !top.includes(x));
+      html += top.map(compactRow).join('');
+      for (const path of [...new Set(rest.map((x) => x.path))]) {
+        const gs = rest.filter((x) => x.path === path), fk = `${k}|far|${path}`;
+        if (gs.length === 1 || openFolds.has(fk)) html += gs.map(compactRow).join('');
+        else html += foldLine(gs, fk, top.length > 0);
+      }
+      continue;
+    }
+    if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}">`; day = k; }
+    // One slot: the games of this night in the same free-hour window (or the same part of the day outside them).
+    const sl = slotOf(g), sk = `${k}|${sl.id}`, group = [];
+    while (i < list.length && nightKey(list[i].date) === k && slotOf(list[i]).id === sl.id) group.push(list[i++]);
+    html += `<div class="sect slot${sl.free ? '' : ' off'}"${first ? ' id="coming"' : ''}><h3 class="cap">${esc(slotName(k, sl))}</h3><span>${esc(sl.note)}</span></div>`;
+    first = false;
+    const top = fold ? group.filter((x) => mine(x) || special(x)) : group, rest = group.filter((x) => !top.includes(x));
+    html += top.map((x) => gameRow(x, { tv: false, fh: false })).join('');
+    // The rest, per competition: one game stays a one-line row, two or more fold into a line you can open.
+    for (const path of [...new Set(rest.map((x) => x.path))]) {
+      const gs = rest.filter((x) => x.path === path), fk = `${sk}|${path}`;
+      if (gs.length === 1) html += compactRow(gs[0]);
+      else if (openFolds.has(fk)) html += gs.map((x) => gameRow(x, { tv: false, fh: false })).join('') + `<button class="btn ghost more" data-act="fold" data-k="${esc(fk)}">${icon('up')}Show fewer</button>`;
+      else html += foldLine(gs, fk, top.length > 0);
+    }
   }
   if (day) html += '</section>';
   // A quiet stretch: keep loading weeks until something shows (or the season runs out).
@@ -219,7 +257,9 @@ const compactRow = (g) => cachedRow('crow', g, {}, () => buildCompact(g));
 function buildCompact(g) {
   const k = kitsFor(g), s = sg(g.date);
   const p = (x, r) => `<div class="p${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${r ? `<b>${esc(x.team.abbr || x.team.short)}</b>${crest(x.team, 18, true)}` : `${crest(x.team, 18, true)}<b>${esc(x.team.abbr || x.team.short)}</b>`}</div>`;
-  const mid = g.state === 'post' ? `<b>${scoreText(k, true)}</b>` : g.postponed ? '<b>PP</b>' : `<b>${g.timeValid ? s.hm : 'TBC'}</b>`;
+  // A 00:30 kick-off sits with the evening before it, so it says its own day ("00:30 MON").
+  const late = g.timeValid && nightKey(g.date) !== s.key ? `<small>${s.wd}</small>` : '';
+  const mid = g.state === 'post' ? `<b>${scoreText(k, true)}</b>` : g.postponed ? '<b>PP</b>' : `<b>${g.timeValid ? s.hm : 'TBC'}</b>${late}`;
   return `<a class="crow${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(spoken(g, k))}">${p(k.left)}<div class="mid">${mid}</div>${p(k.right, true)}</a>`;
 }
 
@@ -246,13 +286,86 @@ function resultRows(results, t) {
   return html;
 }
 
+// ---------- Option A pieces (Darren, 22 Oct 2026)
+// A game that earns a full row: your team, a single game you picked, or a stand-out reason (big game, abroad,
+// on a streamer, playoffs). The free-hours fit alone doesn't count: most games have one.
+const mine = (g) => yourTeam(g);
+const special = (g) => g.state === 'pre' && !g.postponed && reasons(g).some((r) => r !== freeHour(g));
+
+// The slot a game sits in: the free-hour window it starts in, or, outside them, the part of the day.
+const PART = (m) => (m < 5 * 60 ? 'late night' : m < 12 * 60 ? 'morning' : m < 18 * 60 ? 'afternoon' : m < 23 * 60 ? 'evening' : 'late night');
+const mm = (hm) => { const [h, m] = hm.split(':').map(Number); return h * 60 + (m || 0); };
+function slotOf(g) {
+  if (!g.timeValid) return { id: 'tbc', free: false, part: '', note: 'Time to be confirmed' };
+  const s = sg(g.date), w = windowsOf(settings).find((x) => x.on && inWindow(x, s.dow, s.mins));
+  if (w) return { id: `w-${w.id}`, free: true, part: PART(mm(w.from)), note: `Free ${w.from}–${w.to}` };
+  const part = PART(s.mins);
+  return { id: `p-${part}`, free: false, part, note: 'Outside your free hours' };
+}
+// "This morning", "Tonight", "Tomorrow evening", "Fri late night", "Sat 31 Oct · time to be confirmed".
+function slotName(k, sl) {
+  const t = nightToday(), x = sg(k + 'T04:00:00Z');
+  if (!sl.part) return `${keyLabel(k)} · time TBC`;
+  if (k === t) return sl.part === 'evening' ? 'Tonight' : sl.part === 'late night' ? 'Late tonight' : `This ${sl.part}`;
+  return `${k === addDays(t, 1) ? 'Tomorrow' : x.wd} ${sl.part}`;
+}
+
+// Next up: one big card for the game that matters most when nothing is live. Kick-off, countdown, slot, the
+// stand-out reason and whether it's in the calendar. No channel line: that's on the match page (Darren).
+const nextUp = (g) => cachedRow('next', g, { cal: gameInCal(g), m: Math.floor(Date.now() / 60e3) }, () => buildNext(g));
+function buildNext(g) {
+  const k = kitsFor(g), s = sg(g.date), moved = movedFrom(g);
+  const why = reasons(g).filter((r) => r !== freeHour(g))[0];
+  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 34, true)}<span class="tn">${esc(x.team.short)}${g.sport !== 'soccer' ? `<small>${x.team.home ? 'Home' : 'Away'}</small>` : ''}</span></div>`;
+  const when = slotName(nightKey(g.date), slotOf(g));
+  const bits = [moved ? `<span class="moved">${esc(movedText(moved))}</span>` : `<b>${esc(when)}</b><span class="cd">${g.timeValid ? esc(countdown(g.date)) : 'Time to be confirmed'}</span>`];
+  if (why) bits.push(`<em>${esc(why)}</em>`);
+  if (gameInCal(g)) bits.push(`<span class="incal">${icon('check')}In your calendar</span>`);
+  return `<a class="nx" href="${href.match(g)}" aria-label="${esc(`Next up. ${spoken(g, k, { moved, why: reasons(g).join(', ') })}${gameInCal(g) ? ' In your calendar.' : ''}`)}">${side(k.left)}${side(k.right, true)}<div class="ko" aria-hidden="true"><b>${g.timeValid ? s.hm : 'TBC'}</b><span>${s.wd} ${s.d} ${s.mo}</span></div><div class="nxm" aria-hidden="true">${bits.join('<span aria-hidden="true">·</span>')}</div></a>`;
+}
+
+// "Since you looked": the time is saved when the app leaves the screen, and read again when you come back
+// after more than 10 minutes away, so a quick switch to another app doesn't clear the list.
+let prevSeen = load('seenAt', 0) || Date.now() - 864e5, hiddenAt = 0, allRes = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); save('seenAt', hiddenAt); return; }
+  if (hiddenAt && Date.now() - hiddenAt > 10 * 60e3) { prevSeen = hiddenAt; allRes = false; openOlder = false; homeCtx?.redraw(); }
+});
+const openFolds = new Set(); // folded league lines opened this visit
+const sinceText = () => { const s = sg(prevSeen); return s.key === todayKey() ? s.hm : `${s.wd} ${s.hm}`; };
+function sinceRows(results) {
+  // A game counts as new if it could have finished after your last look (started up to 4 h before it).
+  const t = nightToday(), fresh = results.filter((g) => new Date(g.date).getTime() > prevSeen - 4 * 3600e3);
+  if (allRes) return `<div class="sect"><h2 class="cap">Results</h2><span>Since ${earlier ? keyLabel(addDays(todayKey(), -3 - 7 * earlier)) : sg(addDays(t, -3) + 'T04:00:00Z').wd}</span></div>${resultRows(results, t)}`;
+  const fold = picks.teams.length + picks.games.length > 0;
+  const top = fold ? fresh.filter(mine) : fresh, rest = fresh.filter((g) => !top.includes(g));
+  let html = '';
+  if (fresh.length) html += `<div class="sect"><h2 class="cap">${fresh.length ? 'Since you looked' : 'Results'}</h2><span>${fresh.length ? `last open ${sinceText()}` : ''}</span></div>`;
+  html += top.map(compactRow).join('');
+  for (const path of [...new Set(rest.map((x) => x.path))]) {
+    const gs = rest.filter((x) => x.path === path), fk = `res|${path}`;
+    if (gs.length === 1 || openFolds.has(fk)) html += gs.map(compactRow).join('');
+    else html += foldLine(gs, fk, top.length > 0, 'result');
+  }
+  const label = fresh.length ? 'All results' : `No new results since ${sinceText()}`;
+  return html + `<button class="fold quiet" data-act="allres"><span class="grow">${esc(label)}</span>${fresh.length ? '' : '<span class="go">All results</span>'}${icon('chev', 'chev')}</button>`;
+}
+// One line for a followed league's other games: team codes in their colours, then "Premier League · 3 more".
+function foldLine(gs, fk, more, noun = 'game') {
+  const codes = gs.slice(0, 6).flatMap((g) => { const k = kitsFor(g); return [k.left, k.right]; }).slice(0, 8)
+    .map((x) => `<i class="${kitEdge(x).trim()}" style="background:${x.bg};color:${x.ink}">${esc(x.team.abbr || x.team.short)}</i>`).join('');
+  const n = gs.length, name = gs[0].comp.name;
+  const text = more ? `${name} · ${n} more` : `${name} · ${n} ${noun}s`;
+  return `<button class="fold" data-act="fold" data-k="${esc(fk)}" aria-expanded="false" aria-label="${esc(`${text}. Show them`)}">${compImg(gs[0].comp.logo, 18, '')}<span class="grow"><span class="codes" aria-hidden="true">${codes}</span><span class="ft">${esc(text)}</span></span>${icon('down', 'chev')}</button>`;
+}
+
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 const barH = () => (document.querySelector('.filterbar')?.offsetHeight || 0) + 4;
 const onHome = () => !location.hash || location.hash === '#/' || location.hash === '#';
 
 // The strip opens with today at its left edge (keeping the scroll you left it at after that).
 function placeStrip() {
-  const strip = document.querySelector('.filterbar .days'), b = strip?.querySelector('.today');
+  const strip = document.querySelector('#view .days'), b = strip?.querySelector('.today');
   if (!strip || !b || placed.has(strip)) return;
   strip.scrollLeft = b.offsetLeft - strip.offsetLeft - 14;
   placed.add(strip);
@@ -268,10 +381,10 @@ function track() {
   for (const sec of document.querySelectorAll('#view section[id^="d-"]')) { if (sec.getBoundingClientRect().top <= line) k = sec.id.slice(2); else break; }
   if (k !== curDay) {
     curDay = k;
-    const strip = bar.querySelector('.days');
-    strip.querySelector('.cur')?.removeAttribute('aria-current');
-    strip.querySelector('.cur')?.classList.remove('cur');
-    const btn = strip.querySelector(`[data-k="${k}"]`);
+    const strip = document.querySelector('#view .days');
+    strip?.querySelector('.cur')?.removeAttribute('aria-current');
+    strip?.querySelector('.cur')?.classList.remove('cur');
+    const btn = strip?.querySelector(`[data-k="${k}"]`);
     if (btn) {
       btn.classList.add('cur'); btn.setAttribute('aria-current', 'date');
       const l = btn.offsetLeft - strip.offsetLeft, r = l + btn.offsetWidth;
@@ -312,6 +425,8 @@ home.actions = {
   // The button goes away when the day opens, so move focus to the first row it revealed (VoiceOver and keyboard).
   older(d, el, e, ctx) { openOlder = true; ctx.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('r-older')?.focus())); },
   earlier(d, el, e, ctx) { earlier++; ctx.redraw(); },
+  fold(d, el, e, ctx) { if (openFolds.has(d.k)) openFolds.delete(d.k); else openFolds.add(d.k); ctx.redraw(); },
+  allres(d, el, e, ctx) { allRes = true; ctx.redraw(); },
   sport(d, el, e, ctx) {
     cur = d.s; ctx.redraw();
     requestAnimationFrame(() => requestAnimationFrame(() => {

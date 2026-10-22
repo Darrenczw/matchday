@@ -77,11 +77,18 @@ function tvTag(x) {
   return `<a class="tag ${cls} src" href="${esc(x.source)}" target="_blank" rel="noopener" aria-label="${esc(`${KIND[x.kind]}: source for ${x.label}`)}">${KIND[x.kind]}</a>`;
 }
 // Where to watch: every market on an equal row, in Darren's market order (Darren, 22 Oct 2026: UK, SG
-// and the rest matter the same, so none is drawn bigger). Rows elsewhere still show the first market.
+// and the rest matter the same, so none is drawn bigger). Folded to the first listed market until you
+// open it, so channels don't take the whole first screen (Darren, 22 Oct 2026). Open stays open this visit.
+let tvOpen = false;
 function tvAll(g) {
   const all = allMarkets(g);
   const listed = all.filter((x) => x.kind !== 'none'), none = all.filter((x) => x.kind === 'none');
   let html = '<div class="card"><h2>Where to watch</h2>';
+  if (!tvOpen && all.length > 1) {
+    const x = listed[0], n = all.length - (x ? 1 : 0);
+    if (x) html += `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chanList(x.channels))}</span>${tvTag(x)}</div>`;
+    return html + `<button class="tvrow tvmore" data-act="tvopen" aria-expanded="false"><span class="c">${x ? `${n} more ${n > 1 ? 'countries' : 'country'}` : 'Not listed in your countries'}</span>${icon('down', 'chev')}</button></div>`;
+  }
   html += listed.map((x) => `<div class="tvrow"><span class="m">${esc(x.label)}</span><span class="c">${esc(chanList(x.channels))}${x.channels[0] === 'Not shown live' && x.note ? `<small>${esc(x.note)}</small>` : ''}</span>${tvTag(x)}</div>`).join('');
   if (none.length) html += `<div class="tvrow"><span class="c" style="color:var(--mute)">Not listed: ${esc(none.map((x) => x.label).join(', '))}</span></div>`;
   html += `<p class="note">Exact = listed for this game. Likely = holds the rights this season${rightsChecked() ? ` (rights checked ${esc(dateText(rightsChecked()))})` : ''}. Tap Likely to see where it comes from.</p></div>`;
@@ -479,4 +486,5 @@ match.actions = {
   subs(d, el, e, ctx) { openSubs.has(d.id) ? openSubs.delete(d.id) : openSubs.add(d.id); ctx.redraw(); },
   boxteam(d, el, e, ctx) { boxTeam.set(d.g, d.t); ctx.redraw(); },
   swipe(d) { swipeTo(+d.d); },
+  tvopen(d, el, e, ctx) { tvOpen = true; ctx.redraw(); },
 };

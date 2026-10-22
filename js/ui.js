@@ -89,7 +89,7 @@ export function cachedRow(kind, g, opts, build) {
 }
 export const gameRow = (g, opts = {}) => cachedRow('row', g, opts, () => buildRow(g, opts));
 
-function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1 } = {}) {
+function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1, fh: showFh = true } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
@@ -106,7 +106,8 @@ function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true
   // game stands out; the free-hours fit after them in grey, since most games have one.
   const all = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g) : [];
   const fh = freeHour(g);
-  let whys = [...all.filter((x) => x !== fh), ...all.filter((x) => x === fh)].slice(0, whyMax);
+  // My games already names the free-hour slot in its headings, so it can leave the fit out of the row.
+  let whys = [...all.filter((x) => x !== fh), ...(showFh ? all.filter((x) => x === fh) : [])].slice(0, whyMax);
   const m = tv && g.state !== 'post' ? mainMarket(g) : null;
   const used = (compName ? comp.name.length : 0) + (m ? m.label.length + tvShort(m, false).length : 0);
   if (whys.length > 1 && used + whys.join(' · ').length > budget) whys = whys.slice(0, 1); // the line is one line

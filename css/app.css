@@ -469,3 +469,39 @@ html[data-sport] .filterbar { background: color-mix(in srgb, var(--ground) 84%, 
 .wk > .btn { position: absolute; right: 6px; bottom: 5px; }
 .wk .row .meta img { width: 18px; height: 18px; }
 
+
+/* ---------- My games, option A (22 Oct 2026): Next up card, free-hour slot headings, folded league lines */
+.filterbar { padding-top: 6px; }
+.sect.slot { padding-top: 16px; }
+.sect.slot .cap { color: var(--ink); }
+.sect.slot span { white-space: nowrap; }
+.sect.slot.off .cap, .sect.slot.off span { color: var(--mute); }
+.nx { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 0 var(--gutter) 10px; border-radius: var(--radius); overflow: hidden; background: var(--row); box-shadow: var(--shadow); }
+.nx .shirt { display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-width: 0; min-height: 124px; padding: 12px; }
+.nx .shirt.r { align-items: flex-end; text-align: right; }
+.nx .tn { font: 800 24px/1 var(--cond); text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
+.nx .tn small { display: block; margin-top: 4px; font: 700 11.5px/1 var(--text); letter-spacing: .08em; }
+.nx .ko { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; min-width: 104px; padding: 10px 8px; border-radius: 12px; background: #fff; color: #121318; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .45); }
+.nx .ko b { font: 800 34px/1 var(--cond); }
+.nx .ko span { font: 600 12px/1 var(--text); color: #50535c; }
+.nx .nxm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; padding: 9px 12px 10px; font: 500 13px/1.3 var(--text); color: var(--mute); }
+.nx .nxm b { font-weight: 700; color: var(--ink); }
+.nx .nxm .cd { font-weight: 700; color: var(--go); }
+.nx .nxm em { font-style: normal; font-weight: 700; color: var(--go); }
+.nx .nxm .moved { font-weight: 700; color: var(--amber); }
+.nx .incal { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; color: var(--ink); }
+.nx .incal svg { width: 15px; height: 15px; color: var(--go); }
+a.nx:active { filter: brightness(.97); }
+.fold { display: flex; align-items: center; gap: 9px; width: calc(100% - 2 * var(--gutter)); min-height: 44px; margin: 0 var(--gutter) 6px; padding: 7px 10px; border-radius: 10px; background: var(--row); box-shadow: var(--shadow); color: var(--ink); font: 600 13px/1.25 var(--text); text-align: left; }
+.fold img { width: 18px; height: 18px; object-fit: contain; flex: none; }
+.fold .grow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; flex: 1; min-width: 0; }
+.fold .codes { display: flex; gap: 3px; flex-wrap: wrap; }
+.fold .codes i { font: 800 11.5px/1 var(--cond); font-style: normal; letter-spacing: .03em; padding: 4px 5px; border-radius: 4px; }
+.fold .chev { width: 16px; height: 16px; flex: none; color: var(--mute); }
+.fold .go { font-weight: 700; color: var(--go); white-space: nowrap; }
+.fold.quiet { background: transparent; box-shadow: none; color: var(--mute); font-weight: 500; }
+.fold:active { filter: brightness(.97); }
+.crow .mid { gap: 2px; align-content: center; }
+.crow .mid small { font: 600 9.5px/1 var(--text); letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
+button.tvrow.tvmore { width: 100%; color: var(--go); font-weight: 700; text-align: left; }
+.tvmore .chev { width: 16px; height: 16px; color: var(--mute); }
