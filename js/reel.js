@@ -11,11 +11,14 @@
 // - one clip is got ready at a time, and only after the one on screen has played smoothly for a moment: first the
 //   next moment, then the next game's first clip, placed in the next game's slide so a swipe drags it in already
 //   showing its first frame. Three video elements are shared by every slide;
+// - the next few clips' servers are warmed while you watch (warm.js), so even a clip that wasn't got ready starts fast;
 // - Reduce Motion or Low Data Mode: nothing loads or plays on its own; the clip you tap plays.
 import { esc, icon } from './util.js';
 import { crest } from './identity.js';
 import { markSeen } from './feed.js';
 import { load as loadPref, save as savePref } from './store.js';
+import { masterOf } from './clips.js';
+import { warm } from './warm.js';
 
 // Sound stays as you last left it, for every clip and every visit (Darren, 22 Oct 2026).
 let el = null, track = null, S = null, sound = !!loadPref('clipSound', false), io = null;
@@ -115,7 +118,12 @@ function makeVideo() {
   // Playing: no "loading" pulse, and no play button over it (the watchdog may have shown one while it loaded).
   v.addEventListener('playing', () => { if (s === S?.cur) { segClass('buf', false); clearTimeout(S.watch); slideEl(S.gi)?.querySelector('.rplay')?.setAttribute('hidden', ''); } });
   v.addEventListener('ended', () => { if (el && s === S.cur) { markSeen(game().list[S.at[S.gi]]?.clip); next(true); } });
-  v.addEventListener('error', () => { s.ready?.(); s.ready = null; if (el && s === S.cur && v.getAttribute('src')) next(true); }); // a deleted clip: move on
+  v.addEventListener('error', () => {
+    // ESPN's direct 720p stream missing: its master playlist instead (clips.js).
+    const alt = masterOf(v.getAttribute('src'));
+    if (alt) { v.src = alt; v.play().catch(() => {}); return; }
+    s.ready?.(); s.ready = null; if (el && s === S.cur && v.getAttribute('src')) next(true); // a deleted clip: move on
+  });
   return s;
 }
 const segClass = (c, on) => slideEl(S.gi)?.querySelector('.rbar').children[S.at[S.gi]]?.classList.toggle(c, on);
@@ -167,6 +175,7 @@ function show(n, mode) {
   [...sl.querySelector('.rbar').children].forEach((x, j) => { x.classList.toggle('done', j < i); if (j >= i) x.firstChild.style.width = '0'; });
   const pb = sl.querySelector('.rplay');
   if (mode === 'tap' || (mode && !calm())) play(); else pb.hidden = false;
+  warm([m.clip, ...L.slice(i + 1, i + 4).map((x) => x.clip), ...(S.queue[gi + 1]?.list.slice(S.at[gi + 1] || 0, 2) || []).map((x) => x.clip)]);
   schedulePrime();
 }
 function play() {

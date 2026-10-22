@@ -9,6 +9,7 @@ import { net } from '../espn.js';
 import { face, skel, errorCard, gameRow } from '../ui.js';
 import { feedGames, mineFirst, moments, fullHighlights, isSeen, feedLabel, feedMode } from '../feed.js';
 import { openReel } from '../reel.js';
+import { warm } from '../warm.js';
 import { liveBar } from '../livebar.js';
 import { followingAny } from '../store.js';
 
@@ -76,6 +77,8 @@ export default function clipsTab(params, ctx) {
   });
   // The rings and the player use the same queue: every game with at least one clip, newest first.
   queue = pages.filter((x) => x.list.length);
+  // The clip each ring opens on, for the first four games: their servers warmed before you tap (warm.js).
+  warm(queue.slice(0, 4).map((x) => (x.list.find((m) => !isSeen(m.clip)) || x.list[0]).clip));
   // Diagnostics: "?debug" opens the player by itself ("&g=2" for the third game), for testing iPhone Safari headless.
   if (/[?&]debug\b/.test(location.search) && queue.length && !window.__dbgOpened) { window.__dbgOpened = true; setTimeout(() => playClip({ q: 'tab', gi: String(+(new URLSearchParams(location.search).get('g') || 0)) }), 1500); }
   const qi = (x) => queue.indexOf(x);
@@ -93,6 +96,7 @@ export function matchClips(g, d) {
   if (!ms.some((m) => m.clip) && !full) return '';
   const x = { g, d, k, ms, full, list: [...ms.filter((m) => m.clip), ...(full ? [{ clip: full }] : [])] };
   matchQueue = [x];
+  warm(x.list.filter((m) => !isSeen(m.clip)).slice(0, 2).map((m) => m.clip));
   const fullBtn = full ? `<button class="stk full${isSeen(full) ? ' seen' : ''}" role="listitem" data-act="reel" data-q="match" data-gi="0" data-clip="${esc(full.src)}" aria-label="${esc(`Full highlights from ${full.via}. Play`)}"><span class="fp">${PLAY}</span><b class="sm">Full</b><span class="sw">${esc(full.via)}</span></button>` : '';
   return `<section class="card album inmatch"><h2 class="h">Clips<span>${(() => { const n = x.list.filter((m) => !isSeen(m.clip)).length; return n ? `${n} to watch` : 'All watched'; })()}</span></h2><div class="stks" role="list">${ms.map((m) => sticker(x, m, 0, 'match')).join('')}${fullBtn}</div></section>`;
 }

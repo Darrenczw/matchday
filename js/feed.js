@@ -2,7 +2,8 @@
 // Live: the calendar helper reads Reddit's combined feeds (worker/src/reddit.js) and serves them at /api/fans;
 // here they are matched to your games from the last three nights. A thread or clip is only ever shown on a game
 // it was matched to: by ESPN's game id where Reddit carries it, else both teams' names and the time, and for a
-// goal the minute and scorer against ESPN's own goals. NBA clips come straight from ESPN, as on match pages.
+// goal the minute and scorer against ESPN's own goals. NBA clips are ESPN's own, plus r/nba's highlights of plays ESPN
+// didn't clip.
 // If the helper can't be reached, the saved snapshot of real data (data/ftltg-snapshot.json) stands in, labelled.
 import { summary, norm, isMine, gamesFor, isLive } from './espn.js';
 import { load, save, picks, emit, sportOf } from './store.js';
@@ -65,17 +66,23 @@ function goalClip(x, games, via = `r/${x.sub}`) {
   const team = (scorerA === aIsHome ? g.home : g.away).id;
   return { game: g.id, kind: 'goal', min: `${min}'`, team, who: who.trim(), title: x.title, src: x.src, poster: x.img || '', via, by: x.by, url: x.url, at: x.at };
 }
-// An NFL highlight: posted during the game, naming one of its players.
+// An NFL or NBA highlight ("[Highlight] Luka bounces a no-look pass to Kessler"): posted during the game or up to 5 hours
+// after it started, naming one of its players. A full name wins; for the NBA a surname alone counts when only one
+// game that night has a player by it.
+const PLAYS = { nfl: 'football', nba: 'basketball' };
 function playClip(x, games, people) {
-  if (x.sub.toLowerCase() !== 'nfl' || !x.src) return null;
-  const at = new Date(x.at).getTime();
-  for (const g of games.filter((y) => y.sport === 'football')) {
-    const d = at - new Date(g.date).getTime();
-    if (d < -15 * MIN || d > 5 * HOUR) continue;
-    const p = (people.get(g.id) || []).find((q) => q.name && fold(x.title).includes(fold(q.name)));
-    if (p) return { game: g.id, kind: 'play', min: '', team: p.team, who: p.name, title: x.title.replace(/^\[highlight\]\s*/i, ''), src: x.src, poster: x.img || '', via: 'r/nfl', by: x.by, url: x.url, at: x.at };
+  const sport = PLAYS[x.sub.toLowerCase()];
+  if (!sport || !x.src) return null;
+  const at = new Date(x.at).getTime(), t = ` ${fold(x.title)} `;
+  const near = games.filter((g) => { const d = at - new Date(g.date).getTime(); return g.sport === sport && d > -15 * MIN && d < 5 * HOUR; });
+  let hit = null;
+  for (const g of near) { const p = (people.get(g.id) || []).find((q) => q.name && t.includes(` ${fold(q.name)} `)); if (p) { hit = { g, p }; break; } }
+  if (!hit && sport === 'basketball') {
+    const c = near.flatMap((g) => (people.get(g.id) || []).filter((q) => surname(q.name).length >= 4 && t.includes(` ${surname(q.name)} `)).map((p) => ({ g, p })));
+    if (c.length && c.every((y) => y.g === c[0].g)) hit = c.sort((a, b) => t.indexOf(` ${surname(a.p.name)} `) - t.indexOf(` ${surname(b.p.name)} `))[0];
   }
-  return null;
+  if (!hit) return null;
+  return { game: hit.g.id, kind: 'play', min: '', team: hit.p.team, who: hit.p.name, title: x.title.replace(/^\[highlight\]\s*/i, ''), src: x.src, poster: x.img || '', via: `r/${x.sub}`, by: x.by, url: x.url, at: x.at };
 }
 
 // ---------- Loading: your games from the last three nights (and live ones), their summaries, and the helper's feeds.
@@ -124,8 +131,8 @@ async function liveFeed() {
   const w = want.join(',');
   if (w !== lastWant) { lastWant = w; j = (await helperFeeds(subs, w, live).catch(() => null)) || j; } // ask again, so comments come back
   for (const t of threads) t.comments = (j.comments?.[t.id] || []).map((c) => ({ by: c.by, text: c.text, at: c.at }));
-  // Clips: goals from r/soccer, plays from r/nfl. People in each NFL game, for naming a highlight's player.
-  const people = new Map(list.filter((x) => x.g.sport === 'football').map((x) => [x.g.id, peopleOf(x.d)]));
+  // Clips: goals from r/soccer, plays from r/nfl and r/nba. People in each NFL and NBA game, for naming a highlight's player.
+  const people = new Map(list.filter((x) => x.g.sport === 'football' || x.g.sport === 'basketball').map((x) => [x.g.id, peopleOf(x.d)]));
   const clips = [...(j.goals || []).map((x) => goalClip(x, gs)), ...(j.plays || []).map((x) => playClip(x, gs, people))].filter(Boolean);
   await streamable(clips);
   // Games from before the helper started reading Reddit: the saved snapshot's checked clips and comments fill in.
@@ -214,14 +221,33 @@ export function moments(g, d) {
       return { key: `${g.id}:${i}`, team, label: p.type?.abbreviation || 'TD', sub: `Q${p.period?.number || ''} ${p.clock?.displayValue || ''}`.trim(), who, ini: initialsOf(who), h: p.homeScore, a: p.awayScore, clip };
     });
   } else if (g.sport === 'basketball') {
-    // ESPN's own NBA clips: the player is found in the box score, so the sticker gets his face and team.
+    // ESPN's own NBA clips, and r/nba's highlights of other plays, together in the order they were posted. The player
+    // is found in the box score, so the sticker gets his face and team. An r/nba post naming a player of an ESPN clip
+    // posted within 8 minutes of it is the same play (ESPN's copy starts faster, see warm.js), so it's left out.
     const people = [];
-    for (const t of d?.boxscore?.players || []) for (const s of t.statistics || []) for (const x of s.athletes || []) people.push({ team: String(t.team?.id || ''), a: x.athlete });
-    out = clipList(d).filter((c) => c.dur <= 45).map((c, i) => {
-      const p = people.find((x) => x.a?.displayName && c.title.includes(x.a.displayName)) || people.find((x) => x.a?.shortName && c.title.includes(surname(x.a.displayName)));
+    for (const t of d?.boxscore?.players || []) for (const s of t.statistics || []) for (const x of s.athletes || []) if (x.athlete?.displayName) people.push({ team: String(t.team?.id || ''), a: x.athlete });
+    const first = (n) => fold(n).split(' ')[0];
+    const named = (title) => {
+      const t = ` ${fold(title)} `;
+      return people.filter((x) => t.includes(` ${surname(x.a.displayName)} `) || t.includes(` ${fold(x.a.displayName)} `)
+        || (first(x.a.displayName).length >= 4 && people.filter((y) => first(y.a.displayName) === first(x.a.displayName)).length === 1 && t.includes(` ${first(x.a.displayName)} `)))
+        .sort((x, y) => t.indexOf(` ${surname(x.a.displayName)} `) - t.indexOf(` ${surname(y.a.displayName)} `));
+    };
+    const espn = clipList(d).filter((c) => c.dur <= 45).map((c) => {
+      const ps = named(c.title), p = ps[0];
       const clip = { src: c.src, tall: c.tall, poster: c.poster, title: c.title, via: 'ESPN', by: '', at: c.t };
-      return { key: `${g.id}:${c.id}`, team: p?.team || '', label: String(i + 1), who: p?.a?.shortName || '', ini: initialsOf(p?.a?.displayName), athlete: p?.a || null, clip, title: c.title };
+      return { key: `${g.id}:${c.id}`, team: p?.team || '', who: p?.a?.shortName || '', ini: initialsOf(p?.a?.displayName), athlete: p?.a || null, clip, title: c.title, t: Date.parse(c.t) || 0, ps };
     });
+    for (const c of clips) {
+      const ps = named(c.title);
+      if (espn.some((e) => Math.abs(e.t - Date.parse(c.at)) < 8 * MIN && e.ps.some((p) => ps.includes(p)))) used.add(c);
+    }
+    const fans = clips.filter((c) => !used.has(c)).map((c) => {
+      used.add(c);
+      const p = named(c.title)[0] || people.find((x) => fold(x.a.displayName) === fold(c.who));
+      return { key: `${g.id}:r:${c.url || c.src}`, team: c.team || p?.team || '', who: p?.a?.shortName || c.who, ini: initialsOf(p?.a?.displayName || c.who), athlete: p?.a || null, clip: c, title: c.title, t: Date.parse(c.at) || 0 };
+    });
+    out = [...espn, ...fans].sort((a, b) => a.t - b.t).map(({ ps, t, ...m }, i) => ({ ...m, label: String(i + 1) }));
   }
   // Clips that matched no moment are still this game's: after the moments, in the order they were posted.
   for (const c of clips) if (!used.has(c)) out.push({ key: `${g.id}:x:${c.src}`, team: c.team, label: c.min || '', who: c.who, ini: initialsOf(c.who), clip: c, extra: true });

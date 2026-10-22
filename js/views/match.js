@@ -9,7 +9,6 @@ import { prefetch } from '../prefetch.js';
 import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken, face, FACES } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
-import { clipBox } from '../clips.js';
 import { matchClips, playClip } from './clipstab.js';
 import { threadCard } from './fans.js';
 import { threadsOf } from '../feed.js';
@@ -472,7 +471,7 @@ export default function match([sport, slug, id], ctx) {
   ctx.title = g.sport === 'soccer' ? `${g.home.short} v ${g.away.short}` : `${g.away.short} at ${g.home.short}`;
   html += header(g, k, d || {});
   // FTLTG: the game's clips (stickers) and what fans are saying, right under the score.
-  if (d && g.state !== 'pre') html += (g.sport === 'basketball' ? '' : matchClips(g, d)) + fansCard(g);
+  if (d && g.state !== 'pre') html += matchClips(g, d) + fansCard(g);
   if (!d && !e.err) return html + skel(3);
   if (!d) return html + `<div class="banner amber">${icon('wifi')}<span>${g.viaBackup ? 'ESPN isn’t answering. This is the backup copy of the game' : 'Couldn’t load this game’s details. This is what My games already had'}: stats, line-ups and key moments come back when ESPN answers. It tries again on its own.</span></div><p class="foot">Times are Singapore time.</p>`;
   // Football: key moments, stats, line-ups. NBA: quarters, leaders, box score, team stats.
@@ -488,8 +487,6 @@ export default function match([sport, slug, id], ctx) {
     html += (g.sport === 'soccer' ? moments(g, d, k, false) + stats(g, d, k) : us(false)) + formCard(g, d, k, ctx) + lineups(g, d, k) + theGame(g, d, k);
   }
   html += `<p class="foot">Times are Singapore time. Data from ESPN.</p>`;
-  // Clips go last and fill the screen: read the stats, then scroll down into watching (Darren, 22 Oct 2026).
-  if (g.state !== 'pre') html += clipBox(g, d, `${k.left.team.abbr || k.left.team.short} ${k.left.team.score ?? ''}–${k.right.team.score ?? ''} ${k.right.team.abbr || k.right.team.short}`);
   // The games either side of this one in the list, so a swipe opens them at once.
   const p = position(location.hash);
   if (p && !navigator.connection?.saveData) setTimeout(() => { prefetch(p.next); prefetch(p.prev); }, 800);
