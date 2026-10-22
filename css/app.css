@@ -569,3 +569,21 @@ a.plink { color: inherit; text-decoration: none; }
 a.plink:active { text-decoration: underline; }
 .teampage .sqn { font: 800 20px/1 var(--cond); opacity: .85; min-width: 28px; text-align: right; }
 .teampage .face i { font-size: 13px; }
+
+/* ---------- Page turns (22 Oct 2026): iOS-style push for deeper screens, the reverse for Back, a fade for tabs */
+.tabs { view-transition-name: tabs; }
+#bar { view-transition-name: pager; }
+::view-transition-group(root) { animation-duration: .34s; }
+html[data-turn="fwd"]::view-transition-old(root) { animation: turn-out-l .34s cubic-bezier(.2, .8, .2, 1) both; }
+html[data-turn="fwd"]::view-transition-new(root) { animation: turn-in-r .34s cubic-bezier(.2, .8, .2, 1) both; box-shadow: -8px 0 24px rgba(0, 0, 0, .18); }
+html[data-turn="back"]::view-transition-old(root) { z-index: 2; animation: turn-out-r .3s cubic-bezier(.3, .6, .3, 1) both; box-shadow: -8px 0 24px rgba(0, 0, 0, .18); }
+html[data-turn="back"]::view-transition-new(root) { animation: turn-in-l .3s cubic-bezier(.3, .6, .3, 1) both; }
+html[data-turn="tab"]::view-transition-old(root) { animation: turn-fade-out .16s ease both; }
+html[data-turn="tab"]::view-transition-new(root) { animation: turn-fade-in .2s ease .04s both; }
+@keyframes turn-in-r { from { transform: translateX(100%); } }
+@keyframes turn-out-l { to { transform: translateX(-28%); filter: brightness(.9); } }
+@keyframes turn-out-r { to { transform: translateX(100%); } }
+@keyframes turn-in-l { from { transform: translateX(-28%); filter: brightness(.9); } }
+@keyframes turn-fade-out { to { opacity: 0; } }
+@keyframes turn-fade-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }

@@ -162,10 +162,27 @@ const stack = [];
 addEventListener('hashchange', () => {
   const h = location.hash || '#/';
   // A swipe to the next game replaces this screen, so Back still returns to the list it came from.
-  if (swipe.replacing) { swipe.replacing = false; stack[stack.length - 1] = h; }
-  else if (stack.length > 1 && stack[stack.length - 2] === h) stack.pop(); else stack.push(h);
-  go();
+  let dir = 'fwd';
+  if (swipe.replacing) { swipe.replacing = false; stack[stack.length - 1] = h; dir = 'none'; }
+  else if (stack.length > 1 && stack[stack.length - 2] === h) { stack.pop(); dir = 'back'; } else stack.push(h);
+  if (tabReset) dir = 'tab';
+  turn(dir);
 });
+// ---------- Page turns (Darren, 22 Oct 2026: "smoother, more polished"). Deeper screens slide in from the right
+// like iOS, Back slides them away, tabs cross-fade. The tab bar and the game pager stay put. A swipe between
+// games keeps its own slide (swipe.js); reduced motion gets no animation.
+const htmlEl = document.documentElement;
+function turn(dir) {
+  if (!document.startViewTransition || dir === 'none' || !started || matchMedia('(prefers-reduced-motion: reduce)').matches) { go(); return; }
+  htmlEl.dataset.turn = dir;
+  // The screen must always change, animation or not: if the browser hasn't started the turn within a
+  // quarter second (a page drawn in the background, a busy phone), skip it and change the screen at once.
+  let done = false;
+  const step = () => { if (!done) { done = true; go(); } };
+  const t = document.startViewTransition(step);
+  const late = setTimeout(() => { if (!done) { t.skipTransition(); step(); } }, 250);
+  t.finished.finally(() => { clearTimeout(late); if (htmlEl.dataset.turn === dir) delete htmlEl.dataset.turn; });
+}
 stack.push(location.hash || '#/');
 // A screen changed its own link without a new step (Follow's sport tabs): adopt it, so Back and scroll memory match.
 addEventListener('md:replaced', () => { const h = location.hash || '#/'; stack[stack.length - 1] = h; prevHash = h; if (route) route.hash = h; });
