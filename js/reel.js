@@ -15,11 +15,16 @@
 import { esc, icon } from './util.js';
 import { crest } from './identity.js';
 import { markSeen } from './feed.js';
+import { load as loadPref, save as savePref } from './store.js';
 
-let el = null, track = null, S = null, sound = false, io = null;
+// Sound stays as you last left it, for every clip and every visit (Darren, 22 Oct 2026).
+let el = null, track = null, S = null, sound = !!loadPref('clipSound', false), io = null;
+// The three video elements live for the whole visit: iPhone lets a video play with sound on its own (when the clip
+// before it ends) only if that same element was started once by a tap, so they're unlocked on your first tap and kept.
+let SLOTS = null;
 const root = document.documentElement;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches || !!navigator.connection?.saveData;
-const SETTLE = 1200; // ms of smooth playback before the next clip starts loading
+const SETTLE = 250; // ms after the clip on screen starts before the next one loads (1.2 s made quick taps wait)
 // Diagnostics: "?debug" shows each video's events on screen (used to find why clips stalled on iPhone, 22 Oct 2026).
 const DBG = /[?&]debug\b/.test(location.search);
 function dbg(msg) { if (!DBG) return; let b = document.getElementById('rdbg'); if (!b) { b = document.createElement('pre'); b.id = 'rdbg'; b.style.cssText = 'position:fixed;left:0;right:0;top:40%;z-index:99;max-height:40%;overflow:auto;margin:0;padding:6px;background:rgba(0,0,0,.8);color:#0f0;font:11px/1.3 monospace;pointer-events:none;white-space:pre-wrap'; document.body.appendChild(b); } b.textContent = `${(performance.now() / 1000).toFixed(1)} ${msg}\n` + b.textContent.slice(0, 3000); }
@@ -46,10 +51,11 @@ export function openReel(queue, gi = 0, mi = 0) {
   document.body.appendChild(el);
   root.classList.add('reeling');
   track = el.querySelector('.rtrack');
-  S.slots = [0, 1, 2].map(makeVideo);
+  S.slots = SLOTS ||= [0, 1, 2].map(makeVideo);
   wire();
   track.scrollTop = gi * track.clientHeight;
   activate(gi);
+  unlock(); // this open is a tap: let all three elements play with sound from now on
   // From here, whichever game the feed settles on is the one playing.
   io = new IntersectionObserver((es) => {
     for (const e of es) if (e.isIntersecting && e.intersectionRatio >= 0.6) { const k = +e.target.dataset.gi; if (k !== S.gi) activate(k); }
@@ -62,7 +68,7 @@ export function close() {
   if (!el) return;
   clearTimeout(S?.primeT); clearTimeout(S?.watch);
   io?.disconnect(); io = null;
-  for (const s of S.slots) { s.v.pause(); s.v.removeAttribute('src'); s.v.load(); }
+  for (const s of S.slots) { s.v.pause(); s.v.removeAttribute('src'); delete s.v.dataset.src; s.v.classList.remove('on'); s.ready = null; s.v.load(); }
   document.removeEventListener('keydown', onKey);
   el.remove(); el = null; track = null;
   root.classList.remove('reeling');
@@ -106,7 +112,8 @@ function makeVideo() {
     if (v.currentTime > 1.5) markSeen(game().list[S.at[S.gi]]?.clip);
   });
   v.addEventListener('waiting', () => { if (s === S?.cur) segClass('buf', true); });
-  v.addEventListener('playing', () => { if (s === S?.cur) segClass('buf', false); });
+  // Playing: no "loading" pulse, and no play button over it (the watchdog may have shown one while it loaded).
+  v.addEventListener('playing', () => { if (s === S?.cur) { segClass('buf', false); clearTimeout(S.watch); slideEl(S.gi)?.querySelector('.rplay')?.setAttribute('hidden', ''); } });
   v.addEventListener('ended', () => { if (el && s === S.cur) { markSeen(game().list[S.at[S.gi]]?.clip); next(true); } });
   v.addEventListener('error', () => { s.ready?.(); s.ready = null; if (el && s === S.cur && v.getAttribute('src')) next(true); }); // a deleted clip: move on
   return s;
@@ -171,7 +178,8 @@ function play() {
   S.watch = setTimeout(() => { if (S && S.cur === s && (v.paused || v.currentTime < 0.05) && !v.ended) { dbg('watchdog: not started'); pb.hidden = false; } }, 4000);
   v.play().catch((err) => {
     dbg(`play() rejected ${err?.name}`);
-    if (!v.muted) { sound = false; setSound(); play(); return; } // sound needs a tap; play muted instead
+    // Sound not allowed without a tap: play muted this once and keep your choice; the next tap turns it back on.
+    if (!v.muted) { v.muted = true; v.play().catch(() => { pb.hidden = false; }); return; }
     pb.hidden = false; // Low Power Mode: no auto-play, so a play button
   });
 }
@@ -224,8 +232,19 @@ function goGame(d, mode = 'tap') {
   track.scrollTo({ top: k * track.clientHeight, behavior: calm() ? 'auto' : 'smooth' });
 }
 function setSound() {
+  savePref('clipSound', sound);
   const b = el?.querySelector('.rsnd'); if (!b) return;
   b.setAttribute('aria-pressed', String(sound)); b.innerHTML = sound ? SPK_ON : SPK;
+}
+// Inside a tap: start and stop every element once, so iPhone lets each play with sound later without a tap.
+function unlock() {
+  for (const s of S.slots) {
+    if (s === S.cur) continue;
+    const v = s.v;
+    v.muted = true; // silent: the tap is what counts, not the sound
+    if (s.ready) continue; // already being got ready (playing muted to its first frame)
+    v.play().then(() => { if (s !== S?.cur) v.pause(); }).catch(() => {});
+  }
 }
 function flash(svg) { const f = el.querySelector('.rflash'); f.innerHTML = svg; f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
 function toggle() { const v = S.cur.v; if (v.paused) { play(); flash(PLAY); } else { v.pause(); flash(PAUSE); } }
@@ -240,6 +259,7 @@ function wire() {
   track.addEventListener('scroll', () => clearTimeout(holdT), { passive: true });
   track.addEventListener('pointerup', () => { clearTimeout(holdT); if (held) { held = false; play(); } });
   track.addEventListener('click', (e) => {
+    if (sound && S.cur.v.muted) S.cur.v.muted = false; // a tap may play sound: put back what an automatic step lost
     if (e.target.closest('.rplay')) { if (S.cur.v.ended) show(0, 'tap'); else play(); return; }
     if (e.target.closest('button, a') || held) return;
     const r = track.getBoundingClientRect(), f = (e.clientX - r.left) / r.width;
@@ -252,7 +272,7 @@ function wire() {
   el.querySelector('.rnext').addEventListener('click', () => next());
   el.querySelector('.rnextg').addEventListener('click', () => goGame(1));
   el.querySelector('.rprevg').addEventListener('click', () => goGame(-1));
-  el.querySelector('.rsnd').addEventListener('click', () => { sound = !sound; setSound(); S.cur.v.muted = !sound; if (!S.cur.v.paused) play(); });
+  el.querySelector('.rsnd').addEventListener('click', () => { sound = !sound; setSound(); S.cur.v.muted = !sound; if (!S.cur.v.paused) play(); unlock(); });
   document.addEventListener('keydown', onKey);
 }
 function onKey(e) {
