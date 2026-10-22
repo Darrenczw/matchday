@@ -76,6 +76,31 @@ async function resolve(link) {
 }
 const isGoal = (t) => /\[\d+\]\s*-\s*\d+|\d+\s*-\s*\[\d+\]/.test(t);
 
+// ---------- StreaMusk (clips2 research, 22 Oct 2026): a site that copies r/soccer's goal clips to a fast HLS stream
+// about a minute after the post, under the same title ("Como [4] - 0 Manchester Utd - Jacobo Ramón 76'"). Its own
+// list (the 30 most-viewed videos) needs no Reddit request, so it is read every 5 minutes on its own; each new
+// titled video is looked up once for its time (at most 10 a run). Unofficial, 360p; links lasted at least 22 hours.
+const MUSK = 'https://api.streamusk.com/videos/';
+const muskSrc = (id) => `https://d3ctycp5ce1kgh.cloudfront.net/videos/${id}/video.m3u8`;
+export async function muskRun(env) {
+  const now = Date.now();
+  const f = await readFeed(env, 'musk');
+  if (f && now - f.at < 4.5 * MIN) return { spaced: true };
+  const list = await fetch(MUSK, { headers: { 'User-Agent': 'Mozilla/5.0 (FTLTG personal app)', accept: 'application/json' } }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  const known = new Map((f?.items || []).map((x) => [x.id, x]));
+  let budget = 10;
+  for (const v of Array.isArray(list) ? list : []) {
+    if (!v?.id || !v.title || !isGoal(v.title) || known.has(v.id) || budget <= 0) continue;
+    budget--;
+    const d = await fetch(MUSK + encodeURIComponent(v.id), { headers: { 'User-Agent': 'Mozilla/5.0 (FTLTG personal app)' } }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!d || d.status !== 'COMPLETE') continue;
+    known.set(v.id, { id: v.id, title: d.video_title || v.title, at: new Date(+d.created_at * 1000).toISOString(), src: muskSrc(v.id), sub: 'soccer', by: '', url: '', img: '' });
+  }
+  const items = [...known.values()].filter((x) => now - new Date(x.at).getTime() < KEEP).sort((a, b) => b.at.localeCompare(a.at));
+  await writeFeed(env, 'musk', items, now + 5 * MIN);
+  return { musk: items.length };
+}
+
 // ---------- Storage (D1, migrate-5.sql): rfeeds holds each feed's items; rwant the subreddits and threads apps asked for.
 const meta = async (env, k) => (await env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(k).first())?.value;
 const setMeta = (env, k, v) => env.DB.prepare('INSERT INTO meta (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = ?2').bind(k, String(v)).run();
@@ -104,13 +129,16 @@ async function due(env, now, live) {
   const subs = want.filter((w) => w.kind === 'sub').map((w) => w.key.slice(2)).sort();
   const jobs = Object.entries(FEEDS).map(([key, f]) => ({ key, url: f.url, every: f.every[live ? 0 : 1] }));
   if (subs.length) jobs.push({ key: 'teams', url: `${R}/r/${subs.slice(0, 60).join('+')}/top/.rss?t=day&limit=80`, every: live ? 45 * MIN : 30 * MIN, subs });
-  // Comments: a live thread every 6 minutes, a post-match thread every 30, other opened threads hourly.
+  // Comments: a live thread every 6 minutes; post-match and opened threads hourly.
   for (const w of want.filter((x) => x.kind === 'live' || x.kind === 'post' || x.kind === 'thread')) {
     if (now - w.seen_at > DAY) continue;
-    jobs.push({ key: w.key, url: `${R}/comments/${w.key.slice(2)}/.rss?sort=top&limit=25`, every: w.kind === 'live' ? 6 * MIN : w.kind === 'post' ? 30 * MIN : HOUR, comments: true });
+    jobs.push({ key: w.key, kind: w.kind, url: `${R}/comments/${w.key.slice(2)}/.rss?sort=top&limit=25`, every: w.kind === 'live' ? 6 * MIN : HOUR, comments: true });
   }
   const have = new Map(((await env.DB.prepare('SELECT key, at FROM rfeeds').all()).results || []).map((r) => [r.key, r.at]));
-  return jobs.map((j) => ({ ...j, at: have.get(j.key) || 0 })).filter((j) => now - j.at >= j.every).sort((a, b) => a.at - b.at);
+  // With ~15 requests an hour, order matters (22 Oct 2026: comments of 16 post-match threads starved the goal clips
+  // for 90 minutes): goal clips and match threads first, live comments next, then the rest, post-match comments last.
+  const rank = (j) => ({ goals: 0, threads: 1, plays: 2, teams: 3, banter: 3 }[j.key] ?? (j.kind === 'live' ? 1 : 4));
+  return jobs.map((j) => ({ ...j, at: have.get(j.key) || 0 })).filter((j) => now - j.at >= j.every).sort((a, b) => rank(a) - rank(b) || a.at - b.at);
 }
 
 // The odd-minute run.
@@ -185,9 +213,9 @@ export async function fans(url, env) {
   for (const [, id] of want) if (by[`t:${id}`]) comments[id] = items(`t:${id}`).slice(0, 15);
   const rest = +(await meta(env, 'reddit_rest_until') || 0);
   return {
-    at: Math.max(0, ...rows.filter((r) => !r.key.startsWith('t:')).map((r) => r.at || 0)),
+    at: Math.max(0, ...rows.filter((r) => !r.key.startsWith('t:') && r.key !== 'musk').map((r) => r.at || 0)),
     resting: rest > now ? rest : 0,
-    threads: items('threads'), goals: items('goals'), plays: items('plays'), banter: items('banter'),
+    threads: items('threads'), goals: items('goals'), plays: items('plays'), banter: items('banter'), musk: items('musk'),
     teams: items('teams').filter((x) => lower.has(x.sub.toLowerCase())), comments,
   };
 }

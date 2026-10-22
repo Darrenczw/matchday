@@ -3,7 +3,7 @@ import { calendar } from '../../js/ics.js';
 import { reasonsWith } from '../../js/rules.js';
 import { syncRun, inCal, tracked, readMeta } from './sync.js';
 import { tvLines } from './tv.js';
-import { redditRun, fans, thread } from './reddit.js';
+import { redditRun, muskRun, fans, thread } from './reddit.js';
 
 const DAY = 864e5;
 const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -140,7 +140,7 @@ export default {
   },
   async scheduled(event, env, ctx) {
     // Odd minutes read Reddit (reddit.js); its own run, so it never takes CPU time from the calendar check.
-    if (event.cron === '1-59/2 * * * *') { ctx.waitUntil(redditRun(env).catch(() => {})); return; }
+    if (event.cron === '1-59/2 * * * *') { ctx.waitUntil(Promise.allSettled([muskRun(env), redditRun(env)])); return; }
     ctx.waitUntil(syncRun(env));
   },
 };

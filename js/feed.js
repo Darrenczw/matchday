@@ -54,7 +54,7 @@ function threadGame(x, games) {
 }
 // A goal clip: "Arsenal [1] - 0 Everton - Saka 23'" (the bracket marks who scored).
 const GOAL = /^(.+?)\s+(\[?\d+\]?)\s*-\s*(\[?\d+\]?)\s+(.+?)\s+-\s+(.+?)\s+(\d+(?:\+\d+)?)'/;
-function goalClip(x, games) {
+function goalClip(x, games, via = `r/${x.sub}`) {
   const m = x.title.match(GOAL);
   if (!m || !x.src) return null;
   const [, a, sa, sb, b, who, min] = m, at = new Date(x.at).getTime();
@@ -63,7 +63,7 @@ function goalClip(x, games) {
   if (!g) return null;
   const aIsHome = has(a, g.home), scorerA = sa.startsWith('[');
   const team = (scorerA === aIsHome ? g.home : g.away).id;
-  return { game: g.id, kind: 'goal', min: `${min}'`, team, who: who.trim(), title: x.title, src: x.src, poster: x.img || '', via: `r/${x.sub}`, by: x.by, url: x.url, at: x.at };
+  return { game: g.id, kind: 'goal', min: `${min}'`, team, who: who.trim(), title: x.title, src: x.src, poster: x.img || '', via, by: x.by, url: x.url, at: x.at };
 }
 // An NFL highlight: posted during the game, naming one of its players.
 function playClip(x, games, people) {
@@ -139,6 +139,13 @@ async function liveFeed() {
       else if (!mine && ids.has(t.game)) threads.push({ ...t });
     }
   }
+  // StreaMusk's fast copies of the same goal posts (same title): they replace a slow host's file, and goals Reddit
+  // hasn't given us yet come in on their own. Reddit's own videos (v.redd.it) stay first.
+  for (const m of (j.musk || []).map((x) => goalClip(x, gs, 'StreaMusk')).filter(Boolean)) {
+    const twin = clips.find((c) => c.kind === 'goal' && c.game === m.game && (fold(c.title) === fold(m.title) || (minOf(c.min) === minOf(m.min) && c.team === m.team)));
+    if (!twin) clips.push(m);
+    else if (rank(twin) > 0) twin.src = m.src;
+  }
   // Your teams: the helper's multi-feed, split back by subreddit.
   const teams = picks.teams.map((p) => ({ sport: sportOf(p.path), id: p.id, name: p.name, sub: subOf(sportOf(p.path), p.name) })).filter((x) => x.sub)
     .map((x) => ({ ...x, sub: `r/${x.sub}`, posts: (j.teams || []).filter((y) => y.sub.toLowerCase() === x.sub.toLowerCase()).map(postOut) }));
@@ -182,9 +189,9 @@ export function mineFirst(list) {
 }
 
 // ---------- Moments: one per goal or scoring play, with its clip when there is one.
-// Fastest first when several posts show the same goal (measured from SG, 22 Oct 2026): Reddit's own streams start
+// Fastest first when several posts show the same goal (measured from SG, 22 Oct 2026): streams (Reddit's own, StreaMusk) start
 // in ~0.03 s; streamin's files are 6–17 MB with the index at the end, so they wait for the end of the file.
-const HOST = [/v\.redd\.it|\.m3u8/, /clipse|hostedhost|streamable|cdn-cf-east/, /streamain|eraofsports/, /streamin/];
+const HOST = [/v\.redd\.it|\.m3u8|cloudfront\.net\/videos/, /clipse|hostedhost|streamable|cdn-cf-east/, /streamain|eraofsports/, /streamin/];
 const rank = (c) => { const i = HOST.findIndex((re) => re.test(c.src)); return i < 0 ? 2 : i; };
 export function moments(g, d) {
   const clips = (F?.clips || []).filter((c) => c.game === g.id && c.kind !== 'full' && c.src).sort((a, b) => rank(a) - rank(b));
