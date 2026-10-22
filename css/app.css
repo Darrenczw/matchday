@@ -546,3 +546,7 @@ main:has(.clips) { padding-bottom: 0; }
 .tabs, .pagerbar { transition: transform .25s ease, opacity .25s ease; }
 html.reels .tabs { transform: translateY(110%); }
 html.reels .pagerbar { opacity: 0; pointer-events: none; }
+.clips .cflash { position: absolute; left: 50%; top: 50%; z-index: 3; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; background: rgba(0, 0, 0, .45); color: #fff; display: grid; place-items: center; opacity: 0; pointer-events: none; }
+.clips .cflash svg { width: 34px; height: 34px; fill: currentColor; stroke: none; }
+.clips .cflash.on { animation: cflash .6s ease-out; }
+@keyframes cflash { 0% { opacity: 1; transform: scale(.85); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
