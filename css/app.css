@@ -640,46 +640,56 @@ button.stk:active { transform: scale(.96); }
 .afoot { padding: 0 14px 12px; font: 600 12px/1.3 var(--text); color: var(--mute); }
 .row .meta .fb { font-weight: 700; color: var(--ink); white-space: nowrap; }
 
-/* The clip player: full screen, game by game, Stories segments in the scoring team's kit */
+/* The clip player: a vertical feed of games that follows your finger (scroll-snap), Stories segments in the
+   scoring team's kit, a still in the kits under every video until it plays */
 html.reeling { overflow: hidden; }
 html.reeling .tabs { transform: translateY(110%); }
 .reel { position: fixed; inset: 0; z-index: 50; background: #000; color: #fff; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.reel .rv { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
-.reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.reel .rtrack { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.reel .rtrack::-webkit-scrollbar { display: none; }
+.reel .rslide { position: relative; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
+.reel .rpost { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+.reel .rpost::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
+.reel .rpost img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; }
+.reel .rpost b { position: relative; z-index: 2; font: 800 88px/1 var(--cond); letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, .4); }
+.reel .rvbox { position: absolute; inset: 0; z-index: 1; }
+.reel .rpost b { transition: opacity .18s ease-out; }
+.reel .rslide:has(video.on:not(.off)) .rpost b, .reel .rslide:has(video.on:not(.off)) .rpost img { opacity: 0; }
+.reel .rpost img { transition: opacity .18s ease-out; }
+.reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: transparent; opacity: 0; transition: opacity .18s ease-out; }
+.reel video.on { opacity: 1; }
 .reel video.wide { object-fit: contain; }
 .reel video.off { visibility: hidden; }
-.reel.slide-up .rv { animation: rup .3s cubic-bezier(.2, .8, .2, 1); }
-.reel.slide-down .rv { animation: rdown .3s cubic-bezier(.2, .8, .2, 1); }
-@keyframes rup { from { transform: translateY(26%); opacity: .2; } }
-@keyframes rdown { from { transform: translateY(-26%); opacity: .2; } }
-.reel .rtop { position: absolute; left: 0; right: 0; top: 0; z-index: 2; padding: calc(var(--safe-top) + 8px) 10px 30px; background: linear-gradient(rgba(0, 0, 0, .6), transparent); pointer-events: none; }
-.reel .rbar { display: flex; gap: 3px; }
+.reel .rtop { position: absolute; left: 0; right: 0; top: 0; z-index: 2; padding: calc(var(--safe-top) + 8px) 64px 30px 10px; background: linear-gradient(rgba(0, 0, 0, .6), transparent); pointer-events: none; }
+.reel .rbar { display: flex; gap: 3px; margin-right: -54px; }
 .reel .rbar i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .28); overflow: hidden; }
 .reel .rbar i b { display: block; height: 100%; width: 0; background: var(--c); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35); }
 .reel .rbar i.done b { width: 100% !important; }
-.reel .rgame { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.reel .rbar i.buf { animation: rbuf 1s ease-in-out infinite; }
+@keyframes rbuf { 50% { opacity: .45; } }
+.reel .rgame { display: flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 44px; }
 .reel .rteams { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .reel .rk { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 3px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); font: 800 15px/1 var(--cond); letter-spacing: .02em; }
 .reel .rteams > b { font: 800 22px/1 var(--cond); }
 .reel .rteams > span:last-child { font: 700 11px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
-.reel .rx { pointer-events: auto; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 0, 0, .35); color: #fff; }
+.reel .rx { position: absolute; top: calc(var(--safe-top) + 22px); right: 10px; z-index: 4; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 0, 0, .35); color: #fff; }
 .reel .rcap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 56px 72px calc(var(--safe-bottom) + 18px) 14px; background: linear-gradient(transparent, rgba(0, 0, 0, .7)); pointer-events: none; }
 .reel .rmom { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px; }
-.reel .rchip { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); align-self: center; padding: 4px 7px; border-radius: 6px; font: 800 14px/1 var(--cond); letter-spacing: .02em; }
+.reel .rchip { align-self: center; padding: 4px 7px; border-radius: 6px; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); font: 800 14px/1 var(--cond); letter-spacing: .02em; }
 .reel .rmin { font: 800 36px/.9 var(--cond); letter-spacing: -.01em; }
 .reel .rwho { font: 700 17px/1.2 var(--text); }
 .reel .rsc { flex-basis: 100%; font: 800 17px/1 var(--cond); letter-spacing: .03em; opacity: .92; }
 .reel .rsrc { margin-top: 8px; font: 500 12px/1.4 var(--text); opacity: .85; pointer-events: auto; }
 .reel .rsrc a { color: #fff; text-decoration: underline; text-underline-offset: 2px; font-weight: 700; }
 .reel .rsrc span { display: block; opacity: .8; }
-.reel .rsnd { position: absolute; right: 10px; bottom: calc(var(--safe-bottom) + 14px); z-index: 3; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #fff; background: rgba(0, 0, 0, .4); }
+.reel .rsnd { position: absolute; right: 10px; bottom: calc(var(--safe-bottom) + 14px); z-index: 4; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #fff; background: rgba(0, 0, 0, .4); }
 .reel .rsnd svg, .reel .rplay svg { width: 24px; height: 24px; }
 .reel .rplay { position: absolute; left: 50%; top: 50%; z-index: 3; display: grid; place-items: center; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%; background: rgba(0, 0, 0, .5); color: #fff; }
 .reel .rplay svg { width: 32px; height: 32px; fill: currentColor; stroke: none; }
 .reel .rflash { position: absolute; left: 50%; top: 50%; z-index: 3; display: grid; place-items: center; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; background: rgba(0, 0, 0, .45); opacity: 0; pointer-events: none; }
 .reel .rflash svg { width: 34px; height: 34px; fill: #fff; stroke: none; }
 .reel .rflash.on { animation: cflash .6s ease-out; }
-@media (prefers-reduced-motion: reduce) { .reel.slide-up .rv, .reel.slide-down .rv, .reel .rflash.on { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .reel .rflash.on, .reel .rbar i.buf { animation: none; } .reel video { transition: none; } }
 
 /* Fans: thread cards under the game's shirt panels, team subreddits, banter */
 .lnk { min-height: 44px; padding: 0 2px; font: 700 13px/1 var(--text); color: var(--go); }

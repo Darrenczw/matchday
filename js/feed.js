@@ -182,8 +182,12 @@ export function mineFirst(list) {
 }
 
 // ---------- Moments: one per goal or scoring play, with its clip when there is one.
+// Fastest first when several posts show the same goal (measured from SG, 22 Oct 2026): Reddit's own streams start
+// in ~0.03 s; streamin's files are 6–17 MB with the index at the end, so they wait for the end of the file.
+const HOST = [/v\.redd\.it|\.m3u8/, /clipse|hostedhost|streamable|cdn-cf-east/, /streamain|eraofsports/, /streamin/];
+const rank = (c) => { const i = HOST.findIndex((re) => re.test(c.src)); return i < 0 ? 2 : i; };
 export function moments(g, d) {
-  const clips = (F?.clips || []).filter((c) => c.game === g.id && c.kind !== 'full' && c.src);
+  const clips = (F?.clips || []).filter((c) => c.game === g.id && c.kind !== 'full' && c.src).sort((a, b) => rank(a) - rank(b));
   const used = new Set();
   const take = (fn) => { const c = clips.find((x) => !used.has(x) && fn(x)); if (c) used.add(c); return c || null; };
   let out = [];
