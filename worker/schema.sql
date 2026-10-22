@@ -51,3 +51,5 @@ CREATE INDEX IF NOT EXISTS runs_at ON runs (at);
 -- Small values: espn_ok_at, espn_down_since (ESPN is down when this is later than espn_ok_at), nflverse_at (last good
 -- read), nflverse_try_at, backup_at.
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS rfeeds (key TEXT PRIMARY KEY, at INTEGER, next_at INTEGER, body TEXT, err TEXT);
+CREATE TABLE IF NOT EXISTS rwant (key TEXT PRIMARY KEY, kind TEXT NOT NULL, seen_at INTEGER NOT NULL);

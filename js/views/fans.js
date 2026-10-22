@@ -5,7 +5,7 @@
 import { esc, icon, sg, ago } from '../util.js';
 import { kitsFor, crest, inkOn, readable, hex, kitEdge } from '../identity.js';
 import { skel, errorCard, scoreText } from '../ui.js';
-import { feedGames, mineFirst, threadsOf, teamSubs, banter, redditId, snapAt, snapshot } from '../feed.js';
+import { feedGames, mineFirst, threadsOf, teamSubs, banter, redditId, feedLabel, resting } from '../feed.js';
 import { liveBar } from '../livebar.js';
 
 const state = { f: 'all' };
@@ -55,23 +55,24 @@ function banterCards(list) {
 
 export default function fans(params, ctx) {
   ctx.title = 'Fans';
-  const at = snapAt(), sub = at ? `Snapshot · ${sg(at).d} ${sg(at).mo} ${sg(at).hm}` : '';
-  let html = liveBar(ctx) + `<header class="top"><h1>Fans</h1><span class="sub">${esc(sub)}</span></header>`;
+  let html = liveBar(ctx) + `<header class="top"><h1>Fans</h1><span class="sub">${esc(feedLabel())}</span></header>`;
   html += `<div class="chips" role="group" aria-label="Show">${FILTERS.map(([f, name]) => `<button class="chip txt" data-act="ff" data-f="${f}" aria-pressed="${state.f === f}">${name}</button>`).join('')}</div>`;
-  const s = ctx.use('feed:snap', snapshot, 10 * 60e3);
-  const e = ctx.use('feed:games', feedGames, 5 * 60e3);
-  if (!s.v) return html + (s.err ? errorCard('Couldn’t load the fan feed.') : skel(3));
-  const games = e.v ? mineFirst(e.v).list : [];
+  const e = ctx.use('feed:games', feedGames, 2 * 60e3);
+  if (!e.v) return html + (e.err ? errorCard('Couldn’t load the fan feed.') : skel(3));
+  // Reddit asked the helper to slow down: say so, and show what it already has.
+  if (resting() > Date.now()) html += `<div class="banner amber">${icon('clock')}<span>Reddit asked us to slow down. Showing what we already have; new posts come back by ${sg(resting()).hm}.</span></div>`;
+  const games = mineFirst(e.v).list;
   const f = state.f;
   if (f === 'all' || f === 'games') {
-    const cards = e.v ? yourGames(games, f === 'all' ? 3 : 40) : [skel(2)];
+    const cards = yourGames(games, f === 'all' ? 3 : 40);
     html += `<div class="sect"><h2 class="cap">Your games</h2>${f === 'all' && cards.length >= 3 ? '<button class="lnk" data-act="ff" data-f="games">See all</button>' : ''}</div>`;
-    html += cards.length ? cards.join('') : '<div class="banner info"><span>No match threads for your games yet. They open about an hour before kick-off.</span></div>';
+    html += cards.length ? cards.join('') : '<div class="banner info"><span>No match threads for your games in the last three nights. They open about an hour before kick-off.</span></div>';
   }
   if (f === 'all' || f === 'teams') {
     const { list, all } = teamSubs();
     html += `<div class="sect"><h2 class="cap">Your teams</h2></div>`;
     if (all && list.length) html += '<div class="banner info"><span>You don’t follow these teams, so the snapshot’s teams are shown.</span></div>';
+    html += list.length && list.every((t) => !t.posts.length) ? '<div class="banner info"><span>Your teams’ subreddits are on their way. They refresh about every half hour.</span></div>' : '';
     html += list.length ? list.slice(0, f === 'all' ? 2 : 20).map((t) => teamCard(t, games, f === 'all' ? 3 : 8)).join('') : '<div class="banner info"><span>Follow a team to see its fans here.</span></div>';
   }
   if (f === 'all' || f === 'banter') {

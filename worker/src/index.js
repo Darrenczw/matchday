@@ -3,6 +3,7 @@ import { calendar } from '../../js/ics.js';
 import { reasonsWith } from '../../js/rules.js';
 import { syncRun, inCal, tracked, readMeta } from './sync.js';
 import { tvLines } from './tv.js';
+import { redditRun, fans, thread } from './reddit.js';
 
 const DAY = 864e5;
 const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -109,6 +110,10 @@ export default {
       await env.DB.prepare('INSERT INTO owner (id, edit_key_hash, feed_token, created_at) VALUES (1, ?, ?, ?)').bind(await sha256(key), token, Date.now()).run();
       return json({ editKey: key, feedUrl: feedUrl(req, token) }, 200, h);
     }
+    // FTLTG fan feeds: public Reddit content, so no edit key (friends without a calendar read them too).
+    if (url.pathname === '/api/fans' && req.method === 'GET') return json(await fans(url, env), 200, h);
+    const tm = url.pathname.match(/^\/api\/thread\/(\w{4,10})$/);
+    if (tm && req.method === 'GET') return json(await thread(tm[1], env), 200, h);
     if (!url.pathname.startsWith('/api/')) return new Response('Matchday calendar helper', { status: 404 });
 
     const o = await authed(req, env);
@@ -134,6 +139,8 @@ export default {
     return json({ error: 'Unknown' }, 404, h);
   },
   async scheduled(event, env, ctx) {
+    // Odd minutes read Reddit (reddit.js); its own run, so it never takes CPU time from the calendar check.
+    if (event.cron === '1-59/2 * * * *') { ctx.waitUntil(redditRun(env).catch(() => {})); return; }
     ctx.waitUntil(syncRun(env));
   },
 };

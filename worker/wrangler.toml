@@ -5,7 +5,7 @@ compatibility_date = "2026-10-01"
 workers_dev = true
 
 [triggers]
-crons = ["*/2 * * * *"]
+crons = ["*/2 * * * *", "1-59/2 * * * *"]
 
 [vars]
 APP_ORIGIN = "https://darrenczw.github.io"
@@ -19,7 +19,7 @@ database_id = "6d6b4575-6904-4605-be9b-61e7612a9685"
 [env.test]
 name = "matchday-cal-test"
 [env.test.triggers]
-crons = ["*/2 * * * *"]
+crons = ["*/2 * * * *", "1-59/2 * * * *"]
 [env.test.vars]
 APP_ORIGIN = "https://darrenczw.github.io"
 CAL_NAME = "Matchday practice"

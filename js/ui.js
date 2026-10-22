@@ -6,7 +6,7 @@ import { mainMarket, tvShort, rightsChecked } from './tv.js';
 import { reasons, freeHour, tablesVersion } from './suggest.js';
 import { load, save, on, following, teamKey } from './store.js';
 import { inCal } from './cal.js';
-import { badge as feedBadge, snapAt } from './feed.js';
+import { badge as feedBadge, feedAt } from './feed.js';
 
 export const href = {
   match: (g) => `#/m/${g.path}/${g.id}`,
@@ -84,7 +84,7 @@ const rowCache = new Map();
 on((why) => { if (why !== 'calsync') rowCache.clear(); });
 export function cachedRow(kind, g, opts, build) {
   const key = [kind, g.id, g.state, g.date, g.timeValid, g.postponed, g.home.score, g.away.score, g.home.color, g.away.color, g.home.logo, g.away.logo,
-    g.clock, g.period, g.statusName, g.detail, g.viaBackup, isDark(), rightsChecked() || '', tablesVersion(), todayKey(), snapAt(), JSON.stringify(opts)].join('|');
+    g.clock, g.period, g.statusName, g.detail, g.viaBackup, isDark(), rightsChecked() || '', tablesVersion(), todayKey(), feedAt(), JSON.stringify(opts)].join('|');
   let h = rowCache.get(key);
   if (h === undefined) { if (rowCache.size > 3000) rowCache.clear(); h = build(); rowCache.set(key, h); }
   return h;

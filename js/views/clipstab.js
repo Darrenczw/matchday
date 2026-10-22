@@ -7,7 +7,7 @@ import { esc, icon, sg } from '../util.js';
 import { kitsFor, crest, inkOn, isDark, kitEdge } from '../identity.js';
 import { net } from '../espn.js';
 import { face, skel, errorCard, gameRow } from '../ui.js';
-import { feedGames, mineFirst, moments, fullHighlights, isSeen, snapAt } from '../feed.js';
+import { feedGames, mineFirst, moments, fullHighlights, isSeen, feedLabel, feedMode } from '../feed.js';
 import { openReel } from '../reel.js';
 import { liveBar } from '../livebar.js';
 import { followingAny } from '../store.js';
@@ -63,12 +63,11 @@ function page(x, qi) {
 
 export default function clipsTab(params, ctx) {
   ctx.title = 'Clips';
-  const at = snapAt(), when = at ? (() => { const s = sg(at); return `Snapshot · ${s.d} ${s.mo} ${s.hm}`; })() : '';
-  let html = liveBar(ctx) + `<header class="top"><h1>Clips</h1><span class="sub">${esc(when)}</span></header>`;
+  let html = liveBar(ctx) + `<header class="top"><h1>Clips</h1><span class="sub">${esc(feedLabel())}</span></header>`;
   if (!followingAny()) {
     return html + `<section class="empty"><h2>Follow a team to fill this</h2><p>Goals and big plays from your games show up here within minutes, game by game.</p><a class="btn go big" href="#/follow">${icon('search')}Find clubs and leagues</a></section>`;
   }
-  const e = ctx.use('feed:games', feedGames, 5 * 60e3);
+  const e = ctx.use('feed:games', feedGames, 2 * 60e3);
   if (!e.v) return html + (e.err ? (net.offline || !navigator.onLine ? `<div class="banner amber">${icon('wifi')}<span>Clips need a connection. They load again when you’re back online.</span></div>` : errorCard('Couldn’t load the clips.')) : `<div class="rings">${'<span class="ring sk"><span class="rg"></span></span>'.repeat(4)}</div>${skel(2)}`);
   const { list, all } = mineFirst(e.v);
   const pages = list.map(({ g, d }) => {
@@ -78,7 +77,9 @@ export default function clipsTab(params, ctx) {
   // The rings and the player use the same queue: every game with at least one clip, newest first.
   queue = pages.filter((x) => x.list.length);
   const qi = (x) => queue.indexOf(x);
-  if (all) html += `<div class="banner info">${icon('alert')}<span>None of the games in this snapshot are ones you follow, so all of them are shown.</span></div>`;
+  if (all && feedMode() === 'snapshot') html += `<div class="banner info">${icon('alert')}<span>The fan feed isn’t answering, so this is a saved snapshot. None of its games are ones you follow, so all of them are shown.</span></div>`;
+  else if (feedMode() === 'snapshot') html += `<div class="banner info">${icon('alert')}<span>The fan feed isn’t answering, so this is a saved snapshot of real clips.</span></div>`;
+  if (!pages.length) html += `<div class="banner info"><span>No finished or live games of yours in the last three nights. Clips show up here within minutes of a goal.</span></div>`;
   if (queue.length) html += `<div class="rings" role="list" aria-label="Games with clips">${queue.map((x, i) => ring(x, i)).join('')}</div>`;
   html += pages.map((x) => page(x, qi(x))).join('');
   return html;

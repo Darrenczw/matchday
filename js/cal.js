@@ -5,7 +5,8 @@ import { load, save, emit, on, settings, sportOf, teamKey, DEMO, picks } from '.
 // Where the helper lives. Local tests use `wrangler dev`; the practice copy (?demo) uses the practice helper.
 const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const LIVE = 'https://matchday-cal.darren-chow-1.workers.dev', PRACTICE = 'https://matchday-cal-test.darren-chow-1.workers.dev';
-export const CAL_API = LOCAL ? 'http://127.0.0.1:8788' : DEMO ? PRACTICE : LIVE;
+// "?api=test" points a local preview at the practice helper on Cloudflare (testing the real path from the Mac).
+export const CAL_API = /[?&]api=test\b/.test(location.search) ? PRACTICE : LOCAL ? 'http://127.0.0.1:8788' : DEMO ? PRACTICE : LIVE;
 
 export const cal = load('cal', { comps: [], teams: [], games: [] });
 export const calCfg = load('calcfg', { editKey: null, feedUrl: null });
