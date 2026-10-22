@@ -200,6 +200,22 @@ export async function teamInfo(path, id) {
   const standing = (T.standingSummary || '').replace(/ in (English|Spanish|German|Italian|French|Scottish|Dutch|Portuguese|Saudi) /, ' in the ').replace(/\bLALIGA\b/, 'LaLiga');
   return { ...t, standing, record: T.recordSummary || '' };
 }
+// ---------- Players, so everything is a tap away like Football Manager: team → squad → player (Darren, 22 Oct 2026).
+// Squads need the league for football ("soccer/eng.1"); players work with "soccer/all".
+const WEB = 'https://site.web.api.espn.com/apis/common/v3/sports';
+const person = (a) => ({ id: a.id, name: a.displayName || a.fullName || '', short: a.shortName || a.displayName || '', jersey: a.jersey ?? '', pos: a.position?.abbreviation || '', posName: a.position?.displayName || '', age: a.age || '', country: a.citizenship || a.flag?.alt || '', headshot: a.headshot || null });
+export async function roster(path, id) {
+  const d = await get(`${SITE}/${path}/teams/${id}/roster`, 6 * HOUR);
+  const a = d.athletes || [];
+  // NFL lists by unit ("offense", "defense"…); NBA and football give one list.
+  if (a[0]?.items) return a.filter((g) => g.items?.length).map((g) => ({ group: g.position, players: g.items.map(person) }));
+  return [{ group: '', players: a.map(person) }];
+}
+export async function athlete(path, id) {
+  const lp = sportOf(path) === 'soccer' ? 'soccer/all' : path;
+  const [a, o] = await Promise.all([get(`${WEB}/${lp}/athletes/${id}`, 6 * HOUR), get(`${WEB}/${lp}/athletes/${id}/overview`, 10 * MIN).catch(() => null)]);
+  return { a: a.athlete || {}, o: o || {} };
+}
 // Every team in a league or tournament, from its standings (which allow browser calls).
 export async function leagueTeams(path) {
   const st = await standings(path);

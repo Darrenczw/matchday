@@ -1,8 +1,11 @@
 // Team page: the whole screen wears the team's colours (PRD 7.2, screen 4).
 import { esc, sg, icon } from '../util.js';
-import { teamInfo, schedule } from '../espn.js';
+
+const openSquad = new Set(); // squads opened in full this visit
+const UNIT = { offense: 'Offense', defense: 'Defense', specialTeam: 'Special teams', injuredReserveOrOut: 'Injured or out', practiceSquad: 'Practice squad' };
+import { teamInfo, schedule, roster } from '../espn.js';
 import { inkOn, readable, logoSrc, crest, NEUTRAL } from '../identity.js';
-import { teamFollowBtn, calBtn, teamPick, href, skel, errorCard, backBtn } from '../ui.js';
+import { teamFollowBtn, calBtn, teamPick, href, skel, errorCard, backBtn, face, FACES } from '../ui.js';
 import { sportOf, teamKey, settings } from '../store.js';
 import { mainMarket, tvShort, KIND } from '../tv.js';
 
@@ -50,10 +53,35 @@ export default function team([sport, slug, id], ctx) {
   }
   html += `<div class="card"><h2>Next games</h2>${next.length ? next.slice(0, 5).map((g) => line(g, id, false)).join('') : '<p class="note">No games scheduled in the feed yet.</p>'}</div>`;
   if (done.length) html += `<div class="card"><h2>Results</h2>${done.slice(0, 5).map((g) => line(g, id, true)).join('')}</div>`;
-  if (sportOf(path) === 'soccer') {
-    const comps = [...new Map(games.filter((g) => g.league !== 'club.friendly').map((g) => [g.path, g.comp])).values()];
-    if (comps.length) html += `<div class="card"><h2>Plays in</h2><div class="chips" style="flex-wrap:wrap;padding:4px 14px 14px">${comps.map((c) => `<a class="chip" href="${href.comp(c.path)}">${crest({ logo: c.logo, name: c.name }, 24, true)}${esc(c.name)}</a>`).join('')}</div></div>`;
-  }
+  // Where they play, every sport: each competition opens its page (and its table).
+  const comps = [...new Map(games.filter((g) => g.league !== 'club.friendly').map((g) => [g.path, g.comp])).values()];
+  if (comps.length) html += `<div class="card"><h2>Plays in</h2><div class="chips" style="flex-wrap:wrap;padding:4px 14px 14px">${comps.map((c) => `<a class="chip" href="${href.comp(c.path)}">${crest({ logo: c.logo, name: c.name }, 24, true)}${esc(c.name)}</a>`).join('')}</div></div>`;
+  // The squad, like Football Manager: every player opens his page. Football squads need the league, so use the
+  // competition this team plays most games in.
+  const count = new Map(); for (const g of games) if (g.path !== 'soccer/all' && g.league !== 'club.friendly') count.set(g.path, (count.get(g.path) || 0) + 1);
+  const rpath = sportOf(path) === 'soccer' ? (path !== 'soccer/all' ? path : [...count].sort((a, b) => b[1] - a[1])[0]?.[0]) : path;
+  if (rpath) html += squad(ctx, rpath, id, { bg, ink });
   html += `<p class="foot" style="color:inherit;opacity:.8;padding-bottom:12px">Following ${esc(t.short)} brings every one of their games, in every competition, into My games.</p>`;
   return html + '</div>';
 }
+
+function squad(ctx, rpath, id, kit) {
+  const e = ctx.use(`roster:${rpath}:${id}`, () => roster(rpath, id), 6 * 3600e3);
+  if (!e.v) return e.err ? '' : skel(2);
+  const groups = e.v.filter((g) => g.players.length && g.group !== 'suspended');
+  const n = groups.reduce((s, g) => s + g.players.length, 0);
+  if (!n) return '';
+  const open = openSquad.has(id) || n <= 12;
+  let left = open ? Infinity : 10, html = '';
+  for (const g of groups) {
+    if (left <= 0) break;
+    const ps = g.players.slice(0, left); left -= ps.length;
+    if (g.group) html += `<h3 class="unit">${esc(UNIT[g.group] || g.group)}</h3>`;
+    // Photos where the feed has them (NBA, NFL); football rows lead with the name until it has a photo source.
+    const pics = FACES.has(sportOf(rpath));
+    html += ps.map((p) => `<a class="li" href="${href.player(rpath, p.id)}">${pics ? face(p, { bg: 'color-mix(in srgb, currentColor 14%, transparent)', ink: 'inherit' }, 34) : ''}<span class="grow"><span class="t">${esc(p.name)}</span><small>${esc([p.posName, p.age && `${p.age}`, p.country].filter(Boolean).join(' · '))}</small></span>${p.jersey ? `<b class="sqn">${esc(p.jersey)}</b>` : ''}</a>`).join('');
+  }
+  if (!open) html += `<button class="btn ghost more" data-act="squad" data-id="${esc(id)}" style="margin-top:8px">Show all ${n} players</button>`;
+  return `<div class="card"><h2>Squad<span style="float:right;font-weight:600;opacity:.8">${n} players</span></h2>${html}</div>`;
+}
+team.actions = { squad(d, el, e, ctx) { openSquad.add(d.id); ctx.redraw(); } };

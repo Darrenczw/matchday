@@ -11,6 +11,7 @@ export const href = {
   match: (g) => `#/m/${g.path}/${g.id}`,
   team: (path, id) => `#/t/${path}/${id}`,
   comp: (path) => `#/c/${path}`,
+  player: (path, id) => `#/p/${path}/${id}`,
 };
 
 // ---------- Kick-off moved? Remember each game's time; if it changes, show "Moved from" for 7 days.

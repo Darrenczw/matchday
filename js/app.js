@@ -13,6 +13,7 @@ import followView from './views/follow.js';
 import comp from './views/comp.js';
 import team from './views/team.js';
 import match from './views/match.js';
+import player from './views/player.js';
 import week from './views/week.js';
 import settingsView from './views/settings.js';
 
@@ -23,6 +24,7 @@ const ROUTES = [
   [/^#\/c\/(\w+)\/([\w.]+)$/, comp, null],
   [/^#\/t\/(\w+)\/([\w.]+)\/(\d+)$/, team, null],
   [/^#\/m\/(\w+)\/([\w.]+)\/(\d+)$/, match, null],
+  [/^#\/p\/(\w+)\/([\w.]+)\/(\d+)$/, player, null],
   [/^#\/week$/, week, 'week'],
   [/^#\/settings$/, settingsView, 'settings'],
 ];
@@ -150,6 +152,8 @@ function labelFor(h) {
   m = h.match(/^#\/t\/(\w+)\/[\w.]+\/(\d+)$/);
   if (m) return data.get(`team:${m[1]}:${m[2]}`)?.v?.short || 'Team';
   m = h.match(/^#\/m\/(\w+)\/[\w.]+\/(\d+)$/);
+  const pm = h.match(/^#\/p\/(\w+)\/([\w.]+)\/(\d+)$/);
+  if (pm) return data.get(`player:${pm[1]}:${pm[3]}`)?.v?.a?.shortName || 'Player';
   const g = m && known.get(m[2]);
   if (g) return g.sport === 'soccer' ? `${g.home.abbr} v ${g.away.abbr}` : `${g.away.abbr} @ ${g.home.abbr}`;
   return 'Back';

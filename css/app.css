@@ -550,3 +550,22 @@ html.reels .pagerbar { opacity: 0; pointer-events: none; }
 .clips .cflash svg { width: 34px; height: 34px; fill: currentColor; stroke: none; }
 .clips .cflash.on { animation: cflash .6s ease-out; }
 @keyframes cflash { 0% { opacity: 1; transform: scale(.85); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
+
+/* ---------- Player page (22 Oct 2026): the team page's skin, the player's photo where the crest goes */
+.ident.who { flex-direction: column; align-items: flex-start; padding-top: 10px; }
+.ident.who > div { display: grid; gap: 8px; justify-items: start; width: 100%; min-width: 0; }
+.ident.who .face i { font-size: 34px; }
+.ident .num { font: 800 15px/1 var(--cond); letter-spacing: .03em; }
+.chip.plteam { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px 0 6px; background: color-mix(in srgb, var(--skin-ink) 14%, transparent); color: inherit; font: 600 13px/1 var(--text); }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 2px 14px 12px; }
+.tiles div { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--skin-ink) 9%, transparent); }
+.tiles b { font: 800 30px/1 var(--cond); font-variant-numeric: tabular-nums; }
+.tiles span { font: 700 11px/1 var(--text); letter-spacing: .08em; opacity: .8; }
+.teampage .box th, .teampage .box td { border-color: var(--skin-line); color: inherit; }
+.teampage .box th:first-child, .teampage .box td:first-child { background: var(--skin-card); box-shadow: 1px 0 0 var(--skin-line); }
+.teampage .li .when span { color: inherit; opacity: .8; }
+/* Names that open a player or team page look like the text around them, with a quiet underline on press */
+a.plink { color: inherit; text-decoration: none; }
+a.plink:active { text-decoration: underline; }
+.teampage .sqn { font: 800 20px/1 var(--cond); opacity: .85; min-width: 28px; text-align: right; }
+.teampage .face i { font-size: 13px; }

@@ -216,7 +216,8 @@ function gameLeaders(g, d, k) {
     // Drawn: big number and surname. Spoken: full name first, then the numbers.
     const who = `<span class="pn" aria-hidden="true"><span class="sn">${esc(sur)}</span>${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
     const said = `<span class="sr">${esc(`${full}, ${p.displayValue || ''}`)}</span>`;
-    return `<div class="gl-p${r ? ' r' : ''}">${said}${r ? who + `<b aria-hidden="true">${esc(v.big)}</b>` + pic : pic + `<b aria-hidden="true">${esc(v.big)}</b>` + who}</div>`;
+    const tag = p.athlete?.id ? `a href="${href.player(g.path, p.athlete.id)}"` : 'div', end = p.athlete?.id ? 'a' : 'div';
+    return `<${tag} class="gl-p plink${r ? ' r' : ''}">${said}${r ? who + `<b aria-hidden="true">${esc(v.big)}</b>` + pic : pic + `<b aria-hidden="true">${esc(v.big)}</b>` + who}</${end}>`;
   };
   const label = (n) => L.find((c) => c.name === n)?.displayName || n;
   return `<div class="card"><div class="h">Game leaders<span>${tchip(k.left)} ${tchip(k.right)}</span></div>${cats.map((n) => `<div class="gl">${side(L, n)}<span class="cat">${esc(label(n).replace(' Yards', ''))}</span>${side(R, n, true)}</div>`).join('')}</div>`;
@@ -233,7 +234,7 @@ function teamSwitch(g, k) {
 function table(cols, rows, totals) {
   const th = `<tr><th>Player</th>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
   const tr = rows.map((r) => (r.section ? `<tr class="sec"><td colspan="${cols.length + 1}">${esc(r.section)}</td></tr>`
-    : `<tr><td>${r.face || ''}<span class="pn">${esc(r.name)}</span>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</td>${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)).join('');
+    : `<tr><td>${r.href ? `<a class="plink" href="${r.href}">` : ''}${r.face || ''}<span class="pn">${esc(r.name)}</span>${r.href ? '</a>' : ''}${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</td>${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)).join('');
   const tt = totals ? `<tr class="tot"><td>Team</td>${totals.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>` : '';
   return `<div class="boxwrap"><table class="box">${th}${tr}${tt}</table></div>`;
 }
@@ -247,7 +248,7 @@ function boxNBA(g, d, k) {
   const cols = ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'FT', 'STL', 'BLK', 'TO', '+/-'];
   const played = s.athletes.filter((a) => !a.didNotPlay && a.stats?.length);
   const x = id === k.left.team.id ? k.left : k.right;
-  const row = (a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, sub: a.athlete?.position?.abbreviation, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '' });
+  const row = (a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, sub: a.athlete?.position?.abbreviation, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '', href: a.athlete?.id ? href.player(g.path, a.athlete.id) : '' });
   const rows = [{ section: 'Starters' }, ...played.filter((a) => a.starter).map(row), { section: 'Bench' }, ...played.filter((a) => !a.starter).map(row)];
   const dnp = s.athletes.filter((a) => a.didNotPlay).map((a) => a.athlete?.shortName).filter(Boolean);
   return `<div class="card"><div class="h">Box score<span>Swipe for more</span></div>${teamSwitch(g, k)}${table(cols, rows, pick(s.labels, cols, s.totals || []))}${dnp.length ? `<p class="note">Didn’t play: ${esc(dnp.join(', '))}</p>` : ''}</div>`;
@@ -267,7 +268,7 @@ function playersNFL(g, d, k) {
     const s = groups.find((x) => x.name === key);
     if (!s?.athletes?.length) return '';
     const x = id === k.left.team.id ? k.left : k.right;
-    const rows = s.athletes.slice(0, max || 99).map((a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '' }));
+    const rows = s.athletes.slice(0, max || 99).map((a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '', href: a.athlete?.id ? href.player(g.path, a.athlete.id) : '' }));
     return `<h3 class="unit">${title}</h3>${table(cols, rows)}`;
   }).join('');
   return `<div class="card"><h2>Player stats</h2>${teamSwitch(g, k)}${parts}</div>`;
@@ -339,7 +340,7 @@ function lineups(g, d, k) {
   const marks = (aid) => (ev.get(aid) || []).map((m) => (m.goal ? BALL : m.card ? `<i class="cd ${m.card}"></i>` : m.off ? `<span class="off">${ARROW_OUT}${esc(m.off)}</span>` : '')).join('');
   const said = (p) => [p.jersey && `number ${p.jersey}`, p.athlete?.displayName, ...(ev.get(p.athlete?.id) || []).map((m) => (m.goal ? `scored ${m.goal}` : m.card ? (m.card === 'r' ? 'red card' : 'yellow card') : `subbed off ${m.off}`))].filter(Boolean).join(', ');
   const rows = rowsFor(xi, ro?.formation).reverse(); // forwards at the top, attacking up the page
-  const pitch = `<div class="pitch${kitEdge(x)}" style="background:${x.bg};color:${x.ink}" role="list" aria-label="${esc(`${x.team.name || x.team.short} starting eleven${ro?.formation ? `, ${ro.formation}` : ''}`)}"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><rect x="3" y="3" width="94" height="134" rx="2"/><path d="M3 70h94"/><circle cx="50" cy="70" r="11"/><rect x="24" y="3" width="52" height="20"/><rect x="24" y="117" width="52" height="20"/><rect x="38" y="3" width="24" height="7"/><rect x="38" y="130" width="24" height="7"/></svg>${rows.map((row) => `<div class="pl-row">${row.map((p) => `<div class="pl" role="listitem" aria-label="${esc(said(p))}"><span class="sh">${esc(p.jersey || '')}</span><span class="nm" aria-hidden="true">${esc(surname(p.athlete))}</span><span class="mk" aria-hidden="true">${marks(p.athlete?.id)}</span></div>`).join('')}</div>`).join('')}</div>`;
+  const pitch = `<div class="pitch${kitEdge(x)}" style="background:${x.bg};color:${x.ink}" role="list" aria-label="${esc(`${x.team.name || x.team.short} starting eleven${ro?.formation ? `, ${ro.formation}` : ''}`)}"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><rect x="3" y="3" width="94" height="134" rx="2"/><path d="M3 70h94"/><circle cx="50" cy="70" r="11"/><rect x="24" y="3" width="52" height="20"/><rect x="24" y="117" width="52" height="20"/><rect x="38" y="3" width="24" height="7"/><rect x="38" y="130" width="24" height="7"/></svg>${rows.map((row) => `<div class="pl-row">${row.map((p) => `<${p.athlete?.id ? `a href="${href.player(g.path, p.athlete.id)}"` : 'div'} class="pl plink" role="listitem" aria-label="${esc(said(p))}"><span class="sh">${esc(p.jersey || '')}</span><span class="nm" aria-hidden="true">${esc(surname(p.athlete))}</span><span class="mk" aria-hidden="true">${marks(p.athlete?.id)}</span></${p.athlete?.id ? 'a' : 'div'}>`).join('')}</div>`).join('')}</div>`;
   const subsHtml = swaps.length ? `<div class="h" style="padding-top:12px">Subs<span>${swaps.length} made</span></div>${swaps.map((s) => `<div class="swap"><span class="min">${esc(s.min)}</span><span class="in">${ARROW_IN}${esc(s.on?.displayName || '')}</span><span class="out">${ARROW_OUT}${esc(s.off?.displayName || '')}</span><span class="sr">${esc(`${s.min}, ${s.on?.displayName || ''} on for ${s.off?.displayName || ''}`)}</span></div>`).join('')}` : '';
   const onIds = new Set(swaps.map((s) => s.on?.id));
   const bench = all.filter((p) => !p.starter && !onIds.has(p.athlete?.id)).map((p) => surname(p.athlete));
@@ -404,7 +405,7 @@ function formCard(g, d, k, ctx) {
     const nx = g.state === 'post' ? nextFor(g, x, ctx) : '';
     const sub = [standingFor(g, d, ctx, x.team.id), recTxt].filter(Boolean).join(' · ');
     if (res.length) anyForm = true;
-    return `<div class="li">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" role="img" aria-label="Last ${res.length}, oldest first: ${res.map((r) => ({ W: 'won', D: 'drew', L: 'lost' }[r] || r)).join(', ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</div>`;
+    return `<a class="li" href="${href.team(g.path, x.team.id)}">${crest(x.team, 30)}<span class="grow"><span class="t">${esc(x.team.short)}</span>${sub ? `<small class="wrap">${esc(sub)}</small>` : ''}${nx ? `<small class="wrap">${esc(nx)}</small>` : ''}</span>${res.length ? `<span class="forms" role="img" aria-label="Last ${res.length}, oldest first: ${res.map((r) => ({ W: 'won', D: 'drew', L: 'lost' }[r] || r)).join(', ')}">${res.map((r) => `<span class="fm ${r}">${r}</span>`).join('')}</span>` : ''}</a>`;
   });
   return `<div class="card"><div class="h">${g.state === 'post' ? 'What it means' : 'Form'}<span>${[g.state === 'post' ? 'Table now' : '', anyForm ? (g.sport === 'soccer' ? 'last 5, all competitions' : 'last 5') : ''].filter(Boolean).join(' · ').replace(/^./, (c) => c.toUpperCase())}</span></div>${rows.join('')}</div>`;
 }
