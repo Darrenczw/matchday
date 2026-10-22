@@ -4,6 +4,9 @@
 // Once anyone has asked for them, both come back in ~0.05 s. So the clips you're about to see are asked for
 // quietly first: the playlist and its first two 2-second pieces (~350 KB a clip), and the still. Two at a time,
 // the newest request first (it's the clip nearest your thumb). Nothing in Low Data Mode.
+// A Streamable MP4 (r/nba's clips, served to SG from Europe) gets its first ~300 KB read and the rest
+// dropped: its index sits at the front, and the secure connection (~0.3 s to set up) is then already open when the
+// player asks for the file.
 const done = new Set();
 let todo = [], busy = 0;
 const MAX = 2;
@@ -16,8 +19,7 @@ export function warm(clips) {
     done.add(c.src);
     if (c.poster) new Image().src = c.poster;
   }
-  // Only streams have small first pieces worth fetching; a plain MP4 starts from its own first bytes anyway.
-  todo = [...fresh.filter((c) => /\.m3u8(\?|$)/.test(c.src)), ...todo];
+  todo = [...fresh, ...todo];
   pump();
 }
 
@@ -29,10 +31,19 @@ function pump() {
   }
 }
 async function one(src) {
+  if (/\.streamable\.com\//.test(src)) return head(src);
+  if (!/\.m3u8(\?|$)/.test(src)) return;
   const r = await fetch(src);
   if (!r.ok) return;
   const lines = (await r.text()).split('\n').map((x) => x.trim()).filter((x) => x && !x.startsWith('#'));
   // A master playlist lists other playlists; a media playlist lists the pieces. Warm only the pieces.
   if (lines[0]?.includes('.m3u8')) return;
   for (const p of lines.slice(0, 2)) await fetch(new URL(p, src)).then((x) => x.arrayBuffer());
+}
+async function head(src) {
+  const stop = new AbortController();
+  const r = await fetch(src, { signal: stop.signal });
+  const rd = r.body?.getReader();
+  let n = 0;
+  try { while (rd && n < 300e3) { const { done, value } = await rd.read(); if (done) break; n += value.length; } } finally { stop.abort(); }
 }

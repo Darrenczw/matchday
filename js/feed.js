@@ -167,10 +167,14 @@ function peopleOf(d) {
   return out;
 }
 // Streamable's video links expire, so they are asked for when the clips load (streamable allows browser calls).
+// r/nba's clips take the 360p 'mobile' file (23 Oct 2026): Streamable serves Singapore from Europe (~0.6 s to the
+// first byte), and its 720p files are 11–27 MB a clip against 2.6–5.5 MB, so the small one starts sooner and costs
+// far less data. Wide 360p across a phone held upright looks about as sharp as ESPN's tall 720p stretched to full height.
 async function streamable(clips) {
   await Promise.allSettled(clips.filter((c) => c.src.startsWith('streamable:')).map(async (c) => {
     const j = await fetch(`https://api.streamable.com/videos/${c.src.slice(11)}`).then((r) => r.json());
-    const u = j?.files?.mp4?.url || j?.files?.['mp4-mobile']?.url;
+    const f = j?.files || {};
+    const u = (c.via === 'r/nba' && f['mp4-mobile']?.url) || f.mp4?.url || f['mp4-mobile']?.url;
     c.src = u ? (u.startsWith('//') ? `https:${u}` : u) : '';
   }));
   for (let i = clips.length - 1; i >= 0; i--) if (!clips[i].src) clips.splice(i, 1);
@@ -221,9 +225,10 @@ export function moments(g, d) {
       return { key: `${g.id}:${i}`, team, label: p.type?.abbreviation || 'TD', sub: `Q${p.period?.number || ''} ${p.clock?.displayValue || ''}`.trim(), who, ini: initialsOf(who), h: p.homeScore, a: p.awayScore, clip };
     });
   } else if (g.sport === 'basketball') {
-    // ESPN's own NBA clips, and r/nba's highlights of other plays, together in the order they were posted. The player
-    // is found in the box score, so the sticker gets his face and team. An r/nba post naming a player of an ESPN clip
-    // posted within 8 minutes of it is the same play (ESPN's copy starts faster, see warm.js), so it's left out.
+    // r/nba's highlights first, and ESPN's own clips of the plays r/nba didn't post (Darren, 23 Oct 2026: "most of the
+    // NBA clips I'm watching are still ESPN's"), together in the order they were posted. The player is found in the
+    // box score, so the sticker gets his face and team. An ESPN clip naming a player of an r/nba post within 8 minutes
+    // of it is the same play, so ESPN's copy is left out.
     const people = [];
     for (const t of d?.boxscore?.players || []) for (const s of t.statistics || []) for (const x of s.athletes || []) if (x.athlete?.displayName) people.push({ team: String(t.team?.id || ''), a: x.athlete });
     const first = (n) => fold(n).split(' ')[0];
@@ -238,16 +243,13 @@ export function moments(g, d) {
       const clip = { src: c.src, tall: c.tall, poster: c.poster, title: c.title, via: 'ESPN', by: '', at: c.t };
       return { key: `${g.id}:${c.id}`, team: p?.team || '', who: p?.a?.shortName || '', ini: initialsOf(p?.a?.displayName), athlete: p?.a || null, clip, title: c.title, t: Date.parse(c.t) || 0, ps };
     });
-    for (const c of clips) {
-      const ps = named(c.title);
-      if (espn.some((e) => Math.abs(e.t - Date.parse(c.at)) < 8 * MIN && e.ps.some((p) => ps.includes(p)))) used.add(c);
-    }
-    const fans = clips.filter((c) => !used.has(c)).map((c) => {
+    const fans = clips.map((c) => {
       used.add(c);
-      const p = named(c.title)[0] || people.find((x) => fold(x.a.displayName) === fold(c.who));
-      return { key: `${g.id}:r:${c.url || c.src}`, team: c.team || p?.team || '', who: p?.a?.shortName || c.who, ini: initialsOf(p?.a?.displayName || c.who), athlete: p?.a || null, clip: c, title: c.title, t: Date.parse(c.at) || 0 };
+      const ps = named(c.title), p = ps[0] || people.find((x) => fold(x.a.displayName) === fold(c.who));
+      return { key: `${g.id}:r:${c.url || c.src}`, team: c.team || p?.team || '', who: p?.a?.shortName || c.who, ini: initialsOf(p?.a?.displayName || c.who), athlete: p?.a || null, clip: c, title: c.title, t: Date.parse(c.at) || 0, ps };
     });
-    out = [...espn, ...fans].sort((a, b) => a.t - b.t).map(({ ps, t, ...m }, i) => ({ ...m, label: String(i + 1) }));
+    const twin = (e) => fans.some((f) => Math.abs(e.t - f.t) < 8 * MIN && e.ps.some((p) => f.ps.includes(p)));
+    out = [...espn.filter((e) => !twin(e)), ...fans].sort((a, b) => a.t - b.t).map(({ ps, t, ...m }, i) => ({ ...m, label: String(i + 1) }));
   }
   // Clips that matched no moment are still this game's: after the moments, in the order they were posted.
   for (const c of clips) if (!used.has(c)) out.push({ key: `${g.id}:x:${c.src}`, team: c.team, label: c.min || '', who: c.who, ini: initialsOf(c.who), clip: c, extra: true });
