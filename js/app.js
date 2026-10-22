@@ -132,6 +132,8 @@ function go() {
     const m = h.match(re);
     if (!m) continue;
     route = { view, params: m.slice(1), hash: h };
+    // The clip player hides the tab bar; a new screen always brings it back.
+    if (!document.querySelector('.reel')) document.documentElement.classList.remove('reeling');
     ctx.back = stack.length > 1 ? { href: stack[stack.length - 2], label: labelFor(stack[stack.length - 2]) } : null;
     if (tab) lastTab = tab;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.tab === lastTab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
