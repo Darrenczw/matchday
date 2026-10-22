@@ -5,8 +5,9 @@
 // to pause; hold to pause until you let go. Score, minute, scorer and source sit in strips above and below the
 // video, never over the picture's middle.
 // Seamless (Darren, 22 Oct 2026: "clunky, slow to start, stutters, swiping jumpy"):
-// - every moment first shows a still in the kits with its minute; the video fades in only once it is playing, so
-//   there is never a black wait;
+// - every moment first shows a still in the kits with its minute, on top of the video, until its frames move; the
+//   video itself is always visible, because iPhone may not start a video it can't see (22 Oct 2026: on Darren's
+//   iPhone the player opened and never played). A clip that hasn't started in 4 s gets a play button;
 // - one clip is got ready at a time, and only after the one on screen has played smoothly for a moment: first the
 //   next moment, then the next game's first clip, placed in the next game's slide so a swipe drags it in already
 //   showing its first frame. Three video elements are shared by every slide;
@@ -19,6 +20,11 @@ let el = null, track = null, S = null, sound = false, io = null;
 const root = document.documentElement;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches || !!navigator.connection?.saveData;
 const SETTLE = 1200; // ms of smooth playback before the next clip starts loading
+// Diagnostics: "?debug" shows each video's events on screen (used to find why clips stalled on iPhone, 22 Oct 2026).
+const DBG = /[?&]debug\b/.test(location.search);
+function dbg(msg) { if (!DBG) return; let b = document.getElementById('rdbg'); if (!b) { b = document.createElement('pre'); b.id = 'rdbg'; b.style.cssText = 'position:fixed;left:0;right:0;top:40%;z-index:99;max-height:40%;overflow:auto;margin:0;padding:6px;background:rgba(0,0,0,.8);color:#0f0;font:11px/1.3 monospace;pointer-events:none;white-space:pre-wrap'; document.body.appendChild(b); } b.textContent = `${(performance.now() / 1000).toFixed(1)} ${msg}\n` + b.textContent.slice(0, 3000); }
+addEventListener('error', (e) => dbg(`ERR ${e.message}`));
+addEventListener('unhandledrejection', (e) => dbg(`REJ ${e.reason}`));
 
 // queue: [{ g, k, moments: [{ clip, label, sub, who, team, h, a }], full }]; starts at game gi, moment mi.
 export function openReel(queue, gi = 0, mi = 0) {
@@ -54,7 +60,7 @@ export function openReel(queue, gi = 0, mi = 0) {
 
 export function close() {
   if (!el) return;
-  clearTimeout(S?.primeT);
+  clearTimeout(S?.primeT); clearTimeout(S?.watch);
   io?.disconnect(); io = null;
   for (const s of S.slots) { s.v.pause(); s.v.removeAttribute('src'); s.v.load(); }
   document.removeEventListener('keydown', onKey);
@@ -86,12 +92,14 @@ function makeVideo() {
   v.playsInline = true; v.muted = true; v.preload = 'auto';
   v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
   const s = { v, ready: null };
+  if (DBG) for (const ev of ['loadstart', 'loadedmetadata', 'canplay', 'playing', 'waiting', 'stalled', 'pause', 'ended', 'error']) v.addEventListener(ev, () => dbg(`${S?.slots?.indexOf(s)} ${ev} ${(v.dataset.src || '').slice(-18)} rs${v.readyState} ${v.error ? 'e' + v.error.code : ''} cur${s === S?.cur ? 1 : 0}`));
   v.addEventListener('playing', () => {
     v.classList.add('on');
     s.ready?.(); s.ready = null;
     if (s !== S?.cur) v.pause(); // got ready: hold on the first frame
   });
   v.addEventListener('timeupdate', () => {
+    if (v.currentTime > 0.05) v.classList.add('on'); // frames are moving, even if 'playing' never came
     if (!el || s !== S.cur) return;
     const b = slideEl(S.gi)?.querySelector('.rbar').children[S.at[S.gi]]?.firstChild;
     if (b && v.duration) b.style.width = `${(100 * v.currentTime) / v.duration}%`;
@@ -158,7 +166,11 @@ function play() {
   const s = S.cur, v = s.v, pb = slideEl(S.gi).querySelector('.rplay');
   pb.hidden = true;
   v.muted = !sound;
-  v.play().catch(() => {
+  // Never a stuck still: if this clip hasn't started within 4 seconds, offer the play button (it keeps loading).
+  clearTimeout(S.watch);
+  S.watch = setTimeout(() => { if (S && S.cur === s && (v.paused || v.currentTime < 0.05) && !v.ended) { dbg('watchdog: not started'); pb.hidden = false; } }, 4000);
+  v.play().catch((err) => {
+    dbg(`play() rejected ${err?.name}`);
     if (!v.muted) { sound = false; setSound(); play(); return; } // sound needs a tap; play muted instead
     pb.hidden = false; // Low Power Mode: no auto-play, so a play button
   });

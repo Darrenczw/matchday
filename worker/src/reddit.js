@@ -72,7 +72,7 @@ async function resolve(link) {
   const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (FTLTG personal app)' }, redirect: 'follow' });
   if (!r.ok) return '';
   const t = (await r.text()).slice(0, 200e3);
-  return unesc(t.match(/property="og:video(?::url)?"\s+content="([^"]+\.mp4[^"]*)"/)?.[1] || t.match(/data-link="([^"]+\.mp4[^"]*)"/)?.[1] || t.match(/<source[^>]+src="([^"]+\.mp4[^"]*)"/)?.[1] || '');
+  return unesc(t.match(/property=["']og:video(?::url)?["']\s+content=["']([^"']+\.mp4[^"']*)["']/)?.[1] || t.match(/data-link=["']([^"']+\.mp4[^"']*)["']/)?.[1] || t.match(/<source[^>]+src=["']([^"']+\.mp4[^"']*)["']/)?.[1] || '');
 }
 const isGoal = (t) => /\[\d+\]\s*-\s*\d+|\d+\s*-\s*\[\d+\]/.test(t);
 
@@ -127,8 +127,10 @@ export async function redditRun(env) {
       const xml = await get(env, j.url);
       let items = parse(xml, { comments: !!j.comments });
       if (j.comments) items = items.slice(1); // the first entry is the post itself
-      if (j.key === 'goals' || j.key === 'plays') items = await withSrc(env, j.key, j.key === 'goals' ? items.filter((x) => isGoal(x.title)) : items.filter((x) => /^\[highlight\]/i.test(x.title)));
+      if (j.key === 'goals') items = items.filter((x) => isGoal(x.title));
+      if (j.key === 'plays') items = items.filter((x) => /^\[highlight\]/i.test(x.title));
       if (j.key === 'threads' || j.key === 'goals' || j.key === 'plays') items = await merged(env, j.key, items, now);
+      if (j.key === 'goals' || j.key === 'plays') items = await withSrc(env, j.key, items);
       await writeFeed(env, j.key, items, now + j.every);
       done.push(`${j.key}:${items.length}`);
     } catch (e) {
@@ -145,13 +147,21 @@ async function merged(env, key, items, now) {
   const old = ((await readFeed(env, key))?.items || []).filter((x) => !ids.has(x.id) && now - new Date(x.at).getTime() < KEEP);
   return [...items, ...old].slice(0, 400);
 }
-// Video files for clip posts. Known ones carry over from the last read; at most 4 new page look-ups a run.
+// Video files for clip posts. Known ones carry over from the last read, except page-hosted ones older than 2 hours:
+// streamin moves its files between servers (c-cdn → w-cdn, 22 Oct 2026) and old links go 404. At most 6 page
+// look-ups a run, newest posts first.
 async function withSrc(env, key, items) {
-  const old = new Map(((await readFeed(env, key))?.items || []).map((x) => [x.id, x.src]));
-  let budget = 4;
+  const old = new Map(((await readFeed(env, key))?.items || []).map((x) => [x.id, x]));
+  let budget = 6;
+  const now = Date.now();
   for (const x of items) {
-    x.src = old.get(x.id) || srcFor(x.link);
-    if (!x.src && budget > 0 && PAGE.some((re) => re.test(x.link))) { budget--; x.src = await resolve(x.link).catch(() => ''); }
+    const o = old.get(x.id), paged = PAGE.some((re) => re.test(x.link));
+    x.src = o?.src || srcFor(x.link); x.srcAt = o ? o.srcAt || 0 : x.src ? now : 0;
+    if (paged && (!x.src || now - x.srcAt > 2 * HOUR) && budget > 0) {
+      budget--;
+      const fresh = await resolve(x.link).catch(() => '');
+      if (fresh) { x.src = fresh; x.srcAt = now; } else if (!o?.src) x.src = '';
+    }
   }
   return items.filter((x) => x.src || PAGE.some((re) => re.test(x.link)));
 }

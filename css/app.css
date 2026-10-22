@@ -648,16 +648,15 @@ html.reeling .tabs { transform: translateY(110%); }
 .reel .rtrack { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .reel .rtrack::-webkit-scrollbar { display: none; }
 .reel .rslide { position: relative; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
-.reel .rpost { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+.reel .rpost { position: absolute; inset: 0; z-index: 2; display: grid; pointer-events: none; transition: opacity .2s ease-out; place-items: center; background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
 .reel .rpost::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
 .reel .rpost img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; }
 .reel .rpost b { position: relative; z-index: 2; font: 800 88px/1 var(--cond); letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, .4); }
-.reel .rvbox { position: absolute; inset: 0; z-index: 1; }
-.reel .rpost b { transition: opacity .18s ease-out; }
-.reel .rslide:has(video.on:not(.off)) .rpost b, .reel .rslide:has(video.on:not(.off)) .rpost img { opacity: 0; }
-.reel .rpost img { transition: opacity .18s ease-out; }
-.reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: transparent; opacity: 0; transition: opacity .18s ease-out; }
-.reel video.on { opacity: 1; }
+.reel .rvbox { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+.reel .rvbox::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
+/* iPhone may not start a video it can't see, so the video is always visible and the still sits on top until frames move. */
+.reel .rslide:has(video.on:not(.off)) .rpost { opacity: 0; }
+.reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: transparent; }
 .reel video.wide { object-fit: contain; }
 .reel video.off { visibility: hidden; }
 .reel .rtop { position: absolute; left: 0; right: 0; top: 0; z-index: 2; padding: calc(var(--safe-top) + 8px) 64px 30px 10px; background: linear-gradient(rgba(0, 0, 0, .6), transparent); pointer-events: none; }
@@ -689,7 +688,7 @@ html.reeling .tabs { transform: translateY(110%); }
 .reel .rflash { position: absolute; left: 50%; top: 50%; z-index: 3; display: grid; place-items: center; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; background: rgba(0, 0, 0, .45); opacity: 0; pointer-events: none; }
 .reel .rflash svg { width: 34px; height: 34px; fill: #fff; stroke: none; }
 .reel .rflash.on { animation: cflash .6s ease-out; }
-@media (prefers-reduced-motion: reduce) { .reel .rflash.on, .reel .rbar i.buf { animation: none; } .reel video { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .reel .rflash.on, .reel .rbar i.buf { animation: none; } .reel .rpost { transition: none; } }
 
 /* Fans: thread cards under the game's shirt panels, team subreddits, banter */
 .lnk { min-height: 44px; padding: 0 2px; font: 700 13px/1 var(--text); color: var(--go); }

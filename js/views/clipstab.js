@@ -76,6 +76,8 @@ export default function clipsTab(params, ctx) {
   });
   // The rings and the player use the same queue: every game with at least one clip, newest first.
   queue = pages.filter((x) => x.list.length);
+  // Diagnostics: "?debug" opens the player by itself ("&g=2" for the third game), for testing iPhone Safari headless.
+  if (/[?&]debug\b/.test(location.search) && queue.length && !window.__dbgOpened) { window.__dbgOpened = true; setTimeout(() => playClip({ q: 'tab', gi: String(+(new URLSearchParams(location.search).get('g') || 0)) }), 1500); }
   const qi = (x) => queue.indexOf(x);
   if (all && feedMode() === 'snapshot') html += `<div class="banner info">${icon('alert')}<span>The fan feed isn’t answering, so this is a saved snapshot. None of its games are ones you follow, so all of them are shown.</span></div>`;
   else if (feedMode() === 'snapshot') html += `<div class="banner info">${icon('alert')}<span>The fan feed isn’t answering, so this is a saved snapshot of real clips.</span></div>`;
