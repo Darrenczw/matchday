@@ -92,6 +92,8 @@ function morph(a, b) {
   if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b); return; }
   if (a.nodeType === 3 || a.nodeType === 8) { if (a.data !== b.data) a.data = b.data; return; }
   if (a.nodeType !== 1) return;
+  // A part that runs itself (the clip player) is drawn once, then left alone while its key stays the same.
+  if (a.dataset.keep && a.dataset.keep === b.dataset?.keep) return;
   // Most of a long list is the same as last time: the browser's own deep compare skips it in one call.
   if (a.isEqualNode(b)) return;
   // A logo that changes gets a new element: patching src keeps showing the old logo until the new one loads.
