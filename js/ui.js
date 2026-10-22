@@ -221,3 +221,17 @@ export function toast(msg, undo) {
   toastTimer = setTimeout(() => { el.hidden = true; }, undo ? 5000 : 2500);
 }
 export { isDark };
+
+// ---------- Player faces (NBA first, Darren 22 Oct 2026). ESPN's cut-out headshot standing on the team's
+// shirt colour, like a player in his kit. No photo, or a broken one: his shirt number in the number colour.
+// Sports turn on one at a time; NFL photos are in the same feed, football needs a second source.
+export const FACES = new Set(['basketball']);
+export function face(a, x, size = 40) {
+  if (!a) return '';
+  const src = a.headshot?.href?.match(/^https:\/\/a\.espncdn\.com(\/i\/headshots\/.+\.png)$/);
+  const w = size > 32 ? 120 : 64, h = Math.round(w * 0.73);
+  const img = src ? `<img src="https://a.espncdn.com/combiner/i?img=${src[1]}&w=${w}&h=${h}" alt="" loading="lazy" decoding="async">` : '';
+  return `<span class="face" style="width:${size}px;height:${size}px;background:${x.bg};color:${x.ink}" aria-hidden="true"><i>${esc(a.jersey ?? '')}</i>${img}</span>`;
+}
+// A broken photo goes, so the shirt number under it shows.
+document.addEventListener('error', (e) => { if (e.target instanceof HTMLImageElement && e.target.parentElement?.classList.contains('face')) e.target.remove(); }, true);

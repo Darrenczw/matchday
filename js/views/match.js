@@ -6,7 +6,7 @@ import { kitsFor, clashNote, crest, edge, kitEdge, brand, inkOn, readable } from
 import { allMarkets, KIND, rightsChecked, chanList } from '../tv.js';
 import { position, swipeTo } from '../swipe.js';
 import { prefetch } from '../prefetch.js';
-import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken } from '../ui.js';
+import { followBtn, calBtn, backBtn, skel, errorCard, movedFrom, movedText, href, goalLine, spoken, face, FACES } from '../ui.js';
 import { cal, inCal, gameInCal, calReady, CAL_API, status as calStatus } from '../cal.js';
 import { reasons } from '../suggest.js';
 
@@ -203,8 +203,10 @@ function gameLeaders(g, d, k) {
   if (!cats.length) return '';
   // NBA gives "32"; NFL gives "19/33, 225 YDS, 3 TD": show the yards big and the rest small.
   const split = (v = '') => { const m = v.match(/(\d+) YDS/); return m ? { big: m[1], small: v.replace(/,?\s*\d+ YDS/, '').replace(/^,\s*/, '') } : { big: v, small: '' }; };
+  const faces = FACES.has(g.sport);
   const side = (list, n, r) => {
     const p = list.find((c) => c.name === n)?.leaders?.[0];
+    const pic = faces ? face(p?.athlete, r ? k.right : k.left, 40) : '';
     if (!p) return '<div></div>';
     const v = split(p.displayValue);
     // Surname only ("Wembanyama"), so long names fit on one line; the full name is still spoken.
@@ -213,7 +215,7 @@ function gameLeaders(g, d, k) {
     // Drawn: big number and surname. Spoken: full name first, then the numbers.
     const who = `<span class="pn" aria-hidden="true"><span class="sn">${esc(sur)}</span>${v.small ? `<small>${esc(v.small)}</small>` : ''}</span>`;
     const said = `<span class="sr">${esc(`${full}, ${p.displayValue || ''}`)}</span>`;
-    return `<div class="gl-p${r ? ' r' : ''}">${said}${r ? who + `<b aria-hidden="true">${esc(v.big)}</b>` : `<b aria-hidden="true">${esc(v.big)}</b>` + who}</div>`;
+    return `<div class="gl-p${r ? ' r' : ''}">${said}${r ? who + `<b aria-hidden="true">${esc(v.big)}</b>` + pic : pic + `<b aria-hidden="true">${esc(v.big)}</b>` + who}</div>`;
   };
   const label = (n) => L.find((c) => c.name === n)?.displayName || n;
   return `<div class="card"><div class="h">Game leaders<span>${tchip(k.left)} ${tchip(k.right)}</span></div>${cats.map((n) => `<div class="gl">${side(L, n)}<span class="cat">${esc(label(n).replace(' Yards', ''))}</span>${side(R, n, true)}</div>`).join('')}</div>`;
@@ -230,7 +232,7 @@ function teamSwitch(g, k) {
 function table(cols, rows, totals) {
   const th = `<tr><th>Player</th>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
   const tr = rows.map((r) => (r.section ? `<tr class="sec"><td colspan="${cols.length + 1}">${esc(r.section)}</td></tr>`
-    : `<tr><td><span class="pn">${esc(r.name)}</span>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</td>${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)).join('');
+    : `<tr><td>${r.face || ''}<span class="pn">${esc(r.name)}</span>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</td>${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)).join('');
   const tt = totals ? `<tr class="tot"><td>Team</td>${totals.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>` : '';
   return `<div class="boxwrap"><table class="box">${th}${tr}${tt}</table></div>`;
 }
@@ -243,7 +245,8 @@ function boxNBA(g, d, k) {
   if (!s?.athletes?.length) return '';
   const cols = ['MIN', 'PTS', 'REB', 'AST', 'FG', '3PT', 'FT', 'STL', 'BLK', 'TO', '+/-'];
   const played = s.athletes.filter((a) => !a.didNotPlay && a.stats?.length);
-  const row = (a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, sub: a.athlete?.position?.abbreviation, cells: pick(s.labels, cols, a.stats) });
+  const x = id === k.left.team.id ? k.left : k.right;
+  const row = (a) => ({ name: a.athlete?.shortName || a.athlete?.displayName, sub: a.athlete?.position?.abbreviation, cells: pick(s.labels, cols, a.stats), face: FACES.has(g.sport) ? face(a.athlete, x, 26) : '' });
   const rows = [{ section: 'Starters' }, ...played.filter((a) => a.starter).map(row), { section: 'Bench' }, ...played.filter((a) => !a.starter).map(row)];
   const dnp = s.athletes.filter((a) => a.didNotPlay).map((a) => a.athlete?.shortName).filter(Boolean);
   return `<div class="card"><div class="h">Box score<span>Swipe for more</span></div>${teamSwitch(g, k)}${table(cols, rows, pick(s.labels, cols, s.totals || []))}${dnp.length ? `<p class="note">Didn’t play: ${esc(dnp.join(', '))}</p>` : ''}</div>`;
