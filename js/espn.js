@@ -241,13 +241,42 @@ export async function summary(path, id, live = false) {
     const hit = await sumCache().then((c) => c?.match(url)).catch(() => null);
     if (hit) {
       // Saved soon after the final whistle? Stats can still be corrected: refresh it quietly for next time.
-      if (+hit.headers.get('x-md-saved') < new Date(g.date).getTime() + 5 * HOUR) get(url, MIN).then((j) => storeSum(url, j)).catch(() => {});
-      return hit.json();
+      const fresh = () => full(path, id, url, MIN).then((j) => storeSum(url, j)).catch(() => {});
+      const j = await hit.json();
+      // Saved before xG came in (Darren, 26 Oct 2026): fetch it again once, quietly.
+      if (+hit.headers.get('x-md-saved') < new Date(g.date).getTime() + 5 * HOUR || (path.startsWith('soccer/') && !j.xg)) fresh();
+      return j;
     }
   }
-  const j = await get(url, live ? 8e3 : MIN);
+  const j = await full(path, id, url, live ? 8e3 : MIN);
   if (j?.header?.competitions?.[0]?.status?.type?.completed) storeSum(url, j).catch(() => {});
   return j;
+}
+// The summary plus, for football, each team's expected goals (xG). The summary only has xG per player; the
+// core API's team stats have the total (big leagues only: none for e.g. the Scottish Premiership). Fetched side by
+// side, so it adds no wait; added to the summary's team stats as 'expectedGoals', and `xg` marks that it was asked.
+async function full(path, id, url, maxAge) {
+  if (!path.startsWith('soccer/')) return get(url, maxAge);
+  const g = known.get(String(id));
+  const one = (c) => get(`${CORE}/soccer/leagues/${path.slice(7)}/events/${id}/competitions/${id}/competitors/${c}/statistics`, Math.max(maxAge, 30e3))
+    .then((d) => d.splits?.categories?.flatMap((x) => x.stats).find((s) => s.name === 'expectedGoals')?.value).catch(() => null);
+  const asked = new Map();
+  const ask = (c) => { c = String(c); if (!asked.has(c)) asked.set(c, one(c)); return asked.get(c); };
+  if (g && g.state !== 'pre') { ask(g.home.id); ask(g.away.id); } // known from the row: start now
+  const j = await get(url, maxAge);
+  const comps = j?.header?.competitions?.[0];
+  if (!comps || comps.status?.type?.state === 'pre') return j;
+  const ids = comps.competitors.map((c) => String(c.id));
+  const xs = await Promise.all(ids.map(ask));
+  const out = { ...j, xg: true };
+  // Both teams or neither, so the row never shows one side's xG against a blank.
+  if (xs.every((v) => typeof v === 'number') && j.boxscore?.teams) {
+    out.boxscore = { ...j.boxscore, teams: j.boxscore.teams.map((t) => {
+      const v = xs[ids.indexOf(String(t.team?.id))];
+      return v == null ? t : { ...t, statistics: [...(t.statistics || []).filter((s) => s.name !== 'expectedGoals'), { name: 'expectedGoals', displayValue: v.toFixed(2) }] };
+    }) };
+  }
+  return out;
 }
 
 export async function standings(path) {

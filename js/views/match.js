@@ -162,7 +162,8 @@ function quarters(g, d, k) {
 // [stat, label, kind, sub stat, sub suffix]. kind: '%' adds a percent sign; 'ratio' = "9-17" made/attempts;
 // 'countYds' = "12-133" count and yards.
 const TEAM_STATS = {
-  soccer: [['possessionPct', 'Possession', '%'], ['totalShots', 'Shots'], ['shotsOnTarget', 'On target'], ['wonCorners', 'Corners'], ['foulsCommitted', 'Fouls'], ['saves', 'Saves']],
+  // xG comes from the core API (espn.js full()), big leagues only; the row hides when it's missing.
+  soccer: [['possessionPct', 'Possession', '%'], ['expectedGoals', 'Expected goals (xG)'], ['totalShots', 'Shots'], ['shotsOnTarget', 'On target'], ['wonCorners', 'Corners'], ['foulsCommitted', 'Fouls'], ['saves', 'Saves']],
   basketball: [
     ['fieldGoalPct', 'Field goals', '%', 'fieldGoalsMade-fieldGoalsAttempted'], ['threePointFieldGoalPct', '3-pointers', '%', 'threePointFieldGoalsMade-threePointFieldGoalsAttempted'],
     ['freeThrowPct', 'Free throws', '%', 'freeThrowsMade-freeThrowsAttempted'], ['totalRebounds', 'Rebounds', '', 'offensiveRebounds', 'offensive'],
