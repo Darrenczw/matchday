@@ -1,4 +1,5 @@
 // Shared building blocks: game rows, the live hero, follow buttons, toasts, "moved" notes.
+import { photo } from './faces.js';
 import { esc, sg, shortDay, icon, todayKey } from './util.js';
 import { kitsFor, crest, compImg, isDark, edge, kitEdge } from './identity.js';
 import { liveLabel } from './espn.js';
@@ -232,11 +233,15 @@ export { isDark };
 // shirt colour, like a player in his kit. No photo, or a broken one: his shirt number in the number colour.
 // Sports turn on one at a time; football (soccer) needs a second source.
 export const FACES = new Set(['basketball', 'football']);
-export function face(a, x, size = 40) {
+// Football (o.team = the player's team name, TECH-DESIGN 15): when ESPN has no headshot, the helper's photo: a
+// TheSportsDB cut-out (its 100 px or 200 px copy) or a Wikipedia photo that fills the circle.
+export function face(a, x, size = 40, o = {}) {
   if (!a) return '';
   const src = a.headshot?.href?.match(/^https:\/\/a\.espncdn\.com(\/i\/headshots\/.+\.png)$/);
   const w = size > 32 ? 120 : 64, h = Math.round(w * 0.73);
-  const img = src ? `<img src="https://a.espncdn.com/combiner/i?img=${src[1]}&w=${w}&h=${h}" alt="" loading="lazy" decoding="async">` : '';
+  let img = src ? `<img src="https://a.espncdn.com/combiner/i?img=${src[1]}&w=${w}&h=${h}" alt="" loading="lazy" decoding="async">` : '';
+  const p = !img && o.team != null ? photo(a, o.team) : null;
+  if (p) img = `<img class="${p.k}" src="${esc(p.k === 'cut' ? `${p.u}/${size > 48 ? 'small' : 'tiny'}` : p.u)}" alt="" loading="lazy" decoding="async">`;
   return `<span class="face" style="width:${size}px;height:${size}px;background:${x.bg};color:${x.ink}" aria-hidden="true"><i>${esc(a.jersey ?? '')}</i>${img}</span>`;
 }
 // A broken photo goes, so the shirt number under it shows.

@@ -2,7 +2,7 @@
 const VERSION = 'md-v38';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'data/rights.json',
-  'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/rules.js', 'js/names.js', 'js/cal.js', 'js/ics.js', 'js/ui.js', 'js/ground.js', 'js/swipe.js', 'js/prefetch.js', 'js/clips.js', 'js/feed.js', 'js/subs.js', 'js/reel.js', 'js/warm.js', 'js/livebar.js',
+  'js/app.js', 'js/util.js', 'js/store.js', 'js/identity.js', 'js/kits.js', 'js/espn.js', 'js/tv.js', 'js/suggest.js', 'js/rules.js', 'js/names.js', 'js/cal.js', 'js/ics.js', 'js/ui.js', 'js/ground.js', 'js/swipe.js', 'js/prefetch.js', 'js/clips.js', 'js/feed.js', 'js/subs.js', 'js/reel.js', 'js/warm.js', 'js/faces.js', 'js/livebar.js',
   'js/views/home.js', 'js/views/follow.js', 'js/views/comp.js', 'js/views/team.js', 'js/views/match.js', 'js/views/week.js', 'js/views/settings.js', 'js/views/player.js', 'js/views/clipstab.js', 'js/views/fans.js', 'js/views/thread.js',
   'fonts/Saira-var.woff2', 'fonts/SairaCondensed-700.woff2', 'fonts/SairaCondensed-800.woff2',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',

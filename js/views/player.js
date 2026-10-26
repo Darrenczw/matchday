@@ -1,6 +1,7 @@
 // Player page (Darren, 22 Oct 2026: "everything is clickable", the Football Manager way). Reached from game
 // leaders, box scores, line-ups, key moments and squads; it links on to the player's team and his games.
 // The screen wears his team's colours, like a team page.
+import { photo } from '../faces.js';
 import { esc, sg } from '../util.js';
 import { athlete } from '../espn.js';
 import { inkOn, readable, crest, NEUTRAL, hex } from '../identity.js';
@@ -25,8 +26,11 @@ export default function player([sport, league, id], ctx) {
   const tpath = sport === 'soccer' ? 'soccer/all' : path;
   const logo = t.logos?.[0]?.href || '';
   const bits = [a.position?.displayName, a.age && `${a.age}`, a.displayHeight, a.citizenship || a.flag?.alt].filter(Boolean);
-  html += `<div class="ident who">${face({ ...a, headshot: a.headshot }, { bg: 'color-mix(in srgb, ' + ink + ' 14%, transparent)', ink }, 96)}<div><h1>${esc(a.displayName)}</h1><p>${a.jersey ? `<b class="num">#${esc(a.jersey)}</b> · ` : ''}${esc(bits.join(' · '))}</p>
+  html += `<div class="ident who">${face({ ...a, headshot: a.headshot }, { bg: 'color-mix(in srgb, ' + ink + ' 14%, transparent)', ink }, 96, sport === 'soccer' ? { team: t.displayName || '' } : {})}<div><h1>${esc(a.displayName)}</h1><p>${a.jersey ? `<b class="num">#${esc(a.jersey)}</b> · ` : ''}${esc(bits.join(' · '))}</p>
 ${t.id ? `<a class="chip plteam" href="${href.team(tpath, t.id)}">${crest({ logo, name: t.displayName, abbr: t.abbreviation }, 22, true)}${esc(t.displayName)}</a>` : ''}</div></div>`;
+  // Football photos come from TheSportsDB or Wikipedia (TECH-DESIGN 15): say which.
+  const ph = sport === 'soccer' && !a.headshot?.href ? photo(a, t.displayName || '') : null;
+  if (ph) html += `<p class="credit">Photo: ${ph.k === 'cut' ? 'TheSportsDB' : 'Wikipedia'}</p>`;
 
   // Season: the key numbers big, then every split (season, career, or each competition in football).
   const st = o.statistics;

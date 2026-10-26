@@ -4,6 +4,7 @@ import { reasonsWith } from '../../js/rules.js';
 import { syncRun, inCal, tracked, readMeta } from './sync.js';
 import { tvLines } from './tv.js';
 import { redditRun, muskRun, fans, thread } from './reddit.js';
+import { faces, facesRun } from './faces.js';
 
 const DAY = 864e5;
 const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -114,6 +115,8 @@ export default {
     if (url.pathname === '/api/fans' && req.method === 'GET') return json(await fans(url, env), 200, h);
     const tm = url.pathname.match(/^\/api\/thread\/(\w{4,10})$/);
     if (tm && req.method === 'GET') return json(await thread(tm[1], env), 200, h);
+    // Football player faces: public photos, so no edit key either (TECH-DESIGN 15).
+    if (url.pathname === '/api/faces' && req.method === 'POST') return json(await faces(req, env), 200, h);
     if (!url.pathname.startsWith('/api/')) return new Response('Matchday calendar helper', { status: 404 });
 
     const o = await authed(req, env);
@@ -140,7 +143,7 @@ export default {
   },
   async scheduled(event, env, ctx) {
     // Odd minutes read Reddit (reddit.js); its own run, so it never takes CPU time from the calendar check.
-    if (event.cron === '1-59/2 * * * *') { ctx.waitUntil(Promise.allSettled([muskRun(env), redditRun(env)])); return; }
+    if (event.cron === '1-59/2 * * * *') { ctx.waitUntil(Promise.allSettled([muskRun(env), redditRun(env), facesRun(env)])); return; }
     ctx.waitUntil(syncRun(env));
   },
 };

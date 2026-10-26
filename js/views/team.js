@@ -60,7 +60,7 @@ export default function team([sport, slug, id], ctx) {
   // competition this team plays most games in.
   const count = new Map(); for (const g of games) if (g.path !== 'soccer/all' && g.league !== 'club.friendly') count.set(g.path, (count.get(g.path) || 0) + 1);
   const rpath = sportOf(path) === 'soccer' ? (path !== 'soccer/all' ? path : [...count].sort((a, b) => b[1] - a[1])[0]?.[0]) : path;
-  if (rpath) html += squad(ctx, rpath, id, { bg, ink });
+  if (rpath) html += squad(ctx, rpath, id, { bg, ink, name: t.name || t.short });
   html += `<p class="foot" style="color:inherit;opacity:.8;padding-bottom:12px">Following ${esc(t.short)} brings every one of their games, in every competition, into My games.</p>`;
   return html + '</div>';
 }
@@ -77,9 +77,9 @@ function squad(ctx, rpath, id, kit) {
     if (left <= 0) break;
     const ps = g.players.slice(0, left); left -= ps.length;
     if (g.group) html += `<h3 class="unit">${esc(UNIT[g.group] || g.group)}</h3>`;
-    // Photos where the feed has them (NBA, NFL); football rows lead with the name until it has a photo source.
-    const pics = FACES.has(sportOf(rpath));
-    html += ps.map((p) => `<a class="li" href="${href.player(rpath, p.id)}">${pics ? face(p, { bg: 'color-mix(in srgb, currentColor 14%, transparent)', ink: 'inherit' }, 34) : ''}<span class="grow"><span class="t">${esc(p.name)}</span><small>${esc([p.posName, p.age && `${p.age}`, p.country].filter(Boolean).join(' · '))}</small></span>${p.jersey ? `<b class="sqn">${esc(p.jersey)}</b>` : ''}</a>`).join('');
+    // Photos: ESPN's for NBA and NFL; football faces come from the helper (TECH-DESIGN 15).
+    const soccer = sportOf(rpath) === 'soccer', pics = soccer || FACES.has(sportOf(rpath));
+    html += ps.map((p) => `<a class="li" href="${href.player(rpath, p.id)}">${pics ? face({ ...p, displayName: p.name }, { bg: 'color-mix(in srgb, currentColor 14%, transparent)', ink: 'inherit' }, 34, soccer ? { team: kit.name } : {}) : ''}<span class="grow"><span class="t">${esc(p.name)}</span><small>${esc([p.posName, p.age && `${p.age}`, p.country].filter(Boolean).join(' · '))}</small></span>${p.jersey ? `<b class="sqn">${esc(p.jersey)}</b>` : ''}</a>`).join('');
   }
   if (!open) html += `<button class="btn ghost more" data-act="squad" data-id="${esc(id)}" style="margin-top:8px">Show all ${n} players</button>`;
   return `<div class="card"><h2>Squad<span style="float:right;font-weight:600;opacity:.8">${n} players</span></h2>${html}</div>`;
