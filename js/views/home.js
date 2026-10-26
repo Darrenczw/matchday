@@ -1,20 +1,21 @@
-// Home: "My games" (option A, Darren, 22 Oct 2026). It opens at now and time only goes down: Live (or Next up),
-// then results since you last looked, then what's coming, under your own free-hour slots. All in SGT.
-import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, icon, ago, countdown } from '../util.js';
-import { picks, followingAny, DEMO, load, save, sportOf, teamKey, settings } from '../store.js';
+// Home: "My games" (Darren, 26 Oct 2026, option A of "My games, take two"). One rule: finished games are in
+// Results, games to come are in Fixtures, a live game sits on top of both. Results go newest first, Fixtures
+// soonest first, under plain day headings (viewing nights, SGT). The app opens on Results every time.
+import { esc, sg, nightKey, nightToday, todayKey, addDays, keyRange, keyLabel, icon, ago } from '../util.js';
+import { picks, followingAny, DEMO, load, save, sportOf, teamKey } from '../store.js';
 import { gamesFor, isLive, soon, net, sortGames, known } from '../espn.js';
 import { compLogo, compImg, kitsFor, crest, kitEdge } from '../identity.js';
-import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow, movedFrom, movedText } from '../ui.js';
-import { calReady, status as calStatus, gameInCal } from '../cal.js';
+import { gameRow, hero, skel, errorCard, scoreText, spoken, href, cachedRow } from '../ui.js';
+import { calReady, status as calStatus } from '../cal.js';
 import { useTables, reasons, freeHour } from '../suggest.js';
-import { windowsOf, inWindow } from '../rules.js';
 import { prefetchVisible } from '../prefetch.js';
 
 let ver = 0;
 // The sport filter lives for this visit only: a fresh start always opens on All, so no sport is ever hidden by surprise.
 let cur = 'all';
-// Older league results, opened with "4 more results since Sun" (for this visit).
-let openOlder = false;
+// Results or Fixtures. Every launch opens on Results (the morning score check), and so does coming back after
+// more than 10 minutes away; in between, the tab you picked stays.
+let tab = 'res';
 const sig = () => JSON.stringify(picks);
 let lastSig = '', snapAt = 0;
 
@@ -60,12 +61,12 @@ function calBanners(ctx) {
 
 const SPORTS = [['all', 'All'], ['soccer', 'Football'], ['football', 'NFL'], ['basketball', 'NBA']];
 
-// ---------- The season, a week at a time (Darren, 22 Oct 2026). The first screen covers 3 nights back to a week
-// ahead; the next week loads as you near the bottom, earlier results on a tap. Beyond this week, games turn into
-// compact one-line rows under month headings, so a long scroll stays tidy.
+
+// ---------- Data. The first load covers 3 nights back to a week ahead. Fixtures load the next week as you near
+// the bottom; Results load the week before the same way (or with "Earlier results").
 const MAX_WEEKS = 42; // about the rest of a football season
+const MAX_BACK = 26; // about half a year of results
 let more = 0, earlier = 0, curDay = null, pendingJump = null, homeCtx = null;
-const placed = new WeakSet(); // strips already scrolled to today (a new screen makes a new strip)
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const monthOf = (k) => MONTHS[+k.slice(5, 7) - 1];
 
@@ -113,15 +114,16 @@ export default function home(params, ctx) {
   const games = all?.filter(keep);
   const liveIn = new Set((all || []).filter(isLive).map((g) => g.sport));
   const ahead = (games || []).filter((g) => g.state === 'pre' || g.postponed);
-  // The date strip: the whole season, scrolling sideways. The highlighted day follows the list as you scroll.
-  const days = keyRange(addDays(t, -7 * (earlier + 1)), addDays(t, 7 * (MAX_WEEKS + 1)));
-  const has = new Set([...ahead.map((g) => nightKey(g.date)), ...(e.v?.season || []).filter(() => f === 'all')]);
+  const results = (games || []).filter((g) => g.state === 'post' && !g.postponed);
+  // The sticky bar: sport chips with the date button, then the Results / Fixtures switch.
+  const days = keyRange(addDays(t, -91), addDays(t, 7 * (MAX_WEEKS + 1)));
+  const has = new Set([...ahead, ...results].map((g) => nightKey(g.date)).concat((e.v?.season || []).filter(() => f === 'all')));
   const on = curDay || t;
-  // The date strip scrolls away with the title; only the sport chips and the date button stay on top (option A).
-  html += strip(days, t, on, has) + `<div class="filterbar">`
-    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<button class="stripm" data-act="pick" aria-haspopup="dialog" aria-label="Pick a date. Showing ${monthOf(on)}"><b>${monthOf(on)}</b>${icon('cal')}</button></div></div>`;
+  html += `<div class="filterbar">`
+    + `<div class="chips" role="group" aria-label="Sport">${SPORTS.map(([k, l]) => { const hid = f !== 'all' && k !== f && (k === 'all' ? [...liveIn].some((s) => s !== f) : liveIn.has(k)); return `<button class="chip txt" data-act="sport" data-s="${k}" aria-pressed="${f === k}"${hid ? ` aria-label="${l}, game live now"` : ''}>${hid ? '<i class="dot" aria-hidden="true"></i>' : ''}${l}</button>`; }).join('')}<button class="stripm" data-act="pick" aria-haspopup="dialog" aria-label="Go to a date. Showing ${monthOf(on)}"><b>${monthOf(on)}</b>${icon('cal')}</button></div>`
+    + `<div class="seg" role="group" aria-label="Results or fixtures">${[['res', 'Results'], ['fix', 'Fixtures']].map(([k, l]) => `<button data-act="tab" data-t="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div></div>`;
   if (pick) html += picker(days, t, on, has);
-  setTimeout(() => { placeStrip(); track(); }, 0);
+  setTimeout(() => track(false), 0);
 
   if (!games) return html + (e.err ? errorCard() : skel(4, true));
   if (e.v?.backup) html += `<div class="banner amber">${icon('wifi')}<span>ESPN isn’t answering, so these games come from the backup${e.v.backup.espnOkAt ? ` (ESPN last answered at ${sg(e.v.backup.espnOkAt).hm})` : ''}. Live scores pause until ESPN is back. It switches back on its own.</span></div>`;
@@ -137,78 +139,70 @@ export default function home(params, ctx) {
   if (f !== 'all' && !followed.has(f)) {
     return html + `<div class="empty"><h2>No ${label} yet</h2><p>You don’t follow any ${label} teams or leagues.</p><a class="btn go" href="#/follow">Find ${label} to follow</a></div>`;
   }
-  // 1. Live now while a game is on, so a quick score check never needs a scroll. Otherwise one big Next up card.
-  const results = games.filter((g) => g.state === 'post' && !g.postponed).reverse();
+  // A live game sits on top of both lists, so a quick score check never needs a tap.
   const live = games.filter(isLive);
-  let next = null;
   if (live.length) html += `<div class="sect"><h2 class="cap">Live now</h2></div>${live.map(hero).join('')}`;
-  else {
-    const soon7 = ahead.filter((g) => !g.postponed && nightKey(g.date) <= addDays(t, 6));
-    next = soon7.find(mine) || soon7.find(special) || soon7[0] || null;
-    if (next) html += `<div class="sect"><h2 class="cap">Next up</h2><span>${esc(next.comp.name)}</span></div>${nextUp(next)}`;
-  }
-  // 2. Results since you last looked: your teams first, a followed league's other results fold into one line.
-  html += sinceRows(results);
-  // 3. What's coming, one section per viewing night, under your free-hour slots. Your teams, single games and
-  // stand-out games get full rows; the rest of a followed league folds per slot. After this week, month headings
-  // with one-line rows.
-  // NFL counts in weeks (R4): "Week 8", or "Weeks 7–8" across a week boundary.
-  const soonWk = ahead.filter((g) => nightKey(g.date) <= addDays(t, 6));
-  const wk = f === 'football' ? [...new Set(soonWk.map((g) => g.week).filter(Boolean))].sort((a, b) => a - b) : [];
-  if (wk.length) html += `<div class="sect"><h2 class="cap">Coming up</h2><span>${wk.length > 1 ? `Weeks ${wk[0]}–${wk[wk.length - 1]}` : `Week ${wk[0]}`}</span></div>`;
-  const fold = picks.teams.length + picks.games.length > 0; // only leagues followed: nothing to fold behind
-  let day = '', month = '', first = true;
-  const list = ahead.filter((g) => g !== next);
-  for (let i = 0; i < list.length;) {
-    const g = list[i], k = nightKey(g.date), far = k > addDays(t, 6);
-    if (far) {
-      if (k.slice(0, 7) !== month) { if (day) { html += '</section>'; day = ''; } month = k.slice(0, 7); html += `<div class="sect month"${first ? ' id="coming"' : ''}><h2 class="cap">${monthOf(k)}${k.slice(0, 4) !== t.slice(0, 4) ? ` ${k.slice(0, 4)}` : ''}</h2></div>`; first = false; }
-      if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}"><h3 class="dayh sm">${keyLabel(k)}</h3>`; day = k; }
-      // Later weeks: one-line rows; a followed league's other games fold per night, as in this week.
-      const night = [];
-      while (i < list.length && nightKey(list[i].date) === k) night.push(list[i++]);
-      const top = fold ? night.filter((x) => mine(x) || special(x)) : night, rest = night.filter((x) => !top.includes(x));
-      html += top.map(compactRow).join('');
-      for (const path of [...new Set(rest.map((x) => x.path))]) {
-        const gs = rest.filter((x) => x.path === path), fk = `${k}|far|${path}`;
-        if (gs.length === 1 || openFolds.has(fk)) html += gs.map(compactRow).join('');
-        else html += foldLine(gs, fk, top.length > 0);
-      }
-      continue;
-    }
-    if (k !== day) { html += `${day ? '</section>' : ''}<section id="d-${k}">`; day = k; }
-    // One slot: the games of this night in the same free-hour window (or the same part of the day outside them).
-    const sl = slotOf(g), sk = `${k}|${sl.id}`, group = [];
-    while (i < list.length && nightKey(list[i].date) === k && slotOf(list[i]).id === sl.id) group.push(list[i++]);
-    html += `<div class="sect slot${sl.free ? '' : ' off'}"${first ? ' id="coming"' : ''}><h3 class="cap">${esc(slotName(k, sl))}</h3><span>${esc(sl.note)}</span></div>`;
-    first = false;
-    const top = fold ? group.filter((x) => mine(x) || special(x)) : group, rest = group.filter((x) => !top.includes(x));
-    html += top.map((x) => gameRow(x, { tv: false, fh: false })).join('');
-    // The rest, per competition: one game stays a one-line row, two or more fold into a line you can open.
-    for (const path of [...new Set(rest.map((x) => x.path))]) {
-      const gs = rest.filter((x) => x.path === path), fk = `${sk}|${path}`;
-      if (gs.length === 1) html += compactRow(gs[0]);
-      else if (openFolds.has(fk)) html += gs.map((x) => gameRow(x, { tv: false, fh: false })).join('') + `<button class="btn ghost more" data-act="fold" data-k="${esc(fk)}">${icon('up')}Show fewer</button>`;
-      else html += foldLine(gs, fk, top.length > 0);
-    }
-  }
-  if (day) html += '</section>';
-  // A quiet stretch: keep loading weeks until something shows (or the season runs out).
-  if (!loading && !ahead.length && !live.length && more < 8) setTimeout(() => { if (homeCtx === ctx && more < 8) { more++; ctx.redraw(); } }, 0);
-  if (!ahead.length && !live.length && !loading && more >= 8) html += `<div class="empty"><h2>Quiet weeks</h2><p>None of your ${f === 'all' ? 'picks' : `${label} picks`} play in the next two months.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
-  if (loading) html += `<p class="status">${icon('clock')}<span>Loading the next week…</span></p>${skel(2)}`;
-  else if (more >= MAX_WEEKS) html += `<p class="foot">That’s as far ahead as Matchday looks.</p>`;
+  html += tab === 'res' ? resultsList(results, live.length, loading) : fixturesList(ahead, live.length, loading, f, label);
   if (pendingJump && !loading) setTimeout(() => { const k = pendingJump; pendingJump = null; home.actions.jump({ k }); }, 0);
   return html + `<p class="foot" id="homefoot">Times are Singapore time. Scores refresh every 10 seconds while a game is live and this screen is open.</p>`;
 }
 
+// Games grouped by viewing night (00:00–05:00 joins the evening before), in the order given.
+function nights(gs) {
+  const m = new Map();
+  for (const g of gs) { const k = nightKey(g.date); if (!m.has(k)) m.set(k, []); m.get(k).push(g); }
+  return [...m];
+}
+// One day: "Yesterday · Sun 25 Oct", then its games by competition. Your teams (and, in Fixtures, the next game
+// and stand-out games) get full rows at the top of their competition; every other game is a one-line row under
+// the competition's name. Competitions with one of those full rows come first. Nothing folds.
+function dayBlock(k, gs, p, next) {
+  const x = sg(k + 'T04:00:00Z'), rel = keyLabel(k), date = `${x.wd} ${x.d} ${x.mo}`;
+  const wk = gs.every((g) => g.sport === 'football') && gs[0].week ? `Week ${gs[0].week}` : ''; // NFL counts in weeks (R4)
+  const note = [rel !== date ? date : '', wk].filter(Boolean).join(' · ');
+  const isBig = (g) => mine(g) || g === next || special(g);
+  const paths = [...new Set([...gs.filter(isBig), ...gs].map((g) => g.path))];
+  let h = `<section id="${p}-${k}"><div class="sect day"><h2 class="cap">${esc(rel)}</h2>${note ? `<span>${esc(note)}</span>` : ''}</div>`;
+  for (const path of paths) {
+    const cs = gs.filter((g) => g.path === path), big = cs.filter(isBig), rest = cs.filter((g) => !isBig(g));
+    // The full rows name their competition themselves, so the label only shows above one-line rows.
+    if (rest.length) h += `<p class="complab">${compImg(cs[0].comp.logo, 16, '')}<span>${esc(cs[0].comp.name)}</span></p>`;
+    h += big.map((g) => gameRow(g, { tv: false, tag: g === next ? 'Next' : '', compName: !rest.length })).join('') + rest.map(compactRow).join('');
+  }
+  return h + '</section>';
+}
+
+// Results: newest night first; inside a night, kick-off order.
+function resultsList(results, live, loading) {
+  const ns = nights(results).reverse();
+  let html = ns.map(([k, gs]) => dayBlock(k, gs, 'r')).join('');
+  // A quiet few days: reach back a week or two so the list never opens empty.
+  if (!loading && results.length < 4 && earlier < 2) setTimeout(() => { if (homeCtx && earlier < 2) { earlier++; homeCtx.redraw(); } }, 0);
+  if (!ns.length && !loading && !live) html += `<div class="empty"><h2>No results yet</h2><p>None of your picks has finished a game in the last two weeks.</p></div>`;
+  if (loading) html += `<p class="status">${icon('clock')}<span>Loading earlier results…</span></p>${skel(2)}`;
+  else if (earlier < MAX_BACK) html += `<button class="btn ghost more" data-act="earlier">${icon('down')}Earlier results</button>`;
+  return html;
+}
+
+// Fixtures: soonest first. The next game is marked "Next".
+function fixturesList(ahead, live, loading, f, label) {
+  const next = ahead.find((g) => !g.postponed) || null;
+  let html = nights(ahead).map(([k, gs]) => dayBlock(k, gs, 'f', next)).join('');
+  // A quiet stretch: keep loading weeks until something shows (or the season runs out).
+  if (!loading && !ahead.length && !live && more < 8) setTimeout(() => { if (homeCtx && more < 8) { more++; homeCtx.redraw(); } }, 0);
+  if (!ahead.length && !live && !loading && more >= 8) html += `<div class="empty"><h2>Quiet weeks</h2><p>None of your ${f === 'all' ? 'picks' : `${label} picks`} play in the next two months.</p><a class="btn go" href="#/week">See games that suit you</a></div>`;
+  if (loading) html += `<p class="status">${icon('clock')}<span>Loading the next week…</span></p>${skel(2)}`;
+  else if (more >= MAX_WEEKS) html += `<p class="foot">That’s as far ahead as Matchday looks.</p>`;
+  return html;
+}
+
 // ---------- Date and month picker (Darren, 22 Oct 2026): the month name in the bar opens a sheet at the bottom,
 // in thumb reach. Month chips across the top, then that month's days (Monday first) with a dot where you have
-// games. Tap a day to jump there; the list loads up to it if it's further ahead.
+// games. A past day opens Results there, today or later opens Fixtures.
 let pick = null; // 'YYYY-MM' the sheet opens at, while it is open
 // Every month in one scrolling calendar, so you can flick through the season; the month chips jump to one.
 function picker(days, t, on, has) {
-  // Three months back (earlier results load on a jump) to the end of the strip.
+  // Three months back (earlier results load on a jump) to the end of the season.
   const first = addDays(t, -91), last = days[days.length - 1];
   const months = [...new Set(keyRange(first, last).map((k) => k.slice(0, 7)))];
   const chip = (x) => `<button class="mchip" data-act="pickm" data-m="${x}" aria-pressed="${x === pick}">${MONTHS[+x.slice(5) - 1].slice(0, 3)}${x.slice(0, 4) !== t.slice(0, 4) ? ` ${x.slice(2, 4)}` : ''}</button>`;
@@ -227,7 +221,7 @@ function picker(days, t, on, has) {
 <div class="sheethd"><h2 class="cap">Go to a date</h2><button class="btn sm ghost" data-act="pickd" data-k="${t}">Today</button><button class="btn sm icon ghost" data-act="pickx" aria-label="Close">${icon('x')}</button></div>
 <div class="chips mchips" role="group" aria-label="Month">${months.map(chip).join('')}</div>
 <div class="pgrid pwk" aria-hidden="true">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => `<span class="pw">${d}</span>`).join('')}</div>
-<div class="pscroll">${months.map(month).join('')}<p class="note">Dots mark days with your games that are already known. Tap any day to go there.</p></div></div>`;
+<div class="pscroll">${months.map(month).join('')}<p class="note">Dots mark days with your games that are already known. A past day opens Results, today or later opens Fixtures.</p></div></div>`;
 }
 // Scroll the calendar to a month (instantly on open, smoothly from a chip).
 function toMonth(m, smoothly) {
@@ -250,195 +244,83 @@ const afterPaint = (fn) => requestAnimationFrame(() => setTimeout(fn, 0));
 const closePick = () => { pick = null; homeCtx?.redraw(); afterPaint(() => document.querySelector('.stripm')?.focus()); };
 addEventListener('keydown', (e) => { if (pick && e.key === 'Escape') closePick(); });
 
-// The season strip is ~300 buttons; build it again only when today, the highlighted day or the dots change.
-let stripKey = '', stripHtml = '';
-function strip(days, t, on, has) {
-  const key = `${days[0]}|${days.length}|${t}|${on}|${[...has].sort().join()}`;
-  if (key === stripKey) return stripHtml;
-  stripKey = key;
-  return (stripHtml = `<div class="days" role="group" aria-label="Jump to a day">${days.map((k) => { const x = sg(k + 'T04:00:00Z'); return `<button class="${k === t ? 'today ' : ''}${k === on ? 'cur ' : ''}${has.has(k) ? 'has' : ''}${x.d === 1 ? ' m1' : ''}" data-act="jump" data-k="${k}" aria-label="${k === t ? 'Today, ' : ''}${x.wdl} ${x.d} ${x.mo}${has.has(k) ? ', games' : ''}"${k === on ? ' aria-current="date"' : ''}>${x.wd}<b>${x.d}</b></button>`; }).join('')}</div>`);
-}
-
-// One line per game for later weeks and older results: kits, codes, time or score. Tap for the full game.
+// One line per game: kits, codes, time or score. Tap for the full game.
 const compactRow = (g) => cachedRow('crow', g, {}, () => buildCompact(g));
 function buildCompact(g) {
   const k = kitsFor(g), s = sg(g.date);
   const p = (x, r) => `<div class="p${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${r ? `<b>${esc(x.team.abbr || x.team.short)}</b>${crest(x.team, 18, true)}` : `${crest(x.team, 18, true)}<b>${esc(x.team.abbr || x.team.short)}</b>`}</div>`;
   // A 00:30 kick-off sits with the evening before it, so it says its own day ("00:30 MON").
   const late = g.timeValid && nightKey(g.date) !== s.key ? `<small>${s.wd}</small>` : '';
-  const mid = g.state === 'post' ? `<b>${scoreText(k, true)}</b>` : g.postponed ? '<b>PP</b>' : `<b>${g.timeValid ? s.hm : 'TBC'}</b>${late}`;
+  const mid = g.state === 'post' ? `<b>${scoreText(k, true)}</b>${late}` : g.postponed ? '<b>PP</b>' : `<b>${g.timeValid ? s.hm : 'TBC'}</b>${late}`;
   return `<a class="crow${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(spoken(g, k))}">${p(k.left)}<div class="mid">${mid}</div>${p(k.right, true)}</a>`;
 }
 
-// Today's and yesterday's results in full. Older ones show only your teams' games; the rest of a followed
-// league folds into one button, then "Earlier results" goes back a week at a time (compact rows).
+// A game that earns a full row: your team, a single game you picked, or (in Fixtures) a stand-out reason (big
+// game, abroad, on a streamer, playoffs). The free-hours fit alone doesn't count: most games have one.
 const yourTeam = (g) => picks.teams.some((x) => teamKey(x.path, x.id) === teamKey(g.path, g.home.id) || teamKey(x.path, x.id) === teamKey(g.path, g.away.id)) || picks.games.some((x) => x.id === g.id);
-function resultRows(results, t) {
-  const edge = addDays(t, -3);
-  const recent = results.filter((g) => nightKey(g.date) >= edge), past = results.filter((g) => nightKey(g.date) < edge);
-  const old = (g) => nightKey(g.date) < addDays(t, -1) && !yourTeam(g);
-  const hidden = recent.filter(old);
-  let html;
-  if (openOlder || !hidden.length) html = recent.map((g) => (g === hidden[0] ? gameRow(g).replace('<a class="row', '<a id="r-older" class="row') : gameRow(g))).join('');
-  else html = recent.filter((g) => !old(g)).map((g) => gameRow(g)).join('') + `<button class="btn ghost more" data-act="older">${hidden.length} more result${hidden.length > 1 ? 's' : ''} since ${sg(edge + 'T04:00:00Z').wd}</button>`;
-  // Earlier weeks: compact, under month and day headings, newest first.
-  let day = '', month = '';
-  for (const g of past) {
-    const k = nightKey(g.date);
-    if (k.slice(0, 7) !== month) { month = k.slice(0, 7); html += `<div class="sect month"><h2 class="cap">${monthOf(k)}</h2></div>`; day = ''; }
-    if (k !== day) { html += `<h3 class="dayh sm" id="r-${k}">${keyLabel(k)}</h3>`; day = k; }
-    html += compactRow(g);
-  }
-  if (openOlder || !hidden.length) html += `<button class="btn ghost more" data-act="earlier">${icon('up')}Earlier results</button>`;
-  return html;
-}
-
-// ---------- Option A pieces (Darren, 22 Oct 2026)
-// A game that earns a full row: your team, a single game you picked, or a stand-out reason (big game, abroad,
-// on a streamer, playoffs). The free-hours fit alone doesn't count: most games have one.
 const mine = (g) => yourTeam(g);
 const special = (g) => g.state === 'pre' && !g.postponed && reasons(g).some((r) => r !== freeHour(g));
 
-// The slot a game sits in: the free-hour window it starts in, or, outside them, the part of the day.
-const PART = (m) => (m < 5 * 60 ? 'late night' : m < 12 * 60 ? 'morning' : m < 18 * 60 ? 'afternoon' : m < 23 * 60 ? 'evening' : 'late night');
-const mm = (hm) => { const [h, m] = hm.split(':').map(Number); return h * 60 + (m || 0); };
-function slotOf(g) {
-  if (!g.timeValid) return { id: 'tbc', free: false, part: '', note: 'Time to be confirmed' };
-  const s = sg(g.date), w = windowsOf(settings).find((x) => x.on && inWindow(x, s.dow, s.mins));
-  if (w) return { id: `w-${w.id}`, free: true, part: PART(mm(w.from)), note: `Free ${w.from}–${w.to}` };
-  const part = PART(s.mins);
-  return { id: `p-${part}`, free: false, part, note: 'Outside your free hours' };
-}
-// "This morning", "Tonight", "Tomorrow evening", "Fri late night", "Sat 31 Oct · time to be confirmed".
-function slotName(k, sl) {
-  const t = nightToday(), x = sg(k + 'T04:00:00Z');
-  if (!sl.part) return `${keyLabel(k)} · time TBC`;
-  if (k === t) return sl.part === 'evening' ? 'Tonight' : sl.part === 'late night' ? 'Late tonight' : `This ${sl.part}`;
-  return `${k === addDays(t, 1) ? 'Tomorrow' : x.wd} ${sl.part}`;
-}
-
-// Next up: one big card for the game that matters most when nothing is live. Kick-off, countdown, slot, the
-// stand-out reason and whether it's in the calendar. No channel line: that's on the match page (Darren).
-const nextUp = (g) => cachedRow('next', g, { cal: gameInCal(g), m: Math.floor(Date.now() / 60e3) }, () => buildNext(g));
-function buildNext(g) {
-  const k = kitsFor(g), s = sg(g.date), moved = movedFrom(g);
-  const why = reasons(g).filter((r) => r !== freeHour(g))[0];
-  const side = (x, r) => `<div class="shirt${r ? ' r' : ''}${kitEdge(x)}" style="background:${x.bg};color:${x.ink}">${crest(x.team, 34, true)}<span class="tn">${esc(x.team.short)}${g.sport !== 'soccer' ? `<small>${x.team.home ? 'Home' : 'Away'}</small>` : ''}</span></div>`;
-  const when = slotName(nightKey(g.date), slotOf(g));
-  const bits = [moved ? `<span class="moved">${esc(movedText(moved))}</span>` : `<b>${esc(when)}</b><span class="cd">${g.timeValid ? esc(countdown(g.date)) : 'Time to be confirmed'}</span>`];
-  if (why) bits.push(`<em>${esc(why)}</em>`);
-  if (gameInCal(g)) bits.push(`<span class="incal">${icon('check')}In your calendar</span>`);
-  return `<a class="nx" href="${href.match(g)}" aria-label="${esc(`Next up. ${spoken(g, k, { moved, why: reasons(g).join(', ') })}${gameInCal(g) ? ' In your calendar.' : ''}`)}">${side(k.left)}${side(k.right, true)}<div class="ko" aria-hidden="true"><b>${g.timeValid ? s.hm : 'TBC'}</b><span>${s.wd} ${s.d} ${s.mo}</span></div><div class="nxm" aria-hidden="true">${bits.join('<span aria-hidden="true">·</span>')}</div></a>`;
-}
-
-// "Since you looked": the time is saved when the app leaves the screen, and read again when you come back
-// after more than 10 minutes away, so a quick switch to another app doesn't clear the list.
-let prevSeen = load('seenAt', 0) || Date.now() - 864e5, hiddenAt = 0, allRes = false;
+// Coming back after more than 10 minutes away opens Results again, like a fresh launch.
+let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { hiddenAt = Date.now(); save('seenAt', hiddenAt); return; }
-  if (hiddenAt && Date.now() - hiddenAt > 10 * 60e3) { prevSeen = hiddenAt; allRes = false; openOlder = false; homeCtx?.redraw(); }
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (hiddenAt && Date.now() - hiddenAt > 10 * 60e3 && tab !== 'res') { tab = 'res'; homeCtx?.redraw(); }
 });
-const openFolds = new Set(); // folded league lines opened this visit
-const sinceText = () => { const s = sg(prevSeen); return s.key === todayKey() ? s.hm : `${s.wd} ${s.hm}`; };
-function sinceRows(results) {
-  // A game counts as new if it could have finished after your last look (started up to 4 h before it).
-  const t = nightToday(), fresh = results.filter((g) => new Date(g.date).getTime() > prevSeen - 4 * 3600e3);
-  if (allRes) return `<div class="sect"><h2 class="cap">Results</h2><span>Since ${earlier ? keyLabel(addDays(todayKey(), -3 - 7 * earlier)) : sg(addDays(t, -3) + 'T04:00:00Z').wd}</span></div>${resultRows(results, t)}`;
-  const fold = picks.teams.length + picks.games.length > 0;
-  const top = fold ? fresh.filter(mine) : fresh, rest = fresh.filter((g) => !top.includes(g));
-  let html = '';
-  if (fresh.length) html += `<div class="sect"><h2 class="cap">${fresh.length ? 'Since you looked' : 'Results'}</h2><span>${fresh.length ? `last open ${sinceText()}` : ''}</span></div>`;
-  html += top.map(compactRow).join('');
-  for (const path of [...new Set(rest.map((x) => x.path))]) {
-    const gs = rest.filter((x) => x.path === path), fk = `res|${path}`;
-    if (gs.length === 1 || openFolds.has(fk)) html += gs.map(compactRow).join('');
-    else html += foldLine(gs, fk, top.length > 0, 'result');
-  }
-  const label = fresh.length ? 'All results' : `No new results since ${sinceText()}`;
-  return html + `<button class="fold quiet" data-act="allres"><span class="grow">${esc(label)}</span>${fresh.length ? '' : '<span class="go">All results</span>'}${icon('chev', 'chev')}</button>`;
-}
-// One line for a followed league's other games: team codes in their colours, then "Premier League · 3 more".
-function foldLine(gs, fk, more, noun = 'game') {
-  const codes = gs.slice(0, 6).flatMap((g) => { const k = kitsFor(g); return [k.left, k.right]; }).slice(0, 8)
-    .map((x) => `<i class="${kitEdge(x).trim()}" style="background:${x.bg};color:${x.ink}">${esc(x.team.abbr || x.team.short)}</i>`).join('');
-  const n = gs.length, name = gs[0].comp.name;
-  const text = more ? `${name} · ${n} more` : `${name} · ${n} ${noun}s`;
-  return `<button class="fold" data-act="fold" data-k="${esc(fk)}" aria-expanded="false" aria-label="${esc(`${text}. Show them`)}">${compImg(gs[0].comp.logo, 18, '')}<span class="grow"><span class="codes" aria-hidden="true">${codes}</span><span class="ft">${esc(text)}</span></span>${icon('down', 'chev')}</button>`;
-}
 
 const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 const barH = () => (document.querySelector('.filterbar')?.offsetHeight || 0) + 4;
 const onHome = () => !location.hash || location.hash === '#/' || location.hash === '#';
 
-// The strip opens with today at its left edge (keeping the scroll you left it at after that).
-function placeStrip() {
-  const strip = document.querySelector('#view .days'), b = strip?.querySelector('.today');
-  if (!strip || !b || placed.has(strip)) return;
-  strip.scrollLeft = b.offsetLeft - strip.offsetLeft - 14;
-  placed.add(strip);
-}
-// Follow the scroll: the day at the top of the list is the highlighted one, and the strip slides to keep it in
-// view. Near the bottom, the next week loads.
-function track() {
+// Follow the scroll: the month of the day at the top of the list shows in the bar. Near the bottom, the next
+// week loads (Fixtures), or the week before (Results, only on a real scroll so a short list doesn't load the
+// whole season back by itself).
+function track(scrolled) {
   if (!onHome()) return;
   const bar = document.querySelector('.filterbar');
   if (!bar) return;
   const line = bar.getBoundingClientRect().bottom + 12;
-  let k = nightToday();
-  for (const sec of document.querySelectorAll('#view section[id^="d-"]')) { if (sec.getBoundingClientRect().top <= line) k = sec.id.slice(2); else break; }
-  if (k !== curDay) {
-    curDay = k;
-    const strip = document.querySelector('#view .days');
-    strip?.querySelector('.cur')?.removeAttribute('aria-current');
-    strip?.querySelector('.cur')?.classList.remove('cur');
-    const btn = strip?.querySelector(`[data-k="${k}"]`);
-    if (btn) {
-      btn.classList.add('cur'); btn.setAttribute('aria-current', 'date');
-      const l = btn.offsetLeft - strip.offsetLeft, r = l + btn.offsetWidth;
-      if (l < strip.scrollLeft + 8 || r > strip.scrollLeft + strip.clientWidth - 8) strip.scrollTo({ left: l - strip.clientWidth / 2 + btn.offsetWidth / 2, behavior: smooth() });
-    }
-    const m = bar.querySelector('.stripm b'); if (m) m.textContent = monthOf(k);
-  }
+  const secs = document.querySelectorAll('#view section[id^="r-"], #view section[id^="f-"]');
+  let k = secs[0]?.id.slice(2) || nightToday();
+  for (const sec of secs) { if (sec.getBoundingClientRect().top <= line) k = sec.id.slice(2); else break; }
+  if (k !== curDay) { curDay = k; const m = bar.querySelector('.stripm b'); if (m) m.textContent = monthOf(k); }
   prefetchVisible();
-  if (innerHeight + scrollY > document.documentElement.scrollHeight - 900 && more < MAX_WEEKS && homeCtx && !document.querySelector('#view .skel')) { more++; homeCtx.redraw(); }
+  const near = innerHeight + scrollY > document.documentElement.scrollHeight - 900;
+  if (!near || !homeCtx || document.querySelector('#view .skel')) return;
+  if (tab === 'fix' && more < MAX_WEEKS) { more++; homeCtx.redraw(); }
+  else if (tab === 'res' && scrolled && earlier < MAX_BACK && document.documentElement.scrollHeight > innerHeight + 200) { earlier++; homeCtx.redraw(); }
 }
 let tr = 0;
-addEventListener('scroll', () => { clearTimeout(tr); tr = setTimeout(track, 40); }, { passive: true });
+addEventListener('scroll', () => { clearTimeout(tr); tr = setTimeout(() => track(true), 40); }, { passive: true });
 
 home.actions = {
   pick(d, el, e, ctx) { pick = (curDay || nightToday()).slice(0, 7); ctx.redraw(); afterPaint(() => { toMonth(pick, false); document.querySelector('.sheet [aria-pressed="true"]')?.focus({ preventScroll: true }); }); },
   pickm(d) { toMonth(d.m, true); },
   pickx() { closePick(); },
   pickd(d) { pick = null; homeCtx?.redraw(); afterPaint(() => home.actions.jump({ k: d.k })); },
-  // Tap a day: jump to it, loading weeks up to it first if it's further ahead. A day without games goes to the next one that has some.
+  // Go to a day: a past day in Results, today or later in Fixtures (today stays in Results if you're there).
+  // Weeks load up to it first; a day without games goes to the nearest one that has some.
   jump(d) {
     const k = d.k, t = nightToday();
-    if (k < addDays(t, -3)) { // an earlier day: load results back to it, then show its heading
-      const need = Math.ceil((Number(new Date(addDays(t, -3))) - Number(new Date(k))) / (7 * 864e5));
-      if (earlier < need) { earlier = need; openOlder = true; pendingJump = k; homeCtx?.redraw(); return; }
-      const h = document.getElementById(`r-${k}`) || [...document.querySelectorAll('#view [id^="r-2"]')].reverse().find((x) => x.id.slice(2) <= k);
-      if (h) scrollTo({ top: h.getBoundingClientRect().top + scrollY - barH(), behavior: smooth() });
+    const want = k < t || (k === t && tab === 'res') ? 'res' : 'fix';
+    if (tab !== want) { tab = want; homeCtx?.redraw(); afterPaint(() => home.actions.jump(d)); return; }
+    if (want === 'res') {
+      const need = k < addDays(t, -3) ? Math.ceil((Number(new Date(addDays(t, -3))) - Number(new Date(k))) / (7 * 864e5)) : 0;
+      if (earlier < need) { earlier = Math.min(MAX_BACK, need); pendingJump = k; homeCtx?.redraw(); return; }
+      if (k === t) { scrollTo({ top: 0, behavior: smooth() }); return; }
+      const el = document.getElementById(`r-${k}`) || [...document.querySelectorAll('#view section[id^="r-"]')].find((x) => x.id.slice(2) <= k);
+      scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
       return;
     }
     if (k > addDays(t, 6)) {
       const need = Math.ceil((Number(new Date(k)) - Number(new Date(addDays(todayKey(), 7)))) / (7 * 864e5));
       if (more < need) { more = Math.min(MAX_WEEKS, need); pendingJump = k; homeCtx?.redraw(); return; }
     }
-    if (k <= t) { scrollTo({ top: 0, behavior: smooth() }); return; }
-    const el = document.getElementById(`d-${k}`) || [...document.querySelectorAll('#view section[id^="d-"]')].find((x) => x.id.slice(2) >= k);
+    const el = document.getElementById(`f-${k}`) || [...document.querySelectorAll('#view section[id^="f-"]')].find((x) => x.id.slice(2) >= k);
     scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - barH() : 0, behavior: smooth() });
   },
-  // Tapping a sport shows that sport and goes straight to its next game (Coming up, soonest first).
-  // The button goes away when the day opens, so move focus to the first row it revealed (VoiceOver and keyboard).
-  older(d, el, e, ctx) { openOlder = true; ctx.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('r-older')?.focus())); },
+  tab(d, el, e, ctx) { if (tab === d.t) return; tab = d.t; ctx.redraw(); scrollTo({ top: 0 }); },
   earlier(d, el, e, ctx) { earlier++; ctx.redraw(); },
-  fold(d, el, e, ctx) { if (openFolds.has(d.k)) openFolds.delete(d.k); else openFolds.add(d.k); ctx.redraw(); },
-  allres(d, el, e, ctx) { allRes = true; ctx.redraw(); },
-  sport(d, el, e, ctx) {
-    cur = d.s; ctx.redraw();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const el = document.getElementById('coming');
-      scrollTo({ top: el ? Math.max(0, el.getBoundingClientRect().top + scrollY - barH()) : 0, behavior: smooth() });
-    }));
-  },
+  // Tapping a sport shows that sport from the top of the list you're on.
+  sport(d, el, e, ctx) { cur = d.s; ctx.redraw(); scrollTo({ top: 0, behavior: smooth() }); },
 };

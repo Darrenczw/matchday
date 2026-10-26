@@ -91,7 +91,7 @@ export function cachedRow(kind, g, opts, build) {
 }
 export const gameRow = (g, opts = {}) => cachedRow('row', g, opts, () => buildRow(g, opts));
 
-function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1, fh: showFh = true, badge = true } = {}) {
+function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true, whyMax = 1, fh: showFh = true, badge = true, tag = '' } = {}) {
   const k = kitsFor(g), s = sg(g.date);
   let mid;
   if (g.postponed) mid = `<b>${g.timeValid ? s.hm : 'TBC'}</b><span>Postponed</span>`;
@@ -102,13 +102,14 @@ function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true
   const comp = g.comp;
   // Logo only (no separator after it) where the line also holds a button: This week. The spoken label still names it.
   const logoOnly = !compName && comp.logo;
+  // My games marks the soonest game in Fixtures with "Next".
+  if (tag) bits.push(`<span class="nexttag">${esc(tag)}</span>`);
   bits.push(logoOnly ? '' : `${compImg(comp.logo, 14, comp.name)}<span>${esc(comp.name)}</span>`);
   const moved = g.state === 'pre' ? movedFrom(g) : null;
   // Reasons: the rare ones (played abroad, on a streamer, playoffs) first and in green, because they are why a
   // game stands out; the free-hours fit after them in grey, since most games have one.
   const all = !g.postponed && !moved && why && g.state === 'pre' ? reasons(g) : [];
   const fh = freeHour(g);
-  // My games already names the free-hour slot in its headings, so it can leave the fit out of the row.
   let whys = [...all.filter((x) => x !== fh), ...(showFh ? all.filter((x) => x === fh) : [])].slice(0, whyMax);
   const m = tv && g.state !== 'post' ? mainMarket(g) : null;
   const used = (compName ? comp.name.length : 0) + (m ? m.label.length + tvShort(m, false).length : 0);
@@ -128,7 +129,7 @@ function buildRow(g, { why = true, tv = true, room: budget = 44, compName = true
   if (g.postponed) bits.push('<span class="pp">POSTPONED</span>');
   else if (moved) bits.push(`<span class="moved">${movedText(moved)}</span>`);
   else for (const w of whys) bits.push(w === fh ? `<span class="fh">${esc(w)}</span>` : `<em>${esc(w)}</em>`);
-  const label = spoken(g, k, { tv: tvSaid, moved, why: all.join(', ') });
+  const label = `${tag ? `${tag}. ` : ''}${spoken(g, k, { tv: tvSaid, moved, why: all.join(', ') })}`;
   return `<a class="row${g.state === 'post' ? ' done' : ''}" href="${href.match(g)}" aria-label="${esc(label)}">${panel('l', k.left, 26, yours(g, k.left.team))}<div class="mid">${mid}</div>${panel('r', k.right, 26, yours(g, k.right.team))}<div class="meta">${logoOnly ? compImg(comp.logo, 18, comp.name) : ''}${bits.filter(Boolean).join('<span aria-hidden="true">·</span>')}</div></a>`;
 }
 

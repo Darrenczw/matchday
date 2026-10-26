@@ -70,7 +70,6 @@ body:has(#bar .pagerbar) .toast { bottom: calc(122px + var(--safe-bottom)); }
 
 /* ---------- Dates and sport filter on My games: one bar that stays at the top */
 .filterbar { position: sticky; top: 0; z-index: 6; padding: 4px 0 8px; background: var(--ground); }
-.filterbar .days { padding-bottom: 8px; }
 .filterbar .chips { padding-bottom: 0; }
 .filterbar .stripm { display: inline-flex; align-items: center; gap: 5px; flex: none; min-height: 44px; margin-left: auto; padding: 0 4px 0 8px; font: 800 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
 .filterbar .stripm svg { width: 17px; height: 17px; color: var(--mute); }
@@ -109,19 +108,6 @@ body:has(#bar .pagerbar) .toast { bottom: calc(122px + var(--safe-bottom)); }
 .crow.done .p { opacity: .92; }
 a.crow:active { filter: brightness(.97); }
 .dayh { padding: 10px 18px 6px; font: 700 13px/1 var(--text); color: var(--ink); }
-
-/* ---------- Day strip */
-.days { display: flex; gap: 6px; padding: 0 var(--gutter) 14px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding: 0 var(--gutter); scrollbar-width: none; }
-.days::-webkit-scrollbar { display: none; }
-.days button { flex: 0 0 calc((100% - 6 * 6px) / 7); scroll-snap-align: start; }
-.days button { position: relative; min-height: 50px; padding: 6px 0 9px; border-radius: 10px; background: var(--row); color: var(--mute); font: 600 11px/1.1 var(--text); box-shadow: var(--shadow); }
-.days b { display: block; margin-top: 2px; font: 800 19px/1 var(--cond); color: var(--ink); }
-/* The highlighted day follows the list as you scroll; today keeps a ring so you can find your way back. */
-.days .cur { background: var(--ink); color: var(--ground); }
-.days .cur b { color: var(--ground); }
-.days .today:not(.cur) { box-shadow: inset 0 0 0 2px var(--ink); }
-.days .m1:not(.cur) { color: var(--ink); }
-.days .has::after { content: ""; position: absolute; left: 50%; bottom: 4px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
 
 /* ---------- Shirt panels: the core unit */
 .pt { background: #fff; border-radius: 50%; padding: 3px; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); object-fit: contain; flex: none; }
@@ -470,37 +456,16 @@ html[data-sport] .filterbar { background: color-mix(in srgb, var(--ground) 84%, 
 .wk .row .meta img { width: 18px; height: 18px; }
 
 
-/* ---------- My games, option A (22 Oct 2026): Next up card, free-hour slot headings, folded league lines */
+/* ---------- My games, take two (26 Oct 2026): Results / Fixtures switch, plain day headings, league labels */
 .filterbar { padding-top: 6px; }
-.sect.slot { padding-top: 16px; }
-.sect.slot .cap { color: var(--ink); }
-.sect.slot span { white-space: nowrap; }
-.sect.slot.off .cap, .sect.slot.off span { color: var(--mute); }
-.nx { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 0 var(--gutter) 10px; border-radius: var(--radius); overflow: hidden; background: var(--row); box-shadow: var(--shadow); }
-.nx .shirt { display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-width: 0; min-height: 124px; padding: 12px; }
-.nx .shirt.r { align-items: flex-end; text-align: right; }
-.nx .tn { font: 800 24px/1 var(--cond); text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
-.nx .tn small { display: block; margin-top: 4px; font: 700 11.5px/1 var(--text); letter-spacing: .08em; }
-.nx .ko { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; min-width: 104px; padding: 10px 8px; border-radius: 12px; background: #fff; color: #121318; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .45); }
-.nx .ko b { font: 800 34px/1 var(--cond); }
-.nx .ko span { font: 600 12px/1 var(--text); color: #50535c; }
-.nx .nxm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; padding: 9px 12px 10px; font: 500 13px/1.3 var(--text); color: var(--mute); }
-.nx .nxm b { font-weight: 700; color: var(--ink); }
-.nx .nxm .cd { font-weight: 700; color: var(--go); }
-.nx .nxm em { font-style: normal; font-weight: 700; color: var(--go); }
-.nx .nxm .moved { font-weight: 700; color: var(--amber); }
-.nx .incal { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; color: var(--ink); }
-.nx .incal svg { width: 15px; height: 15px; color: var(--go); }
-a.nx:active { filter: brightness(.97); }
-.fold { display: flex; align-items: center; gap: 9px; width: calc(100% - 2 * var(--gutter)); min-height: 44px; margin: 0 var(--gutter) 6px; padding: 7px 10px; border-radius: 10px; background: var(--row); box-shadow: var(--shadow); color: var(--ink); font: 600 13px/1.25 var(--text); text-align: left; }
-.fold img { width: 18px; height: 18px; object-fit: contain; flex: none; }
-.fold .grow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; flex: 1; min-width: 0; }
-.fold .codes { display: flex; gap: 3px; flex-wrap: wrap; }
-.fold .codes i { font: 800 11.5px/1 var(--cond); font-style: normal; letter-spacing: .03em; padding: 4px 5px; border-radius: 4px; }
-.fold .chev { width: 16px; height: 16px; flex: none; color: var(--mute); }
-.fold .go { font-weight: 700; color: var(--go); white-space: nowrap; }
-.fold.quiet { background: transparent; box-shadow: none; color: var(--mute); font-weight: 500; }
-.fold:active { filter: brightness(.97); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 10px var(--gutter) 0; padding: 3px; border-radius: 12px; background: var(--row); box-shadow: var(--shadow); }
+.seg button { min-height: 38px; border-radius: 9px; font: 700 15px/1 var(--text); color: var(--mute); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.sect.day { padding-top: 20px; }
+.sect.day .cap { color: var(--ink); }
+.complab { display: flex; align-items: center; gap: 6px; margin: 0; padding: 8px 18px 6px; font: 600 12px/1.2 var(--text); color: var(--mute); }
+.complab img { width: 16px; height: 16px; object-fit: contain; }
+.row .meta .nexttag { font: 700 11px/1 var(--text); letter-spacing: .1em; text-transform: uppercase; color: var(--go); }
 .crow .mid { gap: 2px; align-content: center; }
 .crow .mid small { font: 600 9.5px/1 var(--text); letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
 button.tvrow.tvmore { width: 100%; color: var(--go); font-weight: 700; text-align: left; }
