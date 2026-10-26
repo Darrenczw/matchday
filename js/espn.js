@@ -96,6 +96,14 @@ function noteLeague(path, L) {
 // ---------- One game shape for scoreboards, team schedules and match summaries.
 // Every game seen this visit, by id: a match page draws its header from it at once, before the summary loads.
 export const known = new Map();
+// A single picked game ({ id, path, date }) that has finished: its final whistle if this visit has seen the game,
+// else a safe time after kick-off (football 2.5 h, NBA 3 h, NFL 4 h). Picks saved without a date never count.
+export function isOver(x) {
+  const g = known.get(String(x.id));
+  if (g) return g.state === 'post' && !g.postponed;
+  const t = Date.parse(x.date || '');
+  return t > 0 && Date.now() > t + { soccer: 2.5, basketball: 3, football: 4 }[sportOf(x.path)] * HOUR;
+}
 export function norm(e, path, src = 'sb') {
   const c = e.competitions?.[0] || e;
   if (e.league?.slug && path.startsWith('soccer/')) { path = `soccer/${e.league.slug}`; noteLeague(path, e.league); }

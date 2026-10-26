@@ -1,7 +1,7 @@
 // Follow: browse and search. Competitions, clubs, national teams, NFL and NBA (PRD 7.1).
 import { esc, icon } from '../util.js';
 import { picks, sportOf } from '../store.js';
-import { compList, leagueTeams, search, compInfo } from '../espn.js';
+import { compList, leagueTeams, search, compInfo, isOver } from '../espn.js';
 import { crest, compImg, compLogo, REGION_ORDER } from '../identity.js';
 import { followBtn, teamFollowBtn, href, skel, errorCard } from '../ui.js';
 import { liveBar } from '../livebar.js';
@@ -29,7 +29,7 @@ function chips() {
   const items = [
     ...picks.teams.filter(mine).map((t) => `<a class="chip" href="${href.team(t.path, t.id)}">${crest(t, 26)}${esc(t.name)}</a>`),
     ...picks.comps.filter(mine).map((c) => `<a class="chip" href="${href.comp(c.path)}">${crest({ logo: c.logo, name: c.name }, 26)}${esc(c.name)}</a>`),
-    ...picks.games.filter(mine).map((g) => `<a class="chip txt" href="#/m/${g.path}/${g.id}">${esc(g.name)}</a>`),
+    ...picks.games.filter((g) => mine(g) && !isOver(g)).map((g) => `<a class="chip txt" href="#/m/${g.path}/${g.id}">${esc(g.name)}</a>`),
   ];
   return items.length ? `<div class="sect"><h2 class="cap">You follow</h2><span>${items.length}</span></div><div class="chips">${items.join('')}</div>` : '';
 }

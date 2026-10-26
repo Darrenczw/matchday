@@ -6,6 +6,7 @@ import { rightsChecked } from '../tv.js';
 import { toast, calBtn, backBtn } from '../ui.js';
 import { cal, calCfg, CAL_API, calReady, calAny, setUp, status, newLink, webcal, syncState, calError } from '../cal.js';
 import { compImg, crest } from '../identity.js';
+import { isOver } from '../espn.js';
 
 // The calendar card: set up once, subscribe once, then it looks after itself. Honest about every state.
 function calendarCard(ctx) {
@@ -23,11 +24,12 @@ function calendarCard(ctx) {
   const items = [
     ...cal.teams.map((t) => `<div class="li">${crest(t, 28)}<span class="grow"><span class="t">${esc(t.name)}</span><small>Every game, all competitions</small></span>${calBtn('team', `${t.path.split('/')[0]}:${t.id}`, t, { compact: true })}</div>`),
     ...cal.comps.map((c) => `<div class="li">${compImg(c.logo, 28, c.name)}<span class="grow"><span class="t">${esc(c.name)}</span><small>Every game</small></span>${calBtn('comp', c.path, c, { compact: true })}</div>`),
-    ...cal.games.map((g) => `<div class="li">${icon('cal')}<span class="grow"><span class="t">${esc(g.name)}</span><small>One game</small></span>${calBtn('game', g.id, g, { compact: true })}</div>`),
+    // Single games leave this list once they're over; they stay in the feed, so the iPhone keeps them as history.
+    ...cal.games.filter((g) => !isOver(g)).map((g) => `<div class="li">${icon('cal')}<span class="grow"><span class="t">${esc(g.name)}</span><small>One game</small></span>${calBtn('game', g.id, g, { compact: true })}</div>`),
   ].join('');
   return `<div class="card"><h2>Calendar</h2>
 <div class="li" style="border:0"><a class="btn go" href="${esc(webcal(calCfg.feedUrl))}">${icon('calplus')}${fetched ? 'Subscribe again' : 'Subscribe on this iPhone'}</a></div>${lines}
-${calAny() ? `<div class="h" style="padding-top:12px">In your calendar<span>Separate from Follow</span></div>${items}` : `<p class="note">Nothing in your calendar yet. Use the Calendar button on a team, league or game.</p>`}
+${items ? `<div class="h" style="padding-top:12px">In your calendar<span>Separate from Follow</span></div>${items}` : `<p class="note">${calAny() ? 'Your single games are over. Past games stay in your iPhone Calendar.' : 'Nothing in your calendar yet.'} Use the Calendar button on a team, league or game.</p>`}
 <p class="note">For the fastest updates: iPhone Settings → Apps → Calendar → Accounts → Fetch New Data → Every 15 Minutes. Opening the Calendar app also fetches.</p>
 <div class="li"><button class="btn sm ghost" data-act="copylink">Copy link</button><button class="btn sm ghost" data-act="newlink">Make a new link</button></div></div>`;
 }
